@@ -217,13 +217,15 @@ client.on('messageCreate', async (message) => {
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
+  await interaction.deferReply();
+
   incrementCommand();
   recordUniqueUser(interaction.user.id);
 
   const { commandName, options } = interaction;
 
   if (commandName === 'ping') {
-    await interaction.reply({ content: 'pong! 🏓' });
+    await interaction.editReply({ content: 'pong! 🏓' });
     return;
   }
 
@@ -238,12 +240,12 @@ client.on('interactionCreate', async (interaction) => {
       )
       .setTimestamp();
 
-    await interaction.reply({ embeds: [statusEmbed] });
+    await interaction.editReply({ embeds: [statusEmbed] });
     return;
   }
 
   if (commandName === 'help') {
-    await interaction.reply({ embeds: [buildHelpEmbed()] });
+    await interaction.editReply({ embeds: [buildHelpEmbed()] });
     return;
   }
 
@@ -251,7 +253,7 @@ client.on('interactionCreate', async (interaction) => {
     const value = options.getString('valor');
     const newPrefix = setPrefix(value || getPrefix());
 
-    await interaction.reply({
+    await interaction.editReply({
       embeds: [buildPrefixStatusEmbed(interaction.user.tag, newPrefix)],
     });
     return;
@@ -261,20 +263,20 @@ client.on('interactionCreate', async (interaction) => {
     const channel = options.getChannel('canal');
 
     if (!channel || !channel.isTextBased()) {
-      await interaction.reply({ content: 'Você precisa indicar um canal de texto válido.', ephemeral: true });
+      await interaction.editReply({ content: 'Você precisa indicar um canal de texto válido.' });
       return;
     }
 
     setWelcomeChannel(interaction.guildId, channel.id);
 
-    await interaction.reply({
+    await interaction.editReply({
       content: `Canal de boas-vindas configurado para ${channel}.`,
     });
     return;
   }
 
   if (commandName === 'sixseven') {
-    await interaction.reply('https://cdn.discordapp.com/attachments/1457245624792780883/1528147588686020781/1499544593182490777.webp?ex=6a973fd8&is=6a95ee58&hm=25123c3facc397d18cccb75418decb8d17a7b0b1bdeb8f9e8decd57b74fca6d4&');
+    await interaction.editReply('https://cdn.discordapp.com/attachments/1457245624792780883/1528147588686020781/1499544593182490777.webp?ex=6a973fd8&is=6a95ee58&hm=25123c3facc397d18cccb75418decb8d17a7b0b1bdeb8f9e8decd57b74fca6d4&');
     return;
   }
 

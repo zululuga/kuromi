@@ -97,8 +97,6 @@ async function runShipPrefix(message) {
 
 // Executa o comando ship a partir de um slash command.
 async function runShipInteraction(interaction) {
-  await interaction.deferReply();
-
   const members = await interaction.guild.members.fetch().catch(() => null);
   if (!members) {
     await interaction.editReply("❌ Nao consegui buscar os membros do servidor.");
