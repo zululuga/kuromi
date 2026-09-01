@@ -1,0 +1,25 @@
+{
+  "name": "botmelody",
+  "version": "1.0.0",
+  "description": "Bot de Discord oficial da Cringelândia",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "bot": "node index.js",
+    "web": "node server.js",
+    "dev": "node server.js",
+    "register": "node src/registerSlashCommands.js",
+    "test": "node tests/botUtils.test.js"
+  },
+  "keywords": [
+    "discord",
+    "bot"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5",
+    "express": "^5.2.1"
+  }
+}

@@ -1,0 +1,960 @@
+{
+  "entries": [
+    {
+      "timestamp": "2026-08-30T22:45:46.386Z",
+      "message": "Painel web do Kuromi iniciado em http://localhost:3000"
+    },
+    {
+      "timestamp": "2026-08-30T22:50:01.728Z",
+      "message": "Painel web do Kuromi iniciado em http://localhost:3000"
+    },
+    {
+      "timestamp": "2026-08-30T23:04:06.830Z",
+      "message": "Painel web do Kuromi iniciado em http://localhost:3000"
+    },
+    {
+      "timestamp": "2026-08-30T23:04:58.705Z",
+      "message": "Painel web do Kuromi iniciado em http://localhost:3000"
+    },
+    {
+      "timestamp": "2026-08-31T23:02:34.021Z",
+      "message": "Painel web do Kuromi iniciado em http://localhost:3000"
+    },
+    {
+      "timestamp": "2026-08-31T23:03:16.206Z",
+      "message": "Painel web do Kuromi iniciado em http://localhost:3000"
+    },
+    {
+      "timestamp": "2026-08-31T23:03:24.387Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-08-31T23:03:26.330Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-08-31T23:03:26.334Z",
+      "message": "(node:15920) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-08-31T23:03:26.334Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-08-31T23:08:23.129Z",
+      "message": "Painel web do Kuromi iniciado em http://localhost:3000"
+    },
+    {
+      "timestamp": "2026-08-31T23:08:52.966Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-08-31T23:08:54.266Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-08-31T23:08:54.270Z",
+      "message": "(node:19016) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-08-31T23:08:54.270Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-08-31T23:09:31.822Z",
+      "message": "Tentativa de enviar embed para canal 1461937203214024891"
+    },
+    {
+      "timestamp": "2026-08-31T23:11:16.448Z",
+      "message": "Tentativa de enviar embed para canal 1461937203214024891"
+    },
+    {
+      "timestamp": "2026-08-31T23:13:30.772Z",
+      "message": "Encerrando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-08-31T23:13:30.778Z",
+      "message": "Bot encerrado com code=null signal=SIGTERM"
+    },
+    {
+      "timestamp": "2026-08-31T23:13:32.897Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-08-31T23:13:34.368Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-08-31T23:13:34.372Z",
+      "message": "(node:15280) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-08-31T23:13:34.373Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-08-31T23:13:59.837Z",
+      "message": "Tentativa de enviar embed para canal 1461937203214024891"
+    },
+    {
+      "timestamp": "2026-08-31T23:14:23.180Z",
+      "message": "Tentativa de enviar embed para canal 6566"
+    },
+    {
+      "timestamp": "2026-08-31T23:16:33.162Z",
+      "message": "Encerrando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-08-31T23:16:33.168Z",
+      "message": "Bot encerrado com code=null signal=SIGTERM"
+    },
+    {
+      "timestamp": "2026-08-31T23:16:35.215Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-08-31T23:16:37.086Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-08-31T23:16:37.092Z",
+      "message": "(node:1896) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-08-31T23:16:37.092Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-08-31T23:16:48.188Z",
+      "message": "Tentativa de enviar embed para canal 1461937203214024891"
+    },
+    {
+      "timestamp": "2026-08-31T23:17:01.100Z",
+      "message": "Tentativa de enviar embed para canal er"
+    },
+    {
+      "timestamp": "2026-08-31T23:25:29.189Z",
+      "message": "Painel web do Kuromi iniciado em http://localhost:3000"
+    },
+    {
+      "timestamp": "2026-08-31T23:25:29.191Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-08-31T23:25:31.139Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-08-31T23:25:31.144Z",
+      "message": "(node:22180) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-08-31T23:25:31.144Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-08-31T23:26:12.604Z",
+      "message": "Tentativa de enviar embed para canal 1453890868980482090"
+    },
+    {
+      "timestamp": "2026-08-31T23:26:12.923Z",
+      "message": "[IPC] Canal inválido ou não encontrado para envio de embed: 1453890868980482090"
+    },
+    {
+      "timestamp": "2026-08-31T23:29:51.393Z",
+      "message": "Tentativa de enviar embed para canal 1461937203214024891"
+    },
+    {
+      "timestamp": "2026-08-31T23:29:51.831Z",
+      "message": "[IPC] Embed enviado com sucesso para o canal 1461937203214024891"
+    },
+    {
+      "timestamp": "2026-08-31T23:33:47.419Z",
+      "message": "Tentativa de enviar embed para canal 1453897584543269035"
+    },
+    {
+      "timestamp": "2026-08-31T23:33:47.704Z",
+      "message": "[IPC] Embed enviado com sucesso para o canal 1453897584543269035"
+    },
+    {
+      "timestamp": "2026-08-31T23:35:57.241Z",
+      "message": "Tentativa de enviar embed para canal 1453897584543269035"
+    },
+    {
+      "timestamp": "2026-08-31T23:35:57.634Z",
+      "message": "[IPC] Embed enviado com sucesso para o canal 1453897584543269035"
+    },
+    {
+      "timestamp": "2026-09-01T02:37:51.579Z",
+      "message": "Encerrando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T02:37:51.611Z",
+      "message": "Bot encerrado com code=null signal=SIGTERM"
+    },
+    {
+      "timestamp": "2026-09-01T02:37:53.628Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T02:37:57.876Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-09-01T02:37:57.886Z",
+      "message": "(node:21044) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-09-01T02:37:57.887Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-09-01T02:38:02.144Z",
+      "message": "Slash commands registrados com sucesso."
+    },
+    {
+      "timestamp": "2026-09-01T02:42:36.770Z",
+      "message": "Encerrando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T02:42:36.776Z",
+      "message": "Bot encerrado com code=null signal=SIGTERM"
+    },
+    {
+      "timestamp": "2026-09-01T02:42:38.792Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T02:42:40.326Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-09-01T02:42:40.330Z",
+      "message": "(node:22444) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-09-01T02:42:40.331Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-09-01T02:42:43.591Z",
+      "message": "Slash commands registrados com sucesso."
+    },
+    {
+      "timestamp": "2026-09-01T02:48:01.271Z",
+      "message": "Encerrando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T02:48:01.277Z",
+      "message": "Bot encerrado com code=null signal=SIGTERM"
+    },
+    {
+      "timestamp": "2026-09-01T02:48:03.289Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T02:48:04.798Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-09-01T02:48:04.801Z",
+      "message": "(node:23820) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-09-01T02:48:04.802Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:07.997Z",
+      "message": "Encerrando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:07:08.003Z",
+      "message": "Bot encerrado com code=null signal=SIGTERM"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:10.014Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:07:10.452Z",
+      "message": "E:\\botMelody\\src\\commands\\ship.js:1"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:10.452Z",
+      "message": "﻿src/commands/ship.js"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:10.453Z",
+      "message": " ^"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:10.453Z",
+      "message": "ReferenceError: src is not defined"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:10.454Z",
+      "message": "    at Object.<anonymous> (E:\\botMelody\\src\\commands\\ship.js:1:2)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:10.454Z",
+      "message": "    at Module._compile (node:internal/modules/cjs/loader:1871:14)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:10.454Z",
+      "message": "    at Object..js (node:internal/modules/cjs/loader:2002:10)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:10.455Z",
+      "message": "    at Module.load (node:internal/modules/cjs/loader:1594:32)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:10.455Z",
+      "message": "    at Module._load (node:internal/modules/cjs/loader:1396:12)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:10.456Z",
+      "message": "    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:10.456Z",
+      "message": "    at Module.require (node:internal/modules/cjs/loader:1617:12)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:10.456Z",
+      "message": "    at require (node:internal/modules/helpers:153:16)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:10.457Z",
+      "message": "    at Object.<anonymous> (E:\\botMelody\\index.js:6:47)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:10.457Z",
+      "message": "    at Module._compile (node:internal/modules/cjs/loader:1871:14)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:10.458Z",
+      "message": "Node.js v24.18.0"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:10.463Z",
+      "message": "Bot encerrado com code=1 signal=none"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:48.409Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:07:48.784Z",
+      "message": "E:\\botMelody\\src\\commands\\ship.js:1"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:48.784Z",
+      "message": "﻿src/commands/ship.js"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:48.785Z",
+      "message": " ^"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:48.785Z",
+      "message": "ReferenceError: src is not defined"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:48.785Z",
+      "message": "    at Object.<anonymous> (E:\\botMelody\\src\\commands\\ship.js:1:2)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:48.786Z",
+      "message": "    at Module._compile (node:internal/modules/cjs/loader:1871:14)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:48.786Z",
+      "message": "    at Object..js (node:internal/modules/cjs/loader:2002:10)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:48.787Z",
+      "message": "    at Module.load (node:internal/modules/cjs/loader:1594:32)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:48.787Z",
+      "message": "    at Module._load (node:internal/modules/cjs/loader:1396:12)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:48.787Z",
+      "message": "    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:48.788Z",
+      "message": "    at Module.require (node:internal/modules/cjs/loader:1617:12)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:48.788Z",
+      "message": "    at require (node:internal/modules/helpers:153:16)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:48.788Z",
+      "message": "    at Object.<anonymous> (E:\\botMelody\\index.js:6:47)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:48.789Z",
+      "message": "    at Module._compile (node:internal/modules/cjs/loader:1871:14)"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:48.789Z",
+      "message": "Node.js v24.18.0"
+    },
+    {
+      "timestamp": "2026-09-01T03:07:48.793Z",
+      "message": "Bot encerrado com code=1 signal=none"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:00.168Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:08:00.559Z",
+      "message": "E:\\botMelody\\src\\commands\\ship.js:1"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:00.560Z",
+      "message": "﻿src/commands/ship.js"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:00.560Z",
+      "message": " ^"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:00.561Z",
+      "message": "ReferenceError: src is not defined"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:00.562Z",
+      "message": "    at Object.<anonymous> (E:\\botMelody\\src\\commands\\ship.js:1:2)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:00.562Z",
+      "message": "    at Module._compile (node:internal/modules/cjs/loader:1871:14)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:00.563Z",
+      "message": "    at Object..js (node:internal/modules/cjs/loader:2002:10)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:00.563Z",
+      "message": "    at Module.load (node:internal/modules/cjs/loader:1594:32)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:00.564Z",
+      "message": "    at Module._load (node:internal/modules/cjs/loader:1396:12)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:00.564Z",
+      "message": "    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:00.565Z",
+      "message": "    at Module.require (node:internal/modules/cjs/loader:1617:12)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:00.565Z",
+      "message": "    at require (node:internal/modules/helpers:153:16)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:00.566Z",
+      "message": "    at Object.<anonymous> (E:\\botMelody\\index.js:6:47)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:00.566Z",
+      "message": "    at Module._compile (node:internal/modules/cjs/loader:1871:14)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:00.567Z",
+      "message": "Node.js v24.18.0"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:00.571Z",
+      "message": "Bot encerrado com code=1 signal=none"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:59.065Z",
+      "message": "Painel web do Kuromi iniciado em http://localhost:3000"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:59.066Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:08:59.488Z",
+      "message": "E:\\botMelody\\src\\commands\\ship.js:1"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:59.489Z",
+      "message": "﻿src/commands/ship.js"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:59.490Z",
+      "message": " ^"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:59.490Z",
+      "message": "ReferenceError: src is not defined"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:59.491Z",
+      "message": "    at Object.<anonymous> (E:\\botMelody\\src\\commands\\ship.js:1:2)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:59.491Z",
+      "message": "    at Module._compile (node:internal/modules/cjs/loader:1871:14)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:59.492Z",
+      "message": "    at Object..js (node:internal/modules/cjs/loader:2002:10)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:59.492Z",
+      "message": "    at Module.load (node:internal/modules/cjs/loader:1594:32)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:59.493Z",
+      "message": "    at Module._load (node:internal/modules/cjs/loader:1396:12)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:59.493Z",
+      "message": "    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:59.494Z",
+      "message": "    at Module.require (node:internal/modules/cjs/loader:1617:12)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:59.494Z",
+      "message": "    at require (node:internal/modules/helpers:153:16)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:59.495Z",
+      "message": "    at Object.<anonymous> (E:\\botMelody\\index.js:6:47)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:59.496Z",
+      "message": "    at Module._compile (node:internal/modules/cjs/loader:1871:14)"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:59.496Z",
+      "message": "Node.js v24.18.0"
+    },
+    {
+      "timestamp": "2026-09-01T03:08:59.498Z",
+      "message": "Bot encerrado com code=1 signal=none"
+    },
+    {
+      "timestamp": "2026-09-01T03:10:07.428Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:10:09.442Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-09-01T03:10:09.469Z",
+      "message": "(node:8352) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-09-01T03:10:09.470Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-09-01T03:19:34.323Z",
+      "message": "Encerrando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:19:34.329Z",
+      "message": "Bot encerrado com code=null signal=SIGTERM"
+    },
+    {
+      "timestamp": "2026-09-01T03:19:36.336Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:19:36.816Z",
+      "message": "E:\\botMelody\\src\\commands\\ship.js:1"
+    },
+    {
+      "timestamp": "2026-09-01T03:19:36.817Z",
+      "message": "src/commands/ship.js"
+    },
+    {
+      "timestamp": "2026-09-01T03:19:36.818Z",
+      "message": "^"
+    },
+    {
+      "timestamp": "2026-09-01T03:19:36.818Z",
+      "message": "ReferenceError: src is not defined"
+    },
+    {
+      "timestamp": "2026-09-01T03:19:36.819Z",
+      "message": "    at Object.<anonymous> (E:\\botMelody\\src\\commands\\ship.js:1:1)"
+    },
+    {
+      "timestamp": "2026-09-01T03:19:36.819Z",
+      "message": "    at Module._compile (node:internal/modules/cjs/loader:1871:14)"
+    },
+    {
+      "timestamp": "2026-09-01T03:19:36.820Z",
+      "message": "    at Object..js (node:internal/modules/cjs/loader:2002:10)"
+    },
+    {
+      "timestamp": "2026-09-01T03:19:36.820Z",
+      "message": "    at Module.load (node:internal/modules/cjs/loader:1594:32)"
+    },
+    {
+      "timestamp": "2026-09-01T03:19:36.821Z",
+      "message": "    at Module._load (node:internal/modules/cjs/loader:1396:12)"
+    },
+    {
+      "timestamp": "2026-09-01T03:19:36.821Z",
+      "message": "    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)"
+    },
+    {
+      "timestamp": "2026-09-01T03:19:36.822Z",
+      "message": "    at Module.require (node:internal/modules/cjs/loader:1617:12)"
+    },
+    {
+      "timestamp": "2026-09-01T03:19:36.822Z",
+      "message": "    at require (node:internal/modules/helpers:153:16)"
+    },
+    {
+      "timestamp": "2026-09-01T03:19:36.823Z",
+      "message": "    at Object.<anonymous> (E:\\botMelody\\index.js:6:47)"
+    },
+    {
+      "timestamp": "2026-09-01T03:19:36.823Z",
+      "message": "    at Module._compile (node:internal/modules/cjs/loader:1871:14)"
+    },
+    {
+      "timestamp": "2026-09-01T03:19:36.824Z",
+      "message": "Node.js v24.18.0"
+    },
+    {
+      "timestamp": "2026-09-01T03:19:36.826Z",
+      "message": "Bot encerrado com code=1 signal=none"
+    },
+    {
+      "timestamp": "2026-09-01T03:20:01.366Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:20:02.975Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-09-01T03:20:02.979Z",
+      "message": "(node:16660) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-09-01T03:20:02.979Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-09-01T03:22:15.476Z",
+      "message": "Encerrando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:22:15.483Z",
+      "message": "Bot encerrado com code=null signal=SIGTERM"
+    },
+    {
+      "timestamp": "2026-09-01T03:22:17.484Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:22:19.070Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-09-01T03:22:19.074Z",
+      "message": "(node:1548) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-09-01T03:22:19.074Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-09-01T03:24:49.662Z",
+      "message": "Encerrando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:24:49.668Z",
+      "message": "Bot encerrado com code=null signal=SIGTERM"
+    },
+    {
+      "timestamp": "2026-09-01T03:24:51.722Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:24:53.205Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-09-01T03:24:53.209Z",
+      "message": "(node:17296) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-09-01T03:24:53.209Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-09-01T03:44:49.972Z",
+      "message": "Erro do cliente Discord: DiscordjsTypeError [ColorConvert]: Unable to convert \"purple\" to a number."
+    },
+    {
+      "timestamp": "2026-09-01T03:44:49.996Z",
+      "message": "    at resolveColor (E:\\botMelody\\node_modules\\discord.js\\src\\util\\Util.js:299:11)"
+    },
+    {
+      "timestamp": "2026-09-01T03:44:49.996Z",
+      "message": "    at EmbedBuilder.setColor (E:\\botMelody\\node_modules\\discord.js\\src\\structures\\EmbedBuilder.js:23:36)"
+    },
+    {
+      "timestamp": "2026-09-01T03:44:49.997Z",
+      "message": "    at buildShipEmbed (E:\\botMelody\\src\\commands\\ship.js:70:6)"
+    },
+    {
+      "timestamp": "2026-09-01T03:44:49.998Z",
+      "message": "    at runShipPrefix (E:\\botMelody\\src\\commands\\ship.js:98:17)"
+    },
+    {
+      "timestamp": "2026-09-01T03:44:49.998Z",
+      "message": "    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+    },
+    {
+      "timestamp": "2026-09-01T03:44:49.998Z",
+      "message": "    at async Client.<anonymous> (E:\\botMelody\\index.js:211:5) {"
+    },
+    {
+      "timestamp": "2026-09-01T03:44:49.999Z",
+      "message": "  code: 'ColorConvert'"
+    },
+    {
+      "timestamp": "2026-09-01T03:44:49.999Z",
+      "message": "}"
+    },
+    {
+      "timestamp": "2026-09-01T03:45:07.119Z",
+      "message": "Encerrando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:45:07.126Z",
+      "message": "Bot encerrado com code=null signal=SIGTERM"
+    },
+    {
+      "timestamp": "2026-09-01T03:45:09.142Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:45:11.223Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-09-01T03:45:11.227Z",
+      "message": "(node:24508) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-09-01T03:45:11.228Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-09-01T03:45:20.376Z",
+      "message": "Erro do cliente Discord: DiscordjsTypeError [ColorConvert]: Unable to convert \"yellow\" to a number."
+    },
+    {
+      "timestamp": "2026-09-01T03:45:20.377Z",
+      "message": "    at resolveColor (E:\\botMelody\\node_modules\\discord.js\\src\\util\\Util.js:299:11)"
+    },
+    {
+      "timestamp": "2026-09-01T03:45:20.377Z",
+      "message": "    at EmbedBuilder.setColor (E:\\botMelody\\node_modules\\discord.js\\src\\structures\\EmbedBuilder.js:23:36)"
+    },
+    {
+      "timestamp": "2026-09-01T03:45:20.378Z",
+      "message": "    at buildShipEmbed (E:\\botMelody\\src\\commands\\ship.js:70:6)"
+    },
+    {
+      "timestamp": "2026-09-01T03:45:20.378Z",
+      "message": "    at runShipPrefix (E:\\botMelody\\src\\commands\\ship.js:98:17)"
+    },
+    {
+      "timestamp": "2026-09-01T03:45:20.379Z",
+      "message": "    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+    },
+    {
+      "timestamp": "2026-09-01T03:45:20.379Z",
+      "message": "    at async Client.<anonymous> (E:\\botMelody\\index.js:211:5) {"
+    },
+    {
+      "timestamp": "2026-09-01T03:45:20.379Z",
+      "message": "  code: 'ColorConvert'"
+    },
+    {
+      "timestamp": "2026-09-01T03:45:20.380Z",
+      "message": "}"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:00.399Z",
+      "message": "Encerrando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:46:00.405Z",
+      "message": "Bot encerrado com code=null signal=SIGTERM"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:02.416Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:46:04.281Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:04.284Z",
+      "message": "(node:20792) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-09-01T03:46:04.285Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:18.639Z",
+      "message": "Erro do cliente Discord: DiscordjsTypeError [ColorConvert]: Unable to convert \"red\" to a number."
+    },
+    {
+      "timestamp": "2026-09-01T03:46:18.640Z",
+      "message": "    at resolveColor (E:\\botMelody\\node_modules\\discord.js\\src\\util\\Util.js:299:11)"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:18.640Z",
+      "message": "    at EmbedBuilder.setColor (E:\\botMelody\\node_modules\\discord.js\\src\\structures\\EmbedBuilder.js:23:36)"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:18.641Z",
+      "message": "    at buildShipEmbed (E:\\botMelody\\src\\commands\\ship.js:71:6)"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:18.641Z",
+      "message": "    at runShipPrefix (E:\\botMelody\\src\\commands\\ship.js:99:17)"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:18.642Z",
+      "message": "    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:18.642Z",
+      "message": "    at async Client.<anonymous> (E:\\botMelody\\index.js:211:5) {"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:18.643Z",
+      "message": "  code: 'ColorConvert'"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:18.643Z",
+      "message": "}"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:55.332Z",
+      "message": "Erro do cliente Discord: DiscordjsTypeError [ColorConvert]: Unable to convert \"red\" to a number."
+    },
+    {
+      "timestamp": "2026-09-01T03:46:55.333Z",
+      "message": "    at resolveColor (E:\\botMelody\\node_modules\\discord.js\\src\\util\\Util.js:299:11)"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:55.333Z",
+      "message": "    at EmbedBuilder.setColor (E:\\botMelody\\node_modules\\discord.js\\src\\structures\\EmbedBuilder.js:23:36)"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:55.334Z",
+      "message": "    at buildShipEmbed (E:\\botMelody\\src\\commands\\ship.js:71:6)"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:55.334Z",
+      "message": "    at runShipPrefix (E:\\botMelody\\src\\commands\\ship.js:99:17)"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:55.335Z",
+      "message": "    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:55.335Z",
+      "message": "    at async Client.<anonymous> (E:\\botMelody\\index.js:211:5) {"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:55.336Z",
+      "message": "  code: 'ColorConvert'"
+    },
+    {
+      "timestamp": "2026-09-01T03:46:55.336Z",
+      "message": "}"
+    },
+    {
+      "timestamp": "2026-09-01T03:47:02.727Z",
+      "message": "Encerrando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:47:02.735Z",
+      "message": "Bot encerrado com code=null signal=SIGTERM"
+    },
+    {
+      "timestamp": "2026-09-01T03:47:04.993Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T03:47:06.575Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-09-01T03:47:06.579Z",
+      "message": "(node:24056) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-09-01T03:47:06.580Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-09-01T03:47:17.101Z",
+      "message": "Erro do cliente Discord: DiscordjsTypeError [ColorConvert]: Unable to convert \"red\" to a number."
+    },
+    {
+      "timestamp": "2026-09-01T03:47:17.101Z",
+      "message": "    at resolveColor (E:\\botMelody\\node_modules\\discord.js\\src\\util\\Util.js:299:11)"
+    },
+    {
+      "timestamp": "2026-09-01T03:47:17.102Z",
+      "message": "    at EmbedBuilder.setColor (E:\\botMelody\\node_modules\\discord.js\\src\\structures\\EmbedBuilder.js:23:36)"
+    },
+    {
+      "timestamp": "2026-09-01T03:47:17.102Z",
+      "message": "    at buildShipEmbed (E:\\botMelody\\src\\commands\\ship.js:71:6)"
+    },
+    {
+      "timestamp": "2026-09-01T03:47:17.103Z",
+      "message": "    at runShipPrefix (E:\\botMelody\\src\\commands\\ship.js:99:17)"
+    },
+    {
+      "timestamp": "2026-09-01T03:47:17.103Z",
+      "message": "    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+    },
+    {
+      "timestamp": "2026-09-01T03:47:17.104Z",
+      "message": "    at async Client.<anonymous> (E:\\botMelody\\index.js:211:5) {"
+    },
+    {
+      "timestamp": "2026-09-01T03:47:17.104Z",
+      "message": "  code: 'ColorConvert'"
+    },
+    {
+      "timestamp": "2026-09-01T03:47:17.105Z",
+      "message": "}"
+    }
+  ]
+}

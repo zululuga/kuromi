@@ -1,0 +1,98 @@
+const fs = require('node:fs');
+const path = require('node:path');
+
+const dataDir = path.join(__dirname, '..', '..', 'data');
+const settingsFile = path.join(dataDir, 'settings.json');
+
+function ensureStorage() {
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+
+  if (!fs.existsSync(settingsFile)) {
+    fs.writeFileSync(settingsFile, JSON.stringify({}, null, 2), 'utf8');
+  }
+}
+
+function readSettings() {
+  ensureStorage();
+
+  try {
+    const raw = fs.readFileSync(settingsFile, 'utf8');
+    return raw ? JSON.parse(raw) : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function writeSettings(settings) {
+  ensureStorage();
+  fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2), 'utf8');
+}
+
+function getGuildSettings(guildId) {
+  const settings = readSettings();
+  return settings[guildId] || {};
+}
+
+function setGuildSettings(guildId, updates) {
+  const settings = readSettings();
+  settings[guildId] = {
+    ...(settings[guildId] || {}),
+    ...updates,
+  };
+  writeSettings(settings);
+  return settings[guildId];
+}
+
+function normalizeChannelValue(input) {
+  if (typeof input !== 'string') {
+    return '';
+  }
+
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  const mentionMatch = trimmed.match(/^<#?(\d+)>?$/);
+  if (mentionMatch) {
+    return mentionMatch[1];
+  }
+
+  const urlMatch = trimmed.match(/\/channels\/\d+\/\d+\/(\d+)/i);
+  if (urlMatch) {
+    return urlMatch[1];
+  }
+
+  const directId = trimmed.match(/(\d{17,20})/);
+  return directId ? directId[1] : trimmed;
+}
+
+function getWelcomeChannel(guildId) {
+  const storedValue = getGuildSettings(guildId).welcomeChannelId || null;
+  return storedValue ? normalizeChannelValue(storedValue) : null;
+}
+
+function setWelcomeChannel(guildId, channelId) {
+  const normalized = normalizeChannelValue(channelId);
+  return setGuildSettings(guildId, { welcomeChannelId: normalized }).welcomeChannelId;
+}
+
+function getBotPrefix(guildId) {
+  return getGuildSettings(guildId).prefix || '!';
+}
+
+function setBotPrefix(guildId, prefix) {
+  return setGuildSettings(guildId, { prefix }).prefix;
+}
+
+module.exports = {
+  getGuildSettings,
+  setGuildSettings,
+  getWelcomeChannel,
+  setWelcomeChannel,
+  getBotPrefix,
+  setBotPrefix,
+  normalizeChannelValue,
+};
