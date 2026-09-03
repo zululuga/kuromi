@@ -95,7 +95,7 @@ client.on('guildMemberAdd', async (member) => {
       }
     )
     .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 256 }))
-    .setImage('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80')
+    .setImage('https://cdn.discordapp.com/attachments/1533657882862686218/1541908904487690321/dhj7hfn-842bcc59-b41f-4ef3-888b-dbfc210f4a5c.gif?ex=6a9b2b92&is=6a99da12&hm=7a41318a2f477b04a295a5b209c43de9517cfa47ac6ecf15e351c045aa104714&')
     .setFooter({ text: 'A Cringelândia agradece sua chegada!' })
     .setTimestamp();
 

@@ -955,6 +955,22 @@
     {
       "timestamp": "2026-09-01T03:47:17.105Z",
       "message": "}"
+    },
+    {
+      "timestamp": "2026-09-01T06:34:01.740Z",
+      "message": "Painel web do Kuromi iniciado em http://34.173.207.172:3000"
+    },
+    {
+      "timestamp": "2026-09-01T06:34:01.742Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-01T06:34:02.127Z",
+      "message": "Outra instância do Kuromi já está em execução. Encerrando este processo..."
+    },
+    {
+      "timestamp": "2026-09-01T06:34:02.138Z",
+      "message": "Bot encerrado com code=1 signal=none"
     }
   ]
 }
