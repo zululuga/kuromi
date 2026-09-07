@@ -1,0 +1,18 @@
+{
+  "guild-123": {
+    "welcomeChannelId": "123456789"
+  },
+  "guild-mention": {
+    "welcomeChannelId": "987654321"
+  },
+  "guild-url": {
+    "welcomeChannelId": "333333333333333333"
+  },
+  "global": {
+    "welcomeChannelId": "1461937203214024891",
+    "prefix": "ku!"
+  },
+  "1453890868980482090": {
+    "welcomeChannelId": "1453890870288973825"
+  }
+}
