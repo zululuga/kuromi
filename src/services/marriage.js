@@ -26,6 +26,17 @@ function getSpouseId(userId) {
   return readMarriageData().marriages[userId] || null;
 }
 
+function endMarriage(userId) {
+  const data = readMarriageData();
+  const spouseId = data.marriages[userId];
+  if (!spouseId) return { ended: false, reason: 'single' };
+
+  delete data.marriages[userId];
+  delete data.marriages[spouseId];
+  writeMarriageData(data);
+  return { ended: true, spouseId };
+}
+
 function createMarriageRequest(requesterId, targetId, guildId) {
   const data = readMarriageData();
   if (data.marriages[requesterId] || data.marriages[targetId]) return { created: false, reason: 'married' };
@@ -70,6 +81,7 @@ function cancelMarriageRequest(requestId, requesterId) {
 
 module.exports = {
   getSpouseId,
+  endMarriage,
   createMarriageRequest,
   resolveMarriageRequest,
   cancelMarriageRequest,

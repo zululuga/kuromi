@@ -31,13 +31,18 @@ function buildWalletEmbed(user, currencies, position) {
     .setTimestamp();
 }
 
-function buildProfileEmbed(user, currencies, spouse, position) {
+function buildProfileEmbed(user, currencies, spouse, position, profession, workCount = 0, pet, totalAventuras = 0) {
+  const petLabel = pet ? `${pet.shiny ? '✨ ' : ''}${pet.label}${pet.shiny ? ' (Shiny)' : ''}` : 'Nenhum pet adotado';
   return new EmbedBuilder()
     .setColor('#e60067')
     .setTitle(`👤 Perfil de ${user.displayName || user.username}`)
     .addFields(
       { name: '💍 Cônjuge', value: spouse ? `${spouse}` : 'Solteiro(a)' },
       { name: 'Colocação em Moedinhas', value: position ? `#${position}` : 'Ainda sem colocação' },
+      { name: '💼 Profissão', value: profession || 'Nenhuma profissão escolhida' },
+      { name: '📈 Trabalhos realizados', value: String(workCount) },
+      { name: '🐾 Pet atual', value: petLabel },
+      { name: '🧭 Aventuras concluídas', value: String(totalAventuras) },
       ...buildCurrencyFields(currencies)
     )
     .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))

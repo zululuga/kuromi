@@ -71,6 +71,21 @@ Exibe os usuários com mais Moedinhas e a sua colocação.
 
 ### `ku!configeconomia <mínimo> <máximo>`
 Configura a faixa do comando `diario`. Disponível para administradores.
+
+### `ku!setareconomia @usuário <quantidade>`
+Define o saldo de Moedinhas de um usuário. Disponível para administradores.
+
+### `ku!resetareconomia @usuário`
+Zera as Moedinhas e o cooldown diário de um usuário. Disponível para administradores.
+
+### `ku!profissao <profissão>`
+Escolhe uma profissão. A primeira escolha é gratuita; trocar custa 50 Moedinhas.
+
+### `ku!trabalho`
+Inicia um desafio de cinco palavras relacionadas à sua profissão. O trabalho pode ser feito a cada 3 horas e paga de 5 a 50 Moedinhas.
+
+### `ku!divorcio`
+Encerra seu casamento por 500 Moedinhas.
 ```
 
 ---
@@ -132,6 +147,33 @@ Exibe o ranking de Moedinhas.
 
 ### `/configeconomia`
 Configura os valores mínimo e máximo do `diario`. Disponível para administradores.
+
+### `/setareconomia usuario quantidade`
+Define o saldo de Moedinhas de um usuário. Disponível para administradores.
+
+### `/resetareconomia usuario`
+Zera as Moedinhas e o cooldown diário de um usuário. Disponível para administradores.
+
+### `/profissao profissao`
+Escolhe uma profissão. A primeira escolha é gratuita; trocar custa 50 Moedinhas.
+
+### `/trabalho`
+Inicia um desafio de cinco palavras relacionadas à sua profissão. O trabalho pode ser feito a cada 3 horas e paga de 5 a 50 Moedinhas.
+
+### `/divorcio`
+Encerra seu casamento por 500 Moedinhas.
+
+### `ku!adocao <pet>`
+Adota um dos 24 pets disponíveis pelo custo base. Pets Shiny têm 5% de chance e valem 4x nas explorações. Trocar o pet custa mais 100 Moedinhas.
+
+### `ku!petexplorar`
+Envia seu pet para uma exploração a cada 12 horas. A recompensa usa o valor do pet e pode receber bônus de monstro ou redução por machucado.
+
+### `/adocao pet`
+Adota um dos 24 pets disponíveis pelo custo base. Pets Shiny têm 5% de chance e valem 4x nas explorações. Trocar o pet custa mais 100 Moedinhas.
+
+### `/petexplorar`
+Envia seu pet para uma exploração a cada 12 horas. A recompensa usa o valor do pet e pode receber bônus de monstro ou redução por machucado.
 
 ---
 

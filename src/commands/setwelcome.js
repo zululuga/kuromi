@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { PermissionFlagsBits, SlashCommandBuilder } = require('discord.js');
 const { setWelcomeChannel } = require('../services/database');
 const { WELCOME } = require('./commandNames');
 
@@ -8,6 +8,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName(WELCOME)
     .setDescription('Define o canal onde a mensagem de boas-vindas será enviada.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addChannelOption((option) =>
       option
         .setName('canal')
@@ -16,6 +17,11 @@ module.exports = {
         .setRequired(true)
     ),
   async executePrefix({ message, args, prefix }) {
+    if (!message.member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
+      await message.reply('❌ Apenas administradores podem configurar as boas-vindas.');
+      return;
+    }
+
     const channel = message.mentions.channels.first() || message.guild?.channels.cache.get(args[0]);
 
     if (!channel || !channel.isTextBased()) {
@@ -27,6 +33,11 @@ module.exports = {
     await message.reply({ content: `✅ Canal de boas-vindas configurado para ${channel}.` });
   },
   async executeSlash({ interaction }) {
+    if (!interaction.member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
+      await interaction.editReply('❌ Apenas administradores podem configurar as boas-vindas.');
+      return;
+    }
+
     const channel = interaction.options.getChannel('canal');
 
     if (!channel || !channel.isTextBased()) {

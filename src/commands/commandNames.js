@@ -11,6 +11,13 @@ module.exports = {
   WALLET: 'carteira',
   PROFILE: 'perfil',
   MARRIAGE: 'casamento',
+  DIVORCE: 'divorcio',
   RANKING: 'ranking',
   ECONOMY_CONFIG: 'configeconomia',
+  SET_ECONOMY: 'setareconomia',
+  RESET_ECONOMY: 'resetareconomia',
+  PROFESSION: 'profissao',
+  WORK: 'trabalho',
+  ADOPTION: 'adocao',
+  PET_EXPLORE: 'petexplorar',
 };

@@ -1,7 +1,19 @@
 {
   "214153735281180673": {
-    "coins": 2,
-    "lastDailyAt": "2026-09-07T02:19:34.329Z"
+    "coins": 151,
+    "lastDailyAt": "2026-09-07T02:19:34.329Z",
+    "profession": "programador",
+    "lastWorkAt": "2026-09-07T04:23:20.799Z",
+    "workCount": 1,
+    "pet": {
+      "key": "borboleta",
+      "label": "Borboleta",
+      "baseCost": 150,
+      "shiny": false,
+      "adoptedAt": "2026-09-07T04:58:18.411Z"
+    },
+    "lastPetExplorationAt": "2026-09-07T04:58:53.064Z",
+    "totalAventuras": 1
   },
   "1329141523186585697": {
     "coins": 34,

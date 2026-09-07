@@ -1135,6 +1135,82 @@
     {
       "timestamp": "2026-09-07T03:57:10.116Z",
       "message": "Slash commands registrados com sucesso."
+    },
+    {
+      "timestamp": "2026-09-07T04:03:47.408Z",
+      "message": "Encerrando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-07T04:03:47.414Z",
+      "message": "Bot encerrado com code=null signal=SIGTERM"
+    },
+    {
+      "timestamp": "2026-09-07T04:03:49.417Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-07T04:03:50.871Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-09-07T04:03:50.875Z",
+      "message": "(node:5336) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-09-07T04:03:50.875Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-09-07T04:05:16.617Z",
+      "message": "(node:5336) Warning: Supplying \"ephemeral\" for interaction response options is deprecated. Utilize flags instead."
+    },
+    {
+      "timestamp": "2026-09-07T04:20:38.813Z",
+      "message": "Encerrando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-07T04:20:38.821Z",
+      "message": "Bot encerrado com code=null signal=SIGTERM"
+    },
+    {
+      "timestamp": "2026-09-07T04:20:40.825Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-07T04:20:42.458Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-09-07T04:20:42.461Z",
+      "message": "(node:17404) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-09-07T04:20:42.462Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-09-07T04:56:12.238Z",
+      "message": "Encerrando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-07T04:56:12.246Z",
+      "message": "Bot encerrado com code=null signal=SIGTERM"
+    },
+    {
+      "timestamp": "2026-09-07T04:56:14.248Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-07T04:56:15.559Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-09-07T04:56:15.562Z",
+      "message": "(node:14844) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-09-07T04:56:15.563Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
     }
   ]
 }

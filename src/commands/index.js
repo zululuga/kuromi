@@ -10,8 +10,15 @@ const commands = [
   require('./carteira'),
   require('./perfil'),
   require('./casamento'),
+  require('./divorcio'),
   require('./ranking'),
   require('./economyconfig'),
+  require('./setareconomia'),
+  require('./resetareconomia'),
+  require('./profissao'),
+  require('./trabalho'),
+  require('./adocao'),
+  require('./petexplorar'),
 ];
 
 const commandsByName = new Map(
