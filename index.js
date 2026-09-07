@@ -178,7 +178,7 @@ async function handleCringePhrase(message) {
   cringePhraseCooldowns.set(message.author.id, Date.now());
 
   await message.react('🌈').catch(() => null);
-  await message.channel.send('https://klipy.com/gifs/gacha-life-gacha-boy');
+  await message.reply('https://klipy.com/gifs/gacha-life-gacha-boy');
   return true;
 }
 

@@ -10,7 +10,11 @@
   },
   "global": {
     "welcomeChannelId": "1461937203214024891",
-    "prefix": "ku!"
+    "prefix": "ku!",
+    "economy": {
+      "minimum": 10,
+      "maximum": 10
+    }
   },
   "1453890868980482090": {
     "welcomeChannelId": "1453890870288973825"
