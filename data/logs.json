@@ -1211,6 +1211,14 @@
     {
       "timestamp": "2026-09-07T04:56:15.563Z",
       "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-09-07T05:03:28.533Z",
+      "message": "Encerrando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-07T05:03:28.540Z",
+      "message": "Bot encerrado com code=null signal=SIGTERM"
     }
   ]
 }
