@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('node:path');
 const { spawn, execFile } = require('node:child_process');
-const { setWelcomeChannel, getWelcomeChannel, normalizeChannelValue } = require('./src/services/database');
+const { setWelcomeChannel, getWelcomeChannel, normalizeChannelValue, getEconomyConfig, setEconomyConfig } = require('./src/services/database');
 const { getPrefix, setPrefix } = require('./src/utils/botUtils');
 const { addLog: savePersistentLog, getLogs, getStats, updateStats, resetStats, clearLogs } = require('./src/services/logging');
 
@@ -157,6 +157,7 @@ app.get('/api/config', (req, res) => {
   res.json({
     prefix: getPrefix(),
     welcomeChannelId: getWelcomeChannel('global') || null,
+    economy: getEconomyConfig(),
   });
 });
 
@@ -169,8 +170,19 @@ app.post('/api/config/welcome-channel', (req, res) => {
 
 app.post('/api/config/prefix', (req, res) => {
   const { value } = req.body || {};
-  const prefix = require('./src/utils/botUtils').setPrefix(value || '!');
+  const prefix = require('./src/utils/botUtils').setPrefix(value || 'ku!');
   res.json({ success: true, prefix });
+});
+
+app.post('/api/config/economy', (req, res) => {
+  const minimum = Number(req.body?.minimum);
+  const maximum = Number(req.body?.maximum);
+
+  if (!Number.isInteger(minimum) || !Number.isInteger(maximum) || minimum < 0 || maximum < minimum) {
+    return res.status(400).json({ success: false, message: 'Informe valores inteiros válidos.' });
+  }
+
+  res.json({ success: true, economy: setEconomyConfig(minimum, maximum) });
 });
 
 app.get('/api/logs', (req, res) => {

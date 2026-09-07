@@ -13,6 +13,8 @@ const { getWelcomeChannel, setWelcomeChannel } = require('../src/services/databa
 
 const lockFile = path.join(__dirname, '..', '.botmelody.lock');
 const prefixFile = path.join(__dirname, '..', 'prefix.json');
+const settingsFile = path.join(__dirname, '..', 'data', 'settings.json');
+const originalSettings = fs.existsSync(settingsFile) ? fs.readFileSync(settingsFile, 'utf8') : '{}';
 
 if (fs.existsSync(lockFile)) {
   fs.unlinkSync(lockFile);
@@ -31,10 +33,10 @@ try {
 
   const help = getCommandList();
   assert.ok(Array.isArray(help), 'A lista de comandos deve existir.');
-  assert.ok(help.some((item) => item.name === '/help'), 'O comando /help deve estar na lista.');
+  assert.ok(help.some((item) => item.name === '/ajuda'), 'O comando /ajuda deve estar na lista.');
 
   const defaultPrefix = getPrefix();
-  assert.equal(defaultPrefix, '!', 'O prefixo padrão deve ser !.');
+  assert.equal(defaultPrefix, 'ku!', 'O prefixo padrão deve ser ku!.');
 
   const changed = setPrefix('?');
   assert.equal(changed, '?', 'O prefixo alterado deve ser retornado.');
@@ -64,4 +66,6 @@ try {
   if (fs.existsSync(prefixFile)) {
     fs.unlinkSync(prefixFile);
   }
+
+  fs.writeFileSync(settingsFile, originalSettings, 'utf8');
 }

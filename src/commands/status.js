@@ -1,5 +1,6 @@
 const { EmbedBuilder, SlashCommandBuilder } = require('discord.js');
 const { STATUS_IMAGE_URL } = require('../config');
+const { STATUS } = require('./commandNames');
 
 function buildStatusEmbed(serverName, userTag) {
   return new EmbedBuilder()
@@ -15,9 +16,9 @@ function buildStatusEmbed(serverName, userTag) {
 }
 
 module.exports = {
-  name: 'status',
+  name: STATUS,
   data: new SlashCommandBuilder()
-    .setName('status')
+    .setName(STATUS)
     .setDescription('Mostra o status do bot e informações do servidor.'),
   async executePrefix({ message }) {
     await message.reply({

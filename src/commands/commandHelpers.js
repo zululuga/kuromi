@@ -1,20 +1,24 @@
 const { EmbedBuilder } = require('discord.js');
 const { getCommandList } = require('../utils/botUtils');
 
-function buildHelpEmbed() {
+function buildHelpEmbed(requestedPage = 1) {
   const commandList = getCommandList();
+  const pageSize = 10;
+  const totalPages = Math.max(1, Math.ceil(commandList.length / pageSize));
+  const page = Math.min(Math.max(Number.parseInt(requestedPage, 10) || 1, 1), totalPages);
+  const pageCommands = commandList.slice((page - 1) * pageSize, page * pageSize);
 
   return new EmbedBuilder()
     .setColor('#7c3aed')
-    .setTitle('📚 Comandos da Kuromi')
-    .setDescription('Aqui estão os recursos disponíveis no momento:')
+    .setTitle(`📚 Comandos da Kuromi • Página ${page}/${totalPages}`)
+    .setDescription('Cada item mostra as versões slash e por prefixo:')
     .addFields(
-      ...commandList.map((command) => ({
+      ...pageCommands.map((command) => ({
         name: `${command.name}`,
-        value: `• ${command.description}\nUso: \`${command.usage}\``,
+        value: `• ${command.description}\n${command.usage.replace(/\n/g, '\n')}`,
       }))
     )
-    .setFooter({ text: 'Kuromi • Bot oficial da Cringelândia' })
+    .setFooter({ text: `Kuromi • ${commandList.length} comandos • Use /ajuda pagina ou ku!ajuda 2` })
     .setTimestamp();
 }
 
@@ -24,7 +28,7 @@ function buildPrefixStatusEmbed(authorTag, newPrefix) {
     .setTitle('🔧 Prefixo da Kuromi')
     .setDescription(`O prefixo atual foi alterado para: \`${newPrefix}\``)
     .addFields(
-      { name: 'Comando de exemplo', value: `\`${newPrefix}help\`` },
+      { name: 'Comando de exemplo', value: `\`${newPrefix}ajuda\`` },
       { name: 'Solicitado por', value: authorTag }
     )
     .setTimestamp();

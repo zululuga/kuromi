@@ -3,6 +3,7 @@ const path = require('node:path');
 
 const dataDir = path.join(__dirname, '..', '..', 'data');
 const settingsFile = path.join(dataDir, 'settings.json');
+const legacyPrefixFile = path.join(__dirname, '..', '..', 'prefix.json');
 
 function ensureStorage() {
   if (!fs.existsSync(dataDir)) {
@@ -80,11 +81,58 @@ function setWelcomeChannel(guildId, channelId) {
 }
 
 function getBotPrefix(guildId) {
-  return getGuildSettings(guildId).prefix || '!';
+  return getGuildSettings(guildId).prefix || 'ku!';
 }
 
 function setBotPrefix(guildId, prefix) {
   return setGuildSettings(guildId, { prefix }).prefix;
+}
+
+function getGlobalSettings() {
+  return getGuildSettings('global');
+}
+
+function getGlobalPrefix() {
+  const settings = getGlobalSettings();
+  if (settings.prefix) return settings.prefix;
+
+  try {
+    if (fs.existsSync(legacyPrefixFile)) {
+      const legacy = JSON.parse(fs.readFileSync(legacyPrefixFile, 'utf8'));
+      if (typeof legacy.prefix === 'string' && legacy.prefix.trim()) {
+        setGlobalPrefix(legacy.prefix.trim());
+        return legacy.prefix.trim();
+      }
+    }
+  } catch (error) {
+    // Ignora um arquivo de prefixo legado inválido.
+  }
+
+  return 'ku!';
+}
+
+function setGlobalPrefix(prefix) {
+  return setGuildSettings('global', { prefix }).prefix;
+}
+
+function getEconomyConfig() {
+  const economy = getGlobalSettings().economy || {};
+  const minimum = Number.isFinite(Number(economy.minimum)) ? Math.max(0, Math.floor(Number(economy.minimum))) : 0;
+  const maximum = Number.isFinite(Number(economy.maximum)) ? Math.max(minimum, Math.floor(Number(economy.maximum))) : 100;
+
+  return { minimum, maximum };
+}
+
+function setEconomyConfig(minimum, maximum) {
+  const normalizedMinimum = Math.max(0, Math.floor(Number(minimum)));
+  const normalizedMaximum = Math.max(normalizedMinimum, Math.floor(Number(maximum)));
+
+  return setGuildSettings('global', {
+    economy: {
+      minimum: normalizedMinimum,
+      maximum: normalizedMaximum,
+    },
+  }).economy;
 }
 
 module.exports = {
@@ -94,5 +142,10 @@ module.exports = {
   setWelcomeChannel,
   getBotPrefix,
   setBotPrefix,
+  getGlobalSettings,
+  getGlobalPrefix,
+  setGlobalPrefix,
+  getEconomyConfig,
+  setEconomyConfig,
   normalizeChannelValue,
 };

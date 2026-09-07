@@ -3,6 +3,7 @@ const { Client, GatewayIntentBits, EmbedBuilder, ActivityType } = require('disco
 const { acquireBotLock, releaseBotLock, getPrefix } = require('./src/utils/botUtils');
 const { getWelcomeChannel, normalizeChannelValue } = require('./src/services/database');
 const { commandsByName, slashCommands } = require('./src/commands');
+const marriageCommand = require('./src/commands/casamento');
 const { DISCORD_TOKEN, STARTUP_CHANNEL_ID, STATUS_IMAGE_URL } = require('./src/config');
 const { incrementCommand, incrementMessages, recordUniqueUser } = require('./src/services/logging');
 
@@ -130,6 +131,13 @@ client.on('messageCreate', async (message) => {
 
 // O registro compartilhado também encaminha cada slash command ao próprio arquivo.
 client.on('interactionCreate', async (interaction) => {
+  if (marriageCommand.isMarriageButton(interaction)) {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await marriageCommand.executeButton({ interaction });
+    return;
+  }
+
   if (!interaction.isChatInputCommand()) return;
 
   await interaction.deferReply();

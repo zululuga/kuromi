@@ -61,6 +61,7 @@ e:/botMelody/
 │   ├── config.js             # Carrega variáveis do .env e constantes
 │   ├── registerSlashCommands.js # Registra os comandos na API do Discord
 │   ├── commands/
+│   │   ├── commandNames.js   # Nomes oficiais de todos os comandos
 │   │   ├── index.js          # Registro único usado pelo bot e pelos slash commands
 │   │   ├── commandHelpers.js # Construtores de embeds (help, prefix status)
 │   │   ├── ping.js           # Comando ping
@@ -94,13 +95,17 @@ e:/botMelody/
 
 | Comando | Descrição | Exemplo com Prefixo |
 |---|---|---|
-| `/ping` | Verifica a resposta do bot | `!ping` |
-| `/status` | Mostra status online e informações | `!status` |
-| `/help` | Exibe a lista de comandos | `!help` |
-| `/prefix` | Altera o prefixo do bot | `!prefix ?` |
-| `/setwelcome` | Define o canal de boas-vindas | `!setwelcome #entrada` |
-| `/sixseven` | Envia a imagem do sixseven | `!sixseven` |
-| `/ship` | Sorteia dois membros e calcula a porcentagem de amor | `!ship` |
+| `/ping` | Verifica a resposta do bot | `ku!ping` |
+| `/status` | Mostra status online e informações | `ku!status` |
+| `/ajuda` | Exibe a lista de comandos | `ku!ajuda` |
+| `/prefixo` | Altera o prefixo do bot | `ku!prefixo ku?` |
+| `/boasvindas` | Define o canal de boas-vindas | `ku!boasvindas #entrada` |
+| `/sixseven` | Envia a imagem do sixseven | `ku!sixseven` |
+| `/casal` | Sorteia dois membros e calcula a porcentagem de amor | `ku!casal` |
+| `/diario` | Resgata Moedinhas uma vez a cada 24 horas | `ku!diario` |
+| `/carteira` | Exibe seu saldo de Moedinhas | `ku!carteira` |
+| `/ranking` | Exibe o ranking de Moedinhas | `ku!ranking` |
+| `/configeconomia` | Configura o mínimo e máximo do diário (administradores) | `ku!configeconomia 0 100` |
 
 ---
 

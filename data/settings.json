@@ -9,7 +9,8 @@
     "welcomeChannelId": "333333333333333333"
   },
   "global": {
-    "welcomeChannelId": "1461937203214024891"
+    "welcomeChannelId": "1461937203214024891",
+    "prefix": "ku!"
   },
   "1453890868980482090": {
     "welcomeChannelId": "1453890870288973825"

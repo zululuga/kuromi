@@ -7,7 +7,7 @@ const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
 (async () => {
   try {
     console.log('Registrando slash commands...');
-    await rest.put(Routes.applicationCommands(DISCORD_CLIENT_ID), { body: commands });
+    await rest.put(Routes.applicationCommands(DISCORD_CLIENT_ID), { body: slashCommands });
     console.log('Slash commands registrados com sucesso!');
   } catch (error) {
     console.error('Erro ao registrar slash commands:', error);

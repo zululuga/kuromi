@@ -1,11 +1,13 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { buildPrefixStatusEmbed } = require('./commandHelpers');
 const { getPrefix, setPrefix } = require('../utils/botUtils');
+const { PREFIX } = require('./commandNames');
 
 module.exports = {
-  name: 'prefix',
+  name: PREFIX,
+  aliases: ['prefix'],
   data: new SlashCommandBuilder()
-    .setName('prefix')
+    .setName(PREFIX)
     .setDescription('Altera o prefixo do bot para outro valor.')
     .addStringOption((option) =>
       option.setName('valor').setDescription('Novo prefixo do bot').setRequired(false)

@@ -1,9 +1,10 @@
 const { SlashCommandBuilder } = require('discord.js');
+const { PING } = require('./commandNames');
 
 module.exports = {
-  name: 'ping',
+  name: PING,
   data: new SlashCommandBuilder()
-    .setName('ping')
+    .setName(PING)
     .setDescription('Responde com pong para confirmar que o bot está vivo.'),
   async executePrefix({ message }) {
     await message.reply('pong! 🏓');

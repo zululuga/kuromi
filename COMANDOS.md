@@ -12,44 +12,65 @@ Acesse em: **http://localhost:3000**
 
 ---
 
-## ⚡ Comandos com Prefixo (Padrão: `!`)
+## ⚡ Comandos com Prefixo (Padrão: `ku!`)
 
 Use qualquer um desses comandos digitando a mensagem no Discord:
 
-### `!ping`
+### `ku!ping`
 Responde com "pong!" para confirmar que o bot está online.
 ```
-Uso: !ping
+Uso: ku!ping
 Resposta: pong! 🏓
 ```
 
-### `!status`
+### `ku!status`
 Mostra o status do bot e informações do servidor.
 ```
-Uso: !status
+Uso: ku!status
 Resposta: Embed com status online
 ```
 
-### `!help`
+### `ku!ajuda`
 Lista todos os comandos e funções disponíveis.
 ```
-Uso: !help
+Uso: ku!ajuda [pagina]
 Resposta: Embed com lista de comandos
 ```
 
-### `!prefix [novo]`
+A ajuda exibe até 10 comandos por página. Use `ku!ajuda 1` ou `/ajuda pagina:1` para escolher a página.
+
+### `ku!prefixo [novo]`
 Altera o prefixo do bot.
 ```
-Uso: !prefix ?
-Resposta: Prefixo alterado para ?
-Depois use: ?ping, ?status, etc.
+Uso: ku!prefixo ku?
+Resposta: Prefixo alterado para ku?
+Depois use: ku?ping, ku?status, etc.
 ```
 
-### `!setwelcome #canal`
+### `ku!boasvindas #canal`
 Define o canal onde a mensagem de boas-vindas será enviada.
 ```
-Uso: !setwelcome #bem-vindos
+Uso: ku!boasvindas #bem-vindos
 Resposta: Canal de boas-vindas configurado para #bem-vindos
+```
+
+### `ku!diario`
+Resgata uma quantidade aleatória de Moedinhas. O resgate pode ser feito uma vez a cada 24 horas.
+
+### `ku!carteira [@usuário]`
+Exibe todos os saldos e a colocação de um usuário. As moedas exibidas são compartilhadas com o perfil.
+
+### `ku!perfil [@usuário]`
+Exibe o cônjuge, todos os saldos e a colocação de um usuário.
+
+### `ku!casamento @usuário`
+Solicita uma cerimônia de casamento por 1000 Moedinhas. O usuário escolhido deve aceitar ou recusar o pedido.
+
+### `ku!ranking`
+Exibe os usuários com mais Moedinhas e a sua colocação.
+
+### `ku!configeconomia <mínimo> <máximo>`
+Configura a faixa do comando `diario`. Disponível para administradores.
 ```
 
 ---
@@ -72,27 +93,45 @@ Uso: /status
 Resposta: Embed com status online
 ```
 
-### `/help`
+### `/ajuda`
 Lista todos os comandos e funções disponíveis.
 ```
-Uso: /help
+Uso: /ajuda [pagina]
 Resposta: Embed com lista de comandos
 ```
 
-### `/prefix [valor]`
+### `/prefixo [valor]`
 Altera o prefixo do bot.
 ```
-Uso: /prefix ?
-Resposta: Prefixo alterado para ?
-Depois use: ?ping, ?status, etc.
+Uso: /prefixo ku?
+Resposta: Prefixo alterado para ku?
+Depois use: ku?ping, ku?status, etc.
 ```
 
-### `/setwelcome #canal`
+### `/boasvindas #canal`
 Define o canal onde a mensagem de boas-vindas será enviada.
 ```
-Uso: /setwelcome #bem-vindos
+Uso: /boasvindas #bem-vindos
 Resposta: Canal de boas-vindas configurado para #bem-vindos
 ```
+
+### `/diario`
+Resgata uma quantidade aleatória de Moedinhas uma vez a cada 24 horas.
+
+### `/carteira [usuário]`
+Exibe todos os saldos e a colocação de um usuário. As moedas exibidas são compartilhadas com o perfil.
+
+### `/perfil [usuário]`
+Exibe o cônjuge, todos os saldos e a colocação de um usuário.
+
+### `/casamento usuario:@usuário`
+Solicita uma cerimônia de casamento por 1000 Moedinhas. O usuário escolhido deve aceitar ou recusar o pedido.
+
+### `/ranking`
+Exibe o ranking de Moedinhas.
+
+### `/configeconomia`
+Configura os valores mínimo e máximo do `diario`. Disponível para administradores.
 
 ---
 
@@ -110,7 +149,10 @@ Resposta: Canal de boas-vindas configurado para #bem-vindos
 ## 📋 Configurações Disponíveis no Painel
 
 ### Prefixo
-Altere o prefixo do bot na seção de configuração (padrão: `!`)
+Altere o prefixo do bot na seção de configuração (padrão: `ku!`). O valor fica salvo em `data/settings.json`.
+
+### Economia
+O intervalo do `daily` também fica salvo em `data/settings.json`. Os saldos e os horários do último resgate ficam em `data/economy.json`.
 
 ### Canal de Boas-vindas
 Configure o canal para receber mensagens de boas-vindas. Aceita:
@@ -123,7 +165,7 @@ Configure o canal para receber mensagens de boas-vindas. Aceita:
 ## 🚀 Dicas
 
 - Use slash commands (`/`) para uma experiência mais moderna
-- Use comandos com prefixo (`!`) se preferir, ou se o bot tiver problemas com slash commands
+- Use comandos com prefixo (`ku!`) se preferir, ou se o bot tiver problemas com slash commands
 - O prefixo é global, afeta todos os servidores
 - O canal de boas-vindas é configurado por servidor
 

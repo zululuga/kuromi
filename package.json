@@ -9,7 +9,7 @@
     "web": "node server.js",
     "dev": "node server.js",
     "register": "node src/registerSlashCommands.js",
-    "test": "node tests/botUtils.test.js"
+    "test": "node tests/botUtils.test.js && node tests/economy.test.js"
   },
   "keywords": [
     "discord",

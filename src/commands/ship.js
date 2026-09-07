@@ -1,4 +1,5 @@
 const { EmbedBuilder, SlashCommandBuilder } = require('discord.js');
+const { SHIP } = require('./commandNames');
 
 
 
@@ -115,9 +116,10 @@ async function runShipInteraction(interaction) {
 }
 
 module.exports = {
-  name: 'ship',
+  name: SHIP,
+  aliases: ['ship'],
   data: new SlashCommandBuilder()
-    .setName('ship')
+    .setName(SHIP)
     .setDescription('Sorteia dois membros aleatórios e calcula a porcentagem de amor entre eles.'),
   runShipPrefix,
   runShipInteraction,

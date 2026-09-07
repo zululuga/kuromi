@@ -1,10 +1,12 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { setWelcomeChannel } = require('../services/database');
+const { WELCOME } = require('./commandNames');
 
 module.exports = {
-  name: 'setwelcome',
+  name: WELCOME,
+  aliases: ['setwelcome'],
   data: new SlashCommandBuilder()
-    .setName('setwelcome')
+    .setName(WELCOME)
     .setDescription('Define o canal onde a mensagem de boas-vindas será enviada.')
     .addChannelOption((option) =>
       option
@@ -17,7 +19,7 @@ module.exports = {
     const channel = message.mentions.channels.first() || message.guild?.channels.cache.get(args[0]);
 
     if (!channel || !channel.isTextBased()) {
-      await message.reply(`❌ Você precisa indicar um canal de texto válido. Use: ${prefix}setwelcome #canal`);
+      await message.reply(`❌ Você precisa indicar um canal de texto válido. Use: ${prefix}boasvindas #canal`);
       return;
     }
 

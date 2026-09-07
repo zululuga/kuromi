@@ -1,8 +1,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const { getGlobalPrefix, setGlobalPrefix } = require('../services/database');
 
 const lockFilePath = path.join(__dirname, '..', '..', '.botmelody.lock');
-const prefixFilePath = path.join(__dirname, '..', '..', 'prefix.json');
 
 function isProcessAlive(pid) {
   if (!Number.isInteger(pid) || pid <= 0) {
@@ -85,50 +85,41 @@ function writeJsonFile(filePath, value) {
 }
 
 function getPrefix() {
-  const storedPrefix = readJsonFile(prefixFilePath, { prefix: '!' }).prefix;
-  return typeof storedPrefix === 'string' && storedPrefix.trim().length > 0 ? storedPrefix.trim() : '!';
+  return getGlobalPrefix();
 }
 
 function setPrefix(prefix) {
-  const normalizedPrefix = typeof prefix === 'string' ? prefix.trim() : '!';
-  const safePrefix = normalizedPrefix.length > 0 ? normalizedPrefix : '!';
+  const normalizedPrefix = typeof prefix === 'string' ? prefix.trim() : 'ku!';
+  const safePrefix = normalizedPrefix.length > 0 ? normalizedPrefix : 'ku!';
 
-  writeJsonFile(prefixFilePath, { prefix: safePrefix });
-  return safePrefix;
+  return setGlobalPrefix(safePrefix);
 }
 
 function getCommandList() {
   const prefix = getPrefix();
   const { commands } = require('../commands');
 
-  return commands.flatMap((command) => {
+  return commands.map((command) => {
     const slashCommand = command.data.toJSON();
     const commandInfo = {
       name: `/${command.name}`,
       description: slashCommand.description,
-      usage: `/${command.name}`,
+      usage: `Slash: /${command.name}\nPrefixo: ${prefix}${command.name}`,
     };
 
-    if (command.name === 'prefix') {
-      commandInfo.usage = '/prefix [valor] (ex.: /prefix ?)';
+    if (command.name === 'prefixo') {
+      commandInfo.usage = `Slash: /prefixo [valor]\nPrefixo: ${prefix}prefixo ku?`;
     }
 
-    if (command.name === 'setwelcome') {
-      commandInfo.usage = '/setwelcome #canal';
+    if (command.name === 'boasvindas') {
+      commandInfo.usage = `Slash: /boasvindas #canal\nPrefixo: ${prefix}boasvindas #canal`;
     }
 
-    if (command.name === 'sixseven' || command.name === 'ship') {
-      return [
-        commandInfo,
-        {
-          name: `${prefix}${command.name}`,
-          description: slashCommand.description,
-          usage: `${prefix}${command.name}`,
-        },
-      ];
+    if (command.name === 'ajuda') {
+      commandInfo.usage = `Slash: /ajuda [pagina]\nPrefixo: ${prefix}ajuda [pagina]`;
     }
 
-    return [commandInfo];
+    return commandInfo;
   });
 }
 
