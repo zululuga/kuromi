@@ -2,7 +2,6 @@ const commands = [
   require('./ping'),
   require('./status'),
   require('./help'),
-  require('./prefix'),
   require('./setwelcome'),
   require('./sixseven'),
   require('./ship'),

@@ -109,14 +109,6 @@ function setWelcomeChannel(guildId, channelId) {
   return setGuildSettings(guildId, { welcomeChannelId: normalized }).welcomeChannelId;
 }
 
-function getBotPrefix(guildId) {
-  return getGuildSettings(guildId).prefix || 'ku!';
-}
-
-function setBotPrefix(guildId, prefix) {
-  return setGuildSettings(guildId, { prefix }).prefix;
-}
-
 function getGlobalSettings() {
   return getGuildSettings('global');
 }
@@ -169,8 +161,6 @@ module.exports = {
   setGuildSettings,
   getWelcomeChannel,
   setWelcomeChannel,
-  getBotPrefix,
-  setBotPrefix,
   getGlobalSettings,
   getGlobalPrefix,
   setGlobalPrefix,

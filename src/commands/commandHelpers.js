@@ -22,19 +22,6 @@ function buildHelpEmbed(requestedPage = 1) {
     .setTimestamp();
 }
 
-function buildPrefixStatusEmbed(authorTag, newPrefix) {
-  return new EmbedBuilder()
-    .setColor('#f59e0b')
-    .setTitle('🔧 Prefixo da Kuromi')
-    .setDescription(`O prefixo atual foi alterado para: \`${newPrefix}\``)
-    .addFields(
-      { name: 'Comando de exemplo', value: `\`${newPrefix}ajuda\`` },
-      { name: 'Solicitado por', value: authorTag }
-    )
-    .setTimestamp();
-}
-
 module.exports = {
   buildHelpEmbed,
-  buildPrefixStatusEmbed,
 };

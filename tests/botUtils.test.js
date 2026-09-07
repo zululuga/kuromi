@@ -7,7 +7,6 @@ const {
   releaseBotLock,
   getCommandList,
   getPrefix,
-  setPrefix,
 } = require('../src/utils/botUtils');
 const { getWelcomeChannel, setWelcomeChannel } = require('../src/services/database');
 
@@ -38,10 +37,6 @@ try {
   const defaultPrefix = getPrefix();
   assert.equal(defaultPrefix, 'ku!', 'O prefixo padrão deve ser ku!.');
 
-  const changed = setPrefix('?');
-  assert.equal(changed, '?', 'O prefixo alterado deve ser retornado.');
-  assert.equal(getPrefix(), '?', 'O prefixo deve ser salvo e lido corretamente.');
-
   const configuredChannel = setWelcomeChannel('guild-123', '123456789');
   assert.equal(configuredChannel, '123456789', 'O canal de boas-vindas deve ser salvo corretamente.');
   assert.equal(getWelcomeChannel('guild-123'), '123456789', 'O canal configurado deve ser lido do banco.');
@@ -57,7 +52,7 @@ try {
   releaseBotLock();
   assert.equal(fs.existsSync(lockFile), false, 'O lock deve ser removido ao encerrar.');
 
-  console.log('Verificação do lock, prefixo, banco e ajuda: OK');
+  console.log('Verificação do lock, banco, prefixo padrão e ajuda: OK');
 } finally {
   if (fs.existsSync(lockFile)) {
     fs.unlinkSync(lockFile);

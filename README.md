@@ -66,11 +66,10 @@ e:/botMelody/
 │   ├── commands/
 │   │   ├── commandNames.js   # Nomes oficiais de todos os comandos
 │   │   ├── index.js          # Registro único usado pelo bot e pelos slash commands
-│   │   ├── commandHelpers.js # Construtores de embeds (help, prefix status)
+│   │   ├── commandHelpers.js # Construtores de embeds de ajuda
 │   │   ├── ping.js           # Comando ping
 │   │   ├── status.js         # Status e presença informativa
 │   │   ├── help.js           # Lista de comandos
-│   │   ├── prefix.js         # Alteração do prefixo
 │   │   ├── setwelcome.js     # Configuração de boas-vindas
 │   │   ├── sixseven.js       # Imagem sixseven
 │   │   └── ship.js           # Sorteio de casal
@@ -89,7 +88,7 @@ e:/botMelody/
 │   └── stats.json            # Contadores de mensagens, comandos e usuários
 │
 └── tests/                    # Suíte de testes unitários
-    └── botUtils.test.js      # Testes de lock, banco de dados e prefixo
+    └── botUtils.test.js      # Testes de lock, banco de dados e ajuda
 ```
 
 ---
@@ -101,7 +100,6 @@ e:/botMelody/
 | `/ping` | Verifica a resposta do bot | `ku!ping` |
 | `/status` | Mostra status online e informações | `ku!status` |
 | `/ajuda` | Exibe a lista de comandos | `ku!ajuda` |
-| `/prefixo` | Altera o prefixo do bot | `ku!prefixo ku?` |
 | `/boasvindas` | Define o canal de boas-vindas | `ku!boasvindas #entrada` |
 | `/sixseven` | Envia a imagem do sixseven | `ku!sixseven` |
 | `/casal` | Sorteia dois membros e calcula a porcentagem de amor | `ku!casal` |

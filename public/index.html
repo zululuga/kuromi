@@ -770,14 +770,6 @@
         <div class="content-card">
           <form id="configForm">
             <div class="form-group">
-              <label for="prefixInput">
-                Prefixo do Bot
-                <span class="help-icon" data-help="Símbolo usado antes de comandos (ex: !ping, !help)">?</span>
-              </label>
-              <input id="prefixInput" type="text" value="!" maxlength="3" />
-            </div>
-
-            <div class="form-group">
               <label for="channelInput">
                 Canal de Boas-vindas
                 <span class="help-icon" data-help="Onde mensagens de boas-vindas serão enviadas">?</span>
@@ -792,11 +784,10 @@
         <div class="section-title">Comandos Disponíveis</div>
         
         <div class="cmd-info">
-          <strong>📝 Comandos com Prefixo:</strong><br>
+          <strong>📝 Comandos:</strong><br>
           <code>!ping</code> — Verifica se o bot está respondendo<br>
           <code>!status</code> — Mostra o estado atual do bot<br>
           <code>!help</code> — Lista todos os comandos<br>
-          <code>!prefix [novo]</code> — Muda o prefixo do bot<br>
           <code>!setwelcome #canal</code> — Define canal de boas-vindas
         </div>
 
@@ -805,7 +796,6 @@
           <code>/ping</code> — Verifica a resposta do bot<br>
           <code>/status</code> — Mostra o estado do bot<br>
           <code>/help</code> — Lista de comandos interativos<br>
-          <code>/prefix [novo]</code> — Altera o prefixo<br>
           <code>/setwelcome #canal</code> — Configura boas-vindas
         </div>
 
@@ -825,7 +815,6 @@
       const usersValue = document.getElementById('usersValue');
       const logsBox = document.getElementById('logsBox');
       const persistentLogs = document.getElementById('persistentLogs');
-      const prefixInput = document.getElementById('prefixInput');
       const channelInput = document.getElementById('channelInput');
 
       let currentStatus = { running: false };
@@ -898,7 +887,6 @@
 
       async function loadConfig() {
         const data = await fetchJson('/api/config');
-        prefixInput.value = data.prefix || '!';
         channelInput.value = data.welcomeChannelId || '';
       }
 
@@ -965,13 +953,7 @@
 
       document.getElementById('configForm').addEventListener('submit', async (event) => {
         event.preventDefault();
-        const prefix = prefixInput.value.trim() || '!';
         const channelId = channelInput.value.trim();
-
-        await fetchJson('/api/config/prefix', {
-          method: 'POST',
-          body: JSON.stringify({ value: prefix }),
-        });
 
         await fetchJson('/api/config/welcome-channel', {
           method: 'POST',

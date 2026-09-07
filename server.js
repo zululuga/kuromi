@@ -2,7 +2,6 @@ const express = require('express');
 const path = require('node:path');
 const { spawn, execFile } = require('node:child_process');
 const { setWelcomeChannel, getWelcomeChannel, normalizeChannelValue, getEconomyConfig, setEconomyConfig } = require('./src/services/database');
-const { getPrefix, setPrefix } = require('./src/utils/botUtils');
 const { addLog: savePersistentLog, getLogs, getStats, updateStats, resetStats, clearLogs } = require('./src/services/logging');
 
 const app = express();
@@ -34,7 +33,6 @@ function getBotStatus() {
     pid: botProcess ? botProcess.pid : null,
     logs: botLogs.slice(-50),
     welcomeChannelId: getWelcomeChannel('global') || null,
-    prefix: getPrefix(),
     uptime,
     stats,
   };
@@ -155,7 +153,6 @@ app.post('/api/register', async (req, res) => {
 
 app.get('/api/config', (req, res) => {
   res.json({
-    prefix: getPrefix(),
     welcomeChannelId: getWelcomeChannel('global') || null,
     economy: getEconomyConfig(),
   });
@@ -166,12 +163,6 @@ app.post('/api/config/welcome-channel', (req, res) => {
   const normalized = String(channelId || '').trim();
   const result = setWelcomeChannel('global', normalized);
   res.json({ success: true, welcomeChannelId: result });
-});
-
-app.post('/api/config/prefix', (req, res) => {
-  const { value } = req.body || {};
-  const prefix = require('./src/utils/botUtils').setPrefix(value || 'ku!');
-  res.json({ success: true, prefix });
 });
 
 app.post('/api/config/economy', (req, res) => {

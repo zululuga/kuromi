@@ -88,13 +88,6 @@ function getPrefix() {
   return getGlobalPrefix();
 }
 
-function setPrefix(prefix) {
-  const normalizedPrefix = typeof prefix === 'string' ? prefix.trim() : 'ku!';
-  const safePrefix = normalizedPrefix.length > 0 ? normalizedPrefix : 'ku!';
-
-  return setGlobalPrefix(safePrefix);
-}
-
 function getCommandList() {
   const prefix = getPrefix();
   const { commands } = require('../commands');
@@ -106,10 +99,6 @@ function getCommandList() {
       description: slashCommand.description,
       usage: `Slash: /${command.name}\nPrefixo: ${prefix}${command.name}`,
     };
-
-    if (command.name === 'prefixo') {
-      commandInfo.usage = `Slash: /prefixo [valor]\nPrefixo: ${prefix}prefixo ku?`;
-    }
 
     if (command.name === 'boasvindas') {
       commandInfo.usage = `Slash: /boasvindas #canal\nPrefixo: ${prefix}boasvindas #canal`;
@@ -128,5 +117,4 @@ module.exports = {
   releaseBotLock,
   getCommandList,
   getPrefix,
-  setPrefix,
 };

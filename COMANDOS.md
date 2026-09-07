@@ -39,14 +39,6 @@ Resposta: Embed com lista de comandos
 
 A ajuda exibe até 10 comandos por página. Use `ku!ajuda 1` ou `/ajuda pagina:1` para escolher a página.
 
-### `ku!prefixo [novo]`
-Altera o prefixo do bot.
-```
-Uso: ku!prefixo ku?
-Resposta: Prefixo alterado para ku?
-Depois use: ku?ping, ku?status, etc.
-```
-
 ### `ku!boasvindas #canal`
 Define o canal onde a mensagem de boas-vindas será enviada.
 ```
@@ -115,14 +107,6 @@ Uso: /ajuda [pagina]
 Resposta: Embed com lista de comandos
 ```
 
-### `/prefixo [valor]`
-Altera o prefixo do bot.
-```
-Uso: /prefixo ku?
-Resposta: Prefixo alterado para ku?
-Depois use: ku?ping, ku?status, etc.
-```
-
 ### `/boasvindas #canal`
 Define o canal onde a mensagem de boas-vindas será enviada.
 ```
@@ -189,9 +173,6 @@ Envia seu pet para uma exploração a cada 12 horas. A recompensa usa o valor do
 ---
 
 ## 📋 Configurações Disponíveis no Painel
-
-### Prefixo
-Altere o prefixo do bot na seção de configuração (padrão: `ku!`). O valor fica salvo em `data/settings.json`.
 
 ### Economia
 O intervalo do `daily` também fica salvo em `data/settings.json`. Os saldos e os horários do último resgate ficam em `data/economy.json`.
