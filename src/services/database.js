@@ -3,7 +3,9 @@ const path = require('node:path');
 
 const dataDir = path.join(__dirname, '..', '..', 'data');
 const settingsFile = path.join(dataDir, 'settings.json');
+const settingsBackupFile = `${settingsFile}.bak`;
 const legacyPrefixFile = path.join(__dirname, '..', '..', 'prefix.json');
+let settingsCache;
 
 function ensureStorage() {
   if (!fs.existsSync(dataDir)) {
@@ -18,17 +20,44 @@ function ensureStorage() {
 function readSettings() {
   ensureStorage();
 
+  if (settingsCache) {
+    return settingsCache;
+  }
+
   try {
     const raw = fs.readFileSync(settingsFile, 'utf8');
-    return raw ? JSON.parse(raw) : {};
+    settingsCache = raw ? JSON.parse(raw) : {};
   } catch (error) {
-    return {};
+    try {
+      const backup = fs.readFileSync(settingsBackupFile, 'utf8');
+      settingsCache = backup ? JSON.parse(backup) : {};
+    } catch (backupError) {
+      settingsCache = {};
+    }
   }
+
+  return settingsCache;
 }
 
 function writeSettings(settings) {
   ensureStorage();
-  fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2), 'utf8');
+  const temporaryFile = `${settingsFile}.${process.pid}.${Date.now()}.tmp`;
+  const serialized = JSON.stringify(settings, null, 2);
+
+  fs.writeFileSync(temporaryFile, serialized, 'utf8');
+  try {
+    if (fs.existsSync(settingsFile)) {
+      fs.copyFileSync(settingsFile, settingsBackupFile);
+    }
+    fs.renameSync(temporaryFile, settingsFile);
+  } catch (error) {
+    if (fs.existsSync(temporaryFile)) {
+      fs.unlinkSync(temporaryFile);
+    }
+    throw error;
+  }
+
+  settingsCache = settings;
 }
 
 function getGuildSettings(guildId) {
