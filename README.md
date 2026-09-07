@@ -18,6 +18,9 @@ ou
 npm run dev
 ```
 
+---
+
+
 Em seguida, acesse no navegador: **[http://localhost:3000](http://localhost:3000)**
 
 ---
@@ -116,6 +119,64 @@ Para garantir que o lock de instância única e os serviços de banco de dados f
 ```bash
 npm test
 ```
+
+---
+
+## Atualizando a VM de Producao
+
+A VM usa o projeto em `~/kuromi`, com o processo `kuromi` gerenciado pelo PM2. O fluxo completo esta em [VM-ATUALIZACAO.md](VM-ATUALIZACAO.md).
+
+### 1. Testar e publicar o commit
+
+No PowerShell, dentro de `E:\botMelody`:
+
+```powershell
+npm test
+git add <arquivos-alterados>
+git commit -m "Descreve a alteracao"
+git push origin main
+```
+
+O commit e o `push` devem acontecer antes do deploy. O script da VM nao cria commits; ele apenas baixa uma versao ja publicada no Git.
+
+### 2. Executar o deploy na VM
+
+```powershell
+ssh kuromi
+```
+
+Na VM:
+
+```bash
+cd ~/kuromi
+chmod +x deploy.sh
+./deploy.sh
+```
+
+O script cria um backup, bloqueia atualizacoes que alterariam `data/`, executa `git pull --ff-only`, instala dependencias e reinicia apenas o processo `kuromi`.
+
+### 3. Validar o processo
+
+```bash
+pm2 status
+pm2 logs kuromi --lines 50
+```
+
+Confirme no Discord que o bot responde e que os dados existentes continuam preservados.
+
+### Dados que nunca devem ser enviados
+
+Nao copie nem sobrescreva na VM:
+
+- `.env`
+- `data/settings.json`
+- `data/economy.json`
+- `data/marriages.json`
+- `data/logs.json`
+- `data/stats.json`
+- `prefix.json`, se existir
+
+O deploy manual ou por `scp` deve enviar apenas codigo. Nunca use uma copia recursiva da pasta inteira do projeto, pois isso pode substituir o banco de producao.
 
 ---
 
