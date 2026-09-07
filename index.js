@@ -1,5 +1,13 @@
 const readline = require('node:readline');
-const { Client, GatewayIntentBits, EmbedBuilder, ActivityType } = require('discord.js');
+const {
+  Client,
+  GatewayIntentBits,
+  EmbedBuilder,
+  ActivityType,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} = require('discord.js');
 const { acquireBotLock, releaseBotLock, getPrefix } = require('./src/utils/botUtils');
 const { getWelcomeChannel, normalizeChannelValue } = require('./src/services/database');
 const { commandsByName, slashCommands } = require('./src/commands');
@@ -8,6 +16,9 @@ const {
   DISCORD_TOKEN,
   STARTUP_CHANNEL_ID,
   STATUS_IMAGE_URL,
+  BUMP_GUIDE_CHANNEL_ID,
+  BUMP_GUIDE_INTERVAL_MS,
+  SERVER_REVIEW_URL,
   WELCOME_ROLE_ID,
   RULES_CHANNEL_ID,
   GUIDES_CHANNEL_ID,
@@ -66,6 +77,93 @@ async function sendStartupAnnouncement() {
   });
 }
 
+function buildBumpGuideEmbed() {
+  return new EmbedBuilder()
+    .setColor('#E60067')
+    .setTitle('🚀 Como ajudar a Cringelândia')
+    .setDescription(
+      'Cada interação aumenta a visibilidade do servidor e ajuda novas pessoas a encontrarem a nossa comunidade. Escolha uma ou mais formas de apoiar:'
+    )
+    .addFields(
+      {
+        name: '📌 DISBOARD — `/bump`',
+        value: 'Use o comando **/bump** quando o DISBOARD permitir. Depois, aguarde o cooldown indicado pelo bot para fazer outro bump.',
+      },
+      {
+        name: '🐢 Canudinho — `/bump`',
+        value: 'O Canudinho também pode registrar o bump do servidor. Execute **/bump** e siga a confirmação enviada pelo bot.',
+      },
+      {
+        name: '💜 Discadia — `/bump`',
+        value: 'No Discadia, use **/bump** quando estiver disponível. Cada bump ajuda a Cringelândia a subir na lista pública de servidores.',
+      },
+      {
+        name: '🗳️ Top.gg — votar',
+        value: 'Abra o link de voto, confirme seu voto e ajude o servidor a ganhar alcance. Normalmente, o voto pode ser repetido após o período indicado pela plataforma.',
+      },
+      {
+        name: '⭐ Review no DISBOARD',
+        value: 'Uma avaliação sincera também ajuda muito: conte como tem sido sua experiência na Cringelândia.',
+      }
+    )
+    .setFooter({ text: 'Kuromiga • sua amiga cringe • Obrigada por fortalecer a comunidade!' })
+    .setTimestamp();
+}
+
+function buildBumpGuideComponents() {
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setLabel('Deixar review')
+        .setStyle(ButtonStyle.Link)
+        .setURL(SERVER_REVIEW_URL),
+      new ButtonBuilder()
+        .setLabel('Abrir DISBOARD')
+        .setStyle(ButtonStyle.Link)
+        .setURL('https://disboard.org/pt-br/server/1453890868980482090')
+    ),
+  ];
+}
+
+async function postBumpGuide() {
+  const channel = await client.channels.fetch(BUMP_GUIDE_CHANNEL_ID).catch(() => null);
+
+  if (!channel || !channel.isTextBased()) {
+    console.warn(`Canal do guia de bump não encontrado ou inválido: ${BUMP_GUIDE_CHANNEL_ID}`);
+    return;
+  }
+
+  const recentMessages = await channel.messages.fetch({ limit: 50 }).catch(() => null);
+  const lastGuide = recentMessages?.find(
+    (message) =>
+      message.author.id === client.user.id &&
+      message.embeds.some((embed) => embed.title === '🚀 Como ajudar a Cringelândia')
+  );
+
+  if (lastGuide && Date.now() - lastGuide.createdTimestamp < BUMP_GUIDE_INTERVAL_MS) {
+    return;
+  }
+
+  await channel.send({
+    embeds: [buildBumpGuideEmbed()],
+    components: buildBumpGuideComponents(),
+    allowedMentions: { parse: [] },
+  });
+  console.log('Guia de bump publicado com sucesso.');
+}
+
+function startBumpGuideScheduler() {
+  postBumpGuide().catch((error) => {
+    console.error('Erro ao publicar o guia de bump:', error);
+  });
+
+  setInterval(() => {
+    postBumpGuide().catch((error) => {
+      console.error('Erro ao publicar o guia de bump:', error);
+    });
+  }, BUMP_GUIDE_INTERVAL_MS);
+}
+
 async function handleCringePhrase(message) {
   if (!/\bviadinho\s+fofinho\b/i.test(message.content)) return false;
 
@@ -84,6 +182,7 @@ client.once('ready', async () => {
   });
 
   await sendStartupAnnouncement();
+  startBumpGuideScheduler();
 });
 
 // Mensagem de boas-vindas ao entrar no servidor.

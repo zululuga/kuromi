@@ -110,6 +110,10 @@ e:/botMelody/
 
 Além dos comandos, a Kuromiga responde a qualquer mensagem que contenha `viadinho fofinho` com uma reação 🏳️‍🌈 e um GIF de Gacha Life.
 
+### Guia de apoio da comunidade
+
+A Kuromiga publica automaticamente, a cada 12 horas, um embed no canal configurado para explicar como ajudar a Cringelândia com bumps no DISBOARD, Canudinho, Discadia, votos no Top.gg e reviews.
+
 ---
 
 ## 🧪 Rodando os Testes
