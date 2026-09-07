@@ -4,8 +4,22 @@ const { acquireBotLock, releaseBotLock, getPrefix } = require('./src/utils/botUt
 const { getWelcomeChannel, normalizeChannelValue } = require('./src/services/database');
 const { commandsByName, slashCommands } = require('./src/commands');
 const marriageCommand = require('./src/commands/casamento');
-const { DISCORD_TOKEN, STARTUP_CHANNEL_ID, STATUS_IMAGE_URL } = require('./src/config');
+const {
+  DISCORD_TOKEN,
+  STARTUP_CHANNEL_ID,
+  STATUS_IMAGE_URL,
+  WELCOME_ROLE_ID,
+  RULES_CHANNEL_ID,
+  GUIDES_CHANNEL_ID,
+  COLORS_CHANNEL_ID,
+} = require('./src/config');
 const { incrementCommand, incrementMessages, recordUniqueUser } = require('./src/services/logging');
+
+const welcomeHeartReactions = ['❤️', '🧡', '💛', '💚', '💙', '💜', '🩷', '🩵', '🖤', '🤍', '🤎'];
+
+function getRandomWelcomeHeart() {
+  return welcomeHeartReactions[Math.floor(Math.random() * welcomeHeartReactions.length)];
+}
 
 // Protege o bot contra duas instâncias rodando ao mesmo tempo.
 const lockAcquired = acquireBotLock();
@@ -87,30 +101,41 @@ client.on('guildMemberAdd', async (member) => {
 
   const welcomeEmbed = new EmbedBuilder()
     .setColor('#8b5cf6')
-    .setTitle('🎉 Bem-vindo(a) ao servidor!')
-    .setDescription(`Olá ${member.user}, seja muito bem-vindo(a) ao **${member.guild.name}**!`)
+    .setTitle('🎉 Uma nova pessoa chegou!')
+    .setDescription(`Que bom ter você aqui, **${member.displayName}**! A Cringelândia fica mais acolhedora com a sua presença.`)
     .addFields(
       {
-        name: '📜 Regras',
-        value: 'Leia as regras e respeite a comunidade antes de interagir.',
+        name: '📜 Comece pelas regras',
+        value: `Consulte <#${RULES_CHANNEL_ID}> para conhecer a casa e manter o ambiente seguro.`,
       },
       {
-        name: '💬 Introdução',
-        value: 'Apresente-se no canal de apresentação e aproveite a comunidade!',
+        name: '🧭 Explore o servidor',
+        value: `Veja vantagens e tutoriais em <#${GUIDES_CHANNEL_ID}>.`,
       },
       {
-        name: '✨ Status',
-        value: `Você é o membro número **${member.guild.memberCount}**.`,
+        name: '🎨 Personalize sua experiência',
+        value: `Confira as cores disponíveis em <#${COLORS_CHANNEL_ID}>.`,
       }
     )
     .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 256 }))
     .setImage('https://cdn.discordapp.com/attachments/1533657882862686218/1541908904487690321/dhj7hfn-842bcc59-b41f-4ef3-888b-dbfc210f4a5c.gif?ex=6a9b2b92&is=6a99da12&hm=7a41318a2f477b04a295a5b209c43de9517cfa47ac6ecf15e351c045aa104714&')
-    .setFooter({ text: 'A Cringelândia agradece sua chegada!' })
+    .setFooter({ text: 'Kuromiga • sua amiga cringe • Acolhimento em primeiro lugar' })
     .setTimestamp();
 
   try {
     if (welcomeChannel) {
-      await welcomeChannel.send({ embeds: [welcomeEmbed] });
+      const welcomeMessage = await welcomeChannel.send({
+        content: `${member} chegou! <@&${WELCOME_ROLE_ID}>, recebam nossa nova pessoa com carinho 💗`,
+        embeds: [welcomeEmbed],
+        allowedMentions: {
+          users: [member.id],
+          roles: [WELCOME_ROLE_ID],
+        },
+      });
+
+      await welcomeMessage.react(getRandomWelcomeHeart()).catch((error) => {
+        console.warn('Não foi possível reagir à mensagem de boas-vindas:', error.message);
+      });
     }
   } catch (error) {
     console.error('Erro ao enviar mensagem de boas-vindas:', error);
