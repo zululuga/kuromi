@@ -44,6 +44,12 @@ try {
   assert.equal(getUserRank('economy-test-user').position, 1, 'O usuário deve aparecer no ranking.');
   assert.equal(getDailyStatus('economy-test-user', Date.parse('2026-01-02T01:00:00.000Z')).available, false);
 
+  fs.writeFileSync(economyFile, JSON.stringify({ 'string-balance': { coins: '150', lastDailyAt: null } }), 'utf8');
+  setEconomyConfig(1, 1);
+  const stringBalanceClaim = claimDaily('string-balance', Date.parse('2026-01-01T00:00:00.000Z'));
+  assert.equal(stringBalanceClaim.balance, 151, 'O diário deve tratar saldos persistidos como números.');
+  assert.equal(getBalance('string-balance'), 151, 'O saldo não deve concatenar a recompensa como texto.');
+
   fs.writeFileSync(economyFile, JSON.stringify({ proposer: { coins: 1200, lastDailyAt: null } }), 'utf8');
   assert.equal(getCurrencyBalances('proposer')[0].label, 'Moedinhas');
   const request = createMarriageRequest('proposer', 'recipient', 'test-guild');

@@ -9,6 +9,11 @@ const CURRENCY_DEFINITIONS = [
   { key: 'coins', label: 'Moedinhas', emoji: '🪙' },
 ];
 
+function normalizeCoins(value) {
+  const coins = Number(value);
+  return Number.isFinite(coins) ? coins : 0;
+}
+
 function readEconomy() {
   const directory = path.dirname(economyFile);
   if (!fs.existsSync(directory)) fs.mkdirSync(directory, { recursive: true });
@@ -30,12 +35,14 @@ function writeEconomy(economy) {
 
 function getUserAccount(userId) {
   const economy = readEconomy();
-  return economy[userId] || { coins: 0, lastDailyAt: null, profession: null, workCount: 0, lastWorkAt: null };
+  const account = economy[userId] || { coins: 0, lastDailyAt: null, profession: null, workCount: 0, lastWorkAt: null };
+  return { ...account, coins: normalizeCoins(account.coins) };
 }
 
 function updateUserAccount(userId, updater) {
   const economy = readEconomy();
   const account = economy[userId] || { coins: 0, lastDailyAt: null, profession: null, workCount: 0, lastWorkAt: null };
+  account.coins = normalizeCoins(account.coins);
   updater(account);
   economy[userId] = account;
   writeEconomy(economy);
@@ -57,6 +64,7 @@ function getCurrencyBalances(userId) {
 function spendCoins(userId, amount) {
   const economy = readEconomy();
   const account = economy[userId] || { coins: 0, lastDailyAt: null };
+  account.coins = normalizeCoins(account.coins);
   if (account.coins < amount) {
     return { spent: false, balance: account.coins };
   }
@@ -70,7 +78,7 @@ function spendCoins(userId, amount) {
 function setUserBalance(userId, amount) {
   const economy = readEconomy();
   const account = economy[userId] || { coins: 0, lastDailyAt: null };
-  account.coins = amount;
+  account.coins = normalizeCoins(amount);
   economy[userId] = account;
   writeEconomy(economy);
   return account;
@@ -153,6 +161,7 @@ function getDailyStatus(userId, now = Date.now()) {
 function claimDaily(userId, now = Date.now()) {
   const economy = readEconomy();
   const account = economy[userId] || { coins: 0, lastDailyAt: null };
+  account.coins = normalizeCoins(account.coins);
   const status = getDailyStatus(userId, now);
 
   if (!status.available) {
