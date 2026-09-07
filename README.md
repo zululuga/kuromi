@@ -61,7 +61,15 @@ e:/botMelody/
 │   ├── config.js             # Carrega variáveis do .env e constantes
 │   ├── registerSlashCommands.js # Registra os comandos na API do Discord
 │   ├── commands/
-│   │   └── commandHelpers.js # Construtores de embeds (help, prefix status)
+│   │   ├── index.js          # Registro único usado pelo bot e pelos slash commands
+│   │   ├── commandHelpers.js # Construtores de embeds (help, prefix status)
+│   │   ├── ping.js           # Comando ping
+│   │   ├── status.js         # Status e presença informativa
+│   │   ├── help.js           # Lista de comandos
+│   │   ├── prefix.js         # Alteração do prefixo
+│   │   ├── setwelcome.js     # Configuração de boas-vindas
+│   │   ├── sixseven.js       # Imagem sixseven
+│   │   └── ship.js           # Sorteio de casal
 │   ├── services/
 │   │   ├── database.js       # Leitura e escrita em data/settings.json
 │   │   └── logging.js        # Gravação de logs e estatísticas de uso
@@ -91,6 +99,8 @@ e:/botMelody/
 | `/help` | Exibe a lista de comandos | `!help` |
 | `/prefix` | Altera o prefixo do bot | `!prefix ?` |
 | `/setwelcome` | Define o canal de boas-vindas | `!setwelcome #entrada` |
+| `/sixseven` | Envia a imagem do sixseven | `!sixseven` |
+| `/ship` | Sorteia dois membros e calcula a porcentagem de amor | `!ship` |
 
 ---
 

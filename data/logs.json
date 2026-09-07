@@ -971,6 +971,70 @@
     {
       "timestamp": "2026-09-01T06:34:02.138Z",
       "message": "Bot encerrado com code=1 signal=none"
+    },
+    {
+      "timestamp": "2026-09-07T01:51:28.493Z",
+      "message": "Painel web do Kuromi iniciado em http://34.173.207.172:3000"
+    },
+    {
+      "timestamp": "2026-09-07T01:51:28.495Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-07T01:51:28.864Z",
+      "message": "Outra instância do Kuromi já está em execução. Encerrando este processo..."
+    },
+    {
+      "timestamp": "2026-09-07T01:51:28.872Z",
+      "message": "Bot encerrado com code=1 signal=none"
+    },
+    {
+      "timestamp": "2026-09-07T01:52:21.277Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-07T01:52:21.654Z",
+      "message": "Outra instância do Kuromi já está em execução. Encerrando este processo..."
+    },
+    {
+      "timestamp": "2026-09-07T01:52:21.663Z",
+      "message": "Bot encerrado com code=1 signal=none"
+    },
+    {
+      "timestamp": "2026-09-07T01:52:40.988Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-07T01:52:41.371Z",
+      "message": "Outra instância do Kuromi já está em execução. Encerrando este processo..."
+    },
+    {
+      "timestamp": "2026-09-07T01:52:41.380Z",
+      "message": "Bot encerrado com code=1 signal=none"
+    },
+    {
+      "timestamp": "2026-09-07T01:55:43.559Z",
+      "message": "Iniciando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-07T01:55:44.973Z",
+      "message": "Kuromi conectado como Kuromi#3749"
+    },
+    {
+      "timestamp": "2026-09-07T01:55:44.977Z",
+      "message": "(node:20472) DeprecationWarning: The ready event has been renamed to clientReady to distinguish it from the gateway READY event and will only emit under that name in v15. Please use clientReady instead."
+    },
+    {
+      "timestamp": "2026-09-07T01:55:44.977Z",
+      "message": "(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "timestamp": "2026-09-07T01:55:48.245Z",
+      "message": "Encerrando bot Kuromi..."
+    },
+    {
+      "timestamp": "2026-09-07T01:55:48.254Z",
+      "message": "Bot encerrado com code=null signal=SIGTERM"
     }
   ]
 }

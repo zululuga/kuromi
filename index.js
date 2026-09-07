@@ -1,10 +1,9 @@
 const readline = require('node:readline');
-const { Client, GatewayIntentBits, EmbedBuilder, ActivityType, SlashCommandBuilder } = require('discord.js');
-const { acquireBotLock, releaseBotLock, getCommandList, getPrefix, setPrefix } = require('./src/utils/botUtils');
-const { getWelcomeChannel, setWelcomeChannel, normalizeChannelValue } = require('./src/services/database');
-const { buildHelpEmbed, buildPrefixStatusEmbed } = require('./src/commands/commandHelpers');
-const { runShipPrefix, runShipInteraction } = require('./src/commands/ship');
-const { DISCORD_TOKEN, STARTUP_CHANNEL_ID } = require('./src/config');
+const { Client, GatewayIntentBits, EmbedBuilder, ActivityType } = require('discord.js');
+const { acquireBotLock, releaseBotLock, getPrefix } = require('./src/utils/botUtils');
+const { getWelcomeChannel, normalizeChannelValue } = require('./src/services/database');
+const { commandsByName, slashCommands } = require('./src/commands');
+const { DISCORD_TOKEN, STARTUP_CHANNEL_ID, STATUS_IMAGE_URL } = require('./src/config');
 const { incrementCommand, incrementMessages, recordUniqueUser } = require('./src/services/logging');
 
 // Protege o bot contra duas instâncias rodando ao mesmo tempo.
@@ -36,13 +35,14 @@ async function sendStartupAnnouncement() {
   const startupEmbed = new EmbedBuilder()
     .setColor('#E60067')
     .setTitle('✨ Kuromi conectado com sucesso!')
-    .setDescription('O bot está online e pronto para interagir com o servidor.')
+    .setDescription('O bot está online, monitorando o servidor e pronto para ajudar.')
     .addFields(
       { name: '🔗 Painel de Controle', value: 'Acesse: http://localhost:3000', inline: false },
       { name: '📍 Servidor', value: channel.guild?.name || 'Desconhecido', inline: true },
       { name: '✅ Status', value: 'Online e funcional', inline: true },
       { name: '📚 Próximos passos', value: 'Use `/help` para ver os comandos disponíveis ou acesse o painel para configurar o bot.', inline: false }
     )
+    .setImage(STATUS_IMAGE_URL)
     .setTimestamp()
     .setFooter({ text: 'Kuromi • Bot oficial da Cringelândia' });
 
@@ -56,7 +56,7 @@ client.once('ready', async () => {
   console.log(`Kuromi conectado como ${client.user.tag}`);
 
   client.user.setPresence({
-    activities: [{ name: 'Ajudando o Cringe (tentando)', type: ActivityType.Watching }],
+    activities: [{ name: 'monitorando e ajudando pessoas', type: ActivityType.Watching }],
     status: 'online',
   });
 
@@ -108,34 +108,7 @@ client.on('guildMemberAdd', async (member) => {
   }
 });
 
-// Lista de comandos que serão registrados no Discord.
-const slashCommands = [
-  new SlashCommandBuilder().setName('ping').setDescription('Responde com pong para confirmar que o bot está vivo.').toJSON(),
-  new SlashCommandBuilder().setName('status').setDescription('Mostra o status do bot e informações do servidor.').toJSON(),
-  new SlashCommandBuilder().setName('help').setDescription('Mostra a lista de comandos e funções do bot.').toJSON(),
-  new SlashCommandBuilder()
-    .setName('prefix')
-    .setDescription('Altera o prefixo do bot para outro valor.')
-    .addStringOption((option) =>
-      option.setName('valor').setDescription('Novo prefixo do bot').setRequired(false)
-    )
-    .toJSON(),
-  new SlashCommandBuilder()
-    .setName('setwelcome')
-    .setDescription('Define o canal onde a mensagem de boas-vindas será enviada.')
-    .addChannelOption((option) =>
-      option
-        .setName('canal')
-        .setDescription('Canal de texto para as boas-vindas')
-        .addChannelTypes([0])
-        .setRequired(true)
-    )
-    .toJSON(),
-  new SlashCommandBuilder().setName('sixseven').setDescription('Envia a imagem do sixseven no chat.').toJSON(),
-  new SlashCommandBuilder().setName('ship').setDescription('Sorteia dois membros aleatórios e calcula a porcentagem de amor entre eles.').toJSON(),
-];
-
-// Processa comandos com prefixo em mensagens de texto.
+// Procura o comando na pasta commands e mantém o index focado na infraestrutura.
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
@@ -148,72 +121,14 @@ client.on('messageCreate', async (message) => {
   const args = message.content.slice(prefix.length).trim().split(/\s+/);
   const cmd = args.shift().toLowerCase();
 
-  if (cmd === 'ping') {
-    incrementCommand();
-    await message.reply('pong! 🏓');
-    return;
-  }
+  const command = commandsByName.get(cmd);
+  if (!command || typeof command.executePrefix !== 'function') return;
 
-  if (cmd === 'status') {
-    const statusEmbed = new EmbedBuilder()
-      .setColor('#22c55e')
-      .setTitle('✅ Bot online')
-      .setDescription('Estou funcionando corretamente e pronto para ajudar!')
-      .addFields(
-        { name: 'Servidor', value: message.guild?.name || 'N/A' },
-        { name: 'Usuário', value: message.author.tag }
-      )
-      .setTimestamp();
-
-    await message.reply({ embeds: [statusEmbed] });
-    return;
-  }
-
-  if (cmd === 'help') {
-    await message.reply({ embeds: [buildHelpEmbed()] });
-    return;
-  }
-
-  if (cmd === 'prefix') {
-    const newValue = args.join(' ').trim();
-    const newPrefix = setPrefix(newValue || prefix);
-
-    await message.reply({
-      embeds: [buildPrefixStatusEmbed(message.author.tag, newPrefix)],
-    });
-    return;
-  }
-
-  if (cmd === 'setwelcome') {
-    const channel = message.mentions.channels.first() || message.guild?.channels.cache.get(args[0]);
-
-    if (!channel || !channel.isTextBased()) {
-      await message.reply('❌ Você precisa indicar um canal de texto válido. Use: `' + prefix + 'setwelcome #canal`');
-      return;
-    }
-
-    setWelcomeChannel(message.guildId, channel.id);
-
-    await message.reply({
-      content: `✅ Canal de boas-vindas configurado para ${channel}.`,
-    });
-    return;
-  }
-
-  if (cmd === 'sixseven') {
-    incrementCommand();
-    await message.channel.send('https://cdn.discordapp.com/attachments/1457245624792780883/1528147588686020781/1499544593182490777.webp?ex=6a973fd8&is=6a95ee58&hm=25123c3facc397d18cccb75418decb8d17a7b0b1bdeb8f9e8decd57b74fca6d4&');
-    return;
-  }
-
-  if (cmd === 'ship') {
-    incrementCommand();
-    await runShipPrefix(message);
-    return;
-  }
+  incrementCommand();
+  await command.executePrefix({ message, args, prefix });
 });
 
-// Centraliza a lógica dos slash commands e respostas.
+// O registro compartilhado também encaminha cada slash command ao próprio arquivo.
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -222,68 +137,13 @@ client.on('interactionCreate', async (interaction) => {
   incrementCommand();
   recordUniqueUser(interaction.user.id);
 
-  const { commandName, options } = interaction;
-
-  if (commandName === 'ping') {
-    await interaction.editReply({ content: 'pong! 🏓' });
+  const command = commandsByName.get(interaction.commandName);
+  if (!command || typeof command.executeSlash !== 'function') {
+    await interaction.editReply({ content: 'Esse comando ainda não está disponível.' });
     return;
   }
 
-  if (commandName === 'status') {
-    const statusEmbed = new EmbedBuilder()
-      .setColor('#22c55e')
-      .setTitle('✅ Bot online')
-      .setDescription('Estou funcionando corretamente e pronto para ajudar!')
-      .addFields(
-        { name: 'Servidor', value: interaction.guild?.name || 'N/A' },
-        { name: 'Usuário', value: interaction.user.tag }
-      )
-      .setTimestamp();
-
-    await interaction.editReply({ embeds: [statusEmbed] });
-    return;
-  }
-
-  if (commandName === 'help') {
-    await interaction.editReply({ embeds: [buildHelpEmbed()] });
-    return;
-  }
-
-  if (commandName === 'prefix') {
-    const value = options.getString('valor');
-    const newPrefix = setPrefix(value || getPrefix());
-
-    await interaction.editReply({
-      embeds: [buildPrefixStatusEmbed(interaction.user.tag, newPrefix)],
-    });
-    return;
-  }
-
-  if (commandName === 'setwelcome') {
-    const channel = options.getChannel('canal');
-
-    if (!channel || !channel.isTextBased()) {
-      await interaction.editReply({ content: 'Você precisa indicar um canal de texto válido.' });
-      return;
-    }
-
-    setWelcomeChannel(interaction.guildId, channel.id);
-
-    await interaction.editReply({
-      content: `Canal de boas-vindas configurado para ${channel}.`,
-    });
-    return;
-  }
-
-  if (commandName === 'sixseven') {
-    await interaction.editReply('https://cdn.discordapp.com/attachments/1457245624792780883/1528147588686020781/1499544593182490777.webp?ex=6a973fd8&is=6a95ee58&hm=25123c3facc397d18cccb75418decb8d17a7b0b1bdeb8f9e8decd57b74fca6d4&');
-    return;
-  }
-
-  if (commandName === 'ship') {
-    await runShipInteraction(interaction);
-    return;
-  }
+  await command.executeSlash({ interaction });
 });
 
 client.on('error', (error) => {

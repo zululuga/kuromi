@@ -99,54 +99,37 @@ function setPrefix(prefix) {
 
 function getCommandList() {
   const prefix = getPrefix();
+  const { commands } = require('../commands');
 
-  return [
-    {
-      name: '/ping',
-      description: 'Responde com “pong” para confirmar que o bot está online.',
-      usage: '/ping',
-    },
-    {
-      name: '/status',
-      description: 'Mostra uma mensagem com o status do bot e informações do servidor.',
-      usage: '/status',
-    },
-    {
-      name: '/help',
-      description: 'Lista os comandos e funções disponíveis do bot.',
-      usage: '/help',
-    },
-    {
-      name: '/prefix',
-      description: 'Altera o prefixo do bot para outro símbolo ou texto.',
-      usage: '/prefix [valor] (ex.: /prefix ?)',
-    },
-    {
-      name: '/setwelcome',
-      description: 'Define o canal do servidor onde a mensagem de boas-vindas será enviada.',
-      usage: '/setwelcome #canal',
-    },
-    {
-      name: `${prefix}sixseven`,
-      description: 'Envia a imagem do sixseven no chat.',
-      usage: `${prefix}sixseven`,
-    },
-    {
-      name: `${prefix}ship`,
-      description: 'Sorteia dois membros aleatórios e calcula a % de amor entre eles.',
-      usage: `${prefix}ship`,
-    },
-    {
-      name: 'Boas-vindas',
-      description: 'Envia mensagem de boas-vindas no canal configurado do servidor, sem DM.',
-      usage: 'Automático',
-    },
-    {
-      name: 'Status do bot',
-      description: 'Define a presença do bot como “Assistindo Seu servidor”.',
-      usage: 'Automático',
-    },
-  ];
+  return commands.flatMap((command) => {
+    const slashCommand = command.data.toJSON();
+    const commandInfo = {
+      name: `/${command.name}`,
+      description: slashCommand.description,
+      usage: `/${command.name}`,
+    };
+
+    if (command.name === 'prefix') {
+      commandInfo.usage = '/prefix [valor] (ex.: /prefix ?)';
+    }
+
+    if (command.name === 'setwelcome') {
+      commandInfo.usage = '/setwelcome #canal';
+    }
+
+    if (command.name === 'sixseven' || command.name === 'ship') {
+      return [
+        commandInfo,
+        {
+          name: `${prefix}${command.name}`,
+          description: slashCommand.description,
+          usage: `${prefix}${command.name}`,
+        },
+      ];
+    }
+
+    return [commandInfo];
+  });
 }
 
 module.exports = {
