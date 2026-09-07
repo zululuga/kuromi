@@ -10,26 +10,28 @@ fi
 
 BACKUP="$HOME/backups/kuromi/$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$BACKUP"
+if [ ! -d data ]; then
+  echo "ERRO: a pasta data/ nao existe na VM. Deploy abortado."
+  exit 1
+fi
 cp -a data "$BACKUP/"
 [ -f .env ] && cp -a .env "$BACKUP/"
 [ -f prefix.json ] && cp -a prefix.json "$BACKUP/"
 echo "Backup criado em $BACKUP"
 
-# Nao atualiza se a copia local ou a versao remota alterar dados persistidos.
+# A VM e a fonte de verdade dos dados. Guarde qualquer estado local antes do pull;
+# ele nao deve impedir a atualizacao nem ser enviado para o repositorio.
 git fetch origin
-if [ -n "$(git status --porcelain -- data)" ]; then
-  echo "ERRO: existem alteracoes locais em data/."
-  echo "Backup preservado em: $BACKUP"
-  exit 1
-fi
-
-if git diff --name-only HEAD origin/main -- data | grep -q '^data/'; then
-  echo "ERRO: o repositorio remoto altera arquivos em data/."
-  echo "Backup preservado em: $BACKUP"
-  exit 1
-fi
+git stash push -u -m "deploy-pre-$BACKUP"
 
 git pull --ff-only origin main
+
+# O pull atualiza o codigo, mas os dados continuam sendo os da VM.
+rm -rf data
+cp -a "$BACKUP/data" data
+[ -f "$BACKUP/.env" ] && cp -a "$BACKUP/.env" .env
+[ -f "$BACKUP/prefix.json" ] && cp -a "$BACKUP/prefix.json" prefix.json
+
 npm ci --omit=dev
 pm2 restart kuromi --update-env
 pm2 save

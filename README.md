@@ -157,7 +157,7 @@ chmod +x deploy.sh
 ./deploy.sh
 ```
 
-O script cria um backup, bloqueia atualizacoes que alterariam `data/`, executa `git pull --ff-only`, instala dependencias e reinicia apenas o processo `kuromi`.
+O script cria um backup da `data/`, guarda temporariamente alteracoes locais, executa `git pull --ff-only`, restaura os dados da VM, instala dependencias e reinicia apenas o processo `kuromi`. A `data/` local da VM e sempre preservada; ela nao precisa ser commitada.
 
 ### 3. Validar o processo
 

@@ -13,7 +13,7 @@ O `settings.json` possui cache em memoria, gravação por arquivo temporario e b
 
 ## Procedimento automatico recomendado
 
-O arquivo `deploy.sh` executa o fluxo de backup, verificacao, atualizacao e reinicio. Ele nao cria commits: as alteracoes precisam ser testadas, commitadas e enviadas ao Git antes de executa-lo:
+O arquivo `deploy.sh` executa o fluxo de backup, verificacao, atualizacao e reinicio. Ele nao cria commits: as alteracoes precisam ser testadas, commitadas e enviadas ao Git antes de executa-lo. A `data/` da VM e sempre a fonte de verdade; o script faz backup e a restaura depois do `git pull`.
 
 ```bash
 cd ~/kuromi
@@ -21,7 +21,7 @@ chmod +x deploy.sh
 ./deploy.sh
 ```
 
-O script aborta se a branch da VM nao for `main`, se houver alteracoes locais em `data/` ou se a versao remota alterar essa pasta. O backup e mantido mesmo quando o deploy e abortado.
+O script aborta se a branch da VM nao for `main` ou se a pasta `data/` nao existir. Alteracoes locais em `data/`, `.env` e `prefix.json` sao preservadas automaticamente e nao entram no commit.
 
 Antes do primeiro uso, publique o script junto com as alteracoes:
 
@@ -70,6 +70,8 @@ Se aparecer `Permission denied`, habilite o script uma vez:
 chmod +x deploy.sh
 ./deploy.sh
 ```
+
+O script nao pede para apagar ou commitar `data/`. Ele cria um backup, guarda temporariamente o estado local para liberar o `git pull`, atualiza apenas o codigo e restaura os dados da VM.
 
 ### 4. Validar o bot
 
@@ -167,27 +169,20 @@ O repositorio deste projeto e `https://github.com/zululuga/kuromi.git`.
 ```bash
 cd ~/kuromi
 git fetch origin
-
-if ! git diff --quiet -- data; then
-	echo "ERRO: existem alteracoes locais em data/. Abortando sem atualizar."
-	exit 1
-fi
-
-if git diff --name-only HEAD origin/main | grep -q '^data/'; then
-	echo "ERRO: a versao remota altera data/. Abortando sem atualizar."
-	exit 1
-fi
-
+BACKUP="$HOME/backups/kuromi/$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$BACKUP"
+cp -a data "$BACKUP/"
+git stash push -u -m "deploy-pre-$BACKUP"
 git pull --ff-only origin main
+rm -rf data
+cp -a "$BACKUP/data" data
 ```
 
-`git pull --ff-only` evita criar merge inesperado. Se aparecer conflito ou aviso de alteracoes locais, pare e nao use `git reset --hard`. Primeiro preserve o estado e investigue:
+`git pull --ff-only` evita criar merge inesperado. O fluxo acima preserva a `data/` da VM mesmo quando ela foi alterada pelo uso normal do bot. Se aparecer conflito no codigo, pare e nao use `git reset --hard`; primeiro preserve o estado e investigue:
 
 ```bash
 git status
 ```
-
-As duas verificacoes anteriores impedem o pull quando ha alteracoes locais ou remotas em `data/`. A causa precisa ser analisada antes de continuar; nao force a substituicao do banco.
 
 Depois do pull, confirme que os dados continuam presentes:
 
