@@ -1,4 +1,4 @@
-# 💖 Kuromiga — sua amiga cringe da Cringelândia & Painel Web
+# 💖 Cringelândia — Seu lugar de ser você & Painel Web
 
 Um bot de Discord simples e elegante construído em Node.js (`discord.js` v14), acompanhado de um **Painel de Controle Web** interativo em Express.js e scripts de gerenciamento via terminal Windows.
 
@@ -80,7 +80,7 @@ e:/botMelody/
 │       └── botUtils.js       # Sistema de lock de processo e prefixo
 │
 ├── public/                   # Frontend do Painel Web
-│   └── index.html            # Dashboard responsivo com tema Kuromiga
+│   └── index.html            # Dashboard responsivo com tema Cringelândia
 │
 ├── data/                     # Armazenamento de dados locais (JSON)
 │   ├── settings.json         # Configurações por servidor (canais de boas-vindas)

@@ -70,7 +70,7 @@ async function sendStartupAnnouncement() {
     )
     .setImage(STATUS_IMAGE_URL)
     .setTimestamp()
-    .setFooter({ text: 'Kuromiga • sua amiga cringe' });
+    .setFooter({ text: 'Cringelândia • Seu lugar de ser você' });
 
   await channel.send({ embeds: [startupEmbed] }).catch((error) => {
     console.error('Erro ao enviar aviso de inicialização:', error);
@@ -98,15 +98,15 @@ function buildBumpGuideEmbed() {
         value: 'No Discadia, use **/bump** quando estiver disponível. Cada bump ajuda a Cringelândia a subir na lista pública de servidores.',
       },
       {
-        name: '🗳️ Top.gg — votar',
-        value: 'Abra o link de voto, confirme seu voto e ajude o servidor a ganhar alcance. Normalmente, o voto pode ser repetido após o período indicado pela plataforma.',
+        name: '🗳️ Top.gg — `/votar`',
+        value: 'Use o comando **/votar** para receber o link oficial do Top.gg, abra a página e confirme seu voto. Normalmente, o voto pode ser repetido após o período indicado pela plataforma.',
       },
       {
         name: '⭐ Review no DISBOARD',
         value: 'Uma avaliação sincera também ajuda muito: conte como tem sido sua experiência na Cringelândia.',
       }
     )
-    .setFooter({ text: 'Kuromiga • sua amiga cringe • Obrigada por fortalecer a comunidade!' })
+    .setFooter({ text: 'Cringelândia • Seu lugar de ser você' })
     .setTimestamp();
 }
 
@@ -218,7 +218,7 @@ client.on('guildMemberAdd', async (member) => {
     )
     .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 256 }))
     .setImage('https://cdn.discordapp.com/attachments/1533657882862686218/1541908904487690321/dhj7hfn-842bcc59-b41f-4ef3-888b-dbfc210f4a5c.gif?ex=6a9b2b92&is=6a99da12&hm=7a41318a2f477b04a295a5b209c43de9517cfa47ac6ecf15e351c045aa104714&')
-    .setFooter({ text: 'Kuromiga • sua amiga cringe • Acolhimento em primeiro lugar' })
+    .setFooter({ text: 'Cringelândia • Seu lugar de ser você • Acolhimento em primeiro lugar' })
     .setTimestamp();
 
   try {
@@ -333,7 +333,7 @@ async function handleSendEmbedCommand(data) {
       .setTitle(title)
       .setColor(embedColor)
       .setTimestamp()
-      .setFooter({ text: 'Kuromiga • sua amiga cringe' });
+      .setFooter({ text: 'Cringelândia • Seu lugar de ser você' });
 
     if (description && String(description).trim()) {
       embed.setDescription(String(description).trim());
