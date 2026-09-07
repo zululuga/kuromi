@@ -27,6 +27,8 @@ const {
 const { incrementCommand, incrementMessages, recordUniqueUser } = require('./src/services/logging');
 
 const welcomeHeartReactions = ['❤️', '🧡', '💛', '💚', '💙', '💜', '🩷', '🩵', '🖤', '🤍', '🤎'];
+const CRINGE_PHRASE_COOLDOWN_MS = 30 * 1000;
+const cringePhraseCooldowns = new Map();
 
 function getRandomWelcomeHeart() {
   return welcomeHeartReactions[Math.floor(Math.random() * welcomeHeartReactions.length)];
@@ -167,7 +169,15 @@ function startBumpGuideScheduler() {
 async function handleCringePhrase(message) {
   if (!/\bviadinho\s+fofinho\b/i.test(message.content)) return false;
 
-  await message.react('🏳️‍🌈').catch(() => null);
+  const lastTriggeredAt = cringePhraseCooldowns.get(message.author.id) || 0;
+  if (Date.now() - lastTriggeredAt < CRINGE_PHRASE_COOLDOWN_MS) {
+    await message.react('🍅').catch(() => null);
+    return true;
+  }
+
+  cringePhraseCooldowns.set(message.author.id, Date.now());
+
+  await message.react('🌈').catch(() => null);
   await message.channel.send('https://klipy.com/gifs/gacha-life-gacha-boy');
   return true;
 }
