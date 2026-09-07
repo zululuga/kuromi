@@ -10,7 +10,7 @@ function buildHelpEmbed(requestedPage = 1) {
 
   return new EmbedBuilder()
     .setColor('#7c3aed')
-    .setTitle(`📚 Comandos da Kuromi • Página ${page}/${totalPages}`)
+    .setTitle(`📚 Comandos da Kuromiga • Página ${page}/${totalPages}`)
     .setDescription('Cada item mostra as versões slash e por prefixo:')
     .addFields(
       ...pageCommands.map((command) => ({
@@ -18,7 +18,7 @@ function buildHelpEmbed(requestedPage = 1) {
         value: `• ${command.description}\n${command.usage.replace(/\n/g, '\n')}`,
       }))
     )
-    .setFooter({ text: `Kuromi • ${commandList.length} comandos • Use /ajuda pagina ou ku!ajuda 2` })
+    .setFooter({ text: `Kuromiga • sua amiga cringe • ${commandList.length} comandos • Use /ajuda pagina ou ku!ajuda 2` })
     .setTimestamp();
 }
 

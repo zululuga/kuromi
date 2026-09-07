@@ -1,9 +1,9 @@
 @echo off
-title KUROMI - Painel Web Control
+title KUROMIGA - Painel Web Control
 cd /d "%~dp0"
 
 echo ===============================================
-echo      KUROMI - BOT OFICIAL DA CRINGELANDIA
+echo      KUROMIGA - SUA AMIGA CRINGE
 echo ===============================================
 echo.
 echo [1/2] Registrando Slash Commands no Discord...

@@ -1,4 +1,4 @@
-# 📚 Comandos do Kuromi
+# 📚 Comandos da Kuromiga
 
 ## 🔧 Painel de Controle Local
 Acesse em: **http://localhost:3000**
@@ -194,4 +194,4 @@ Configure o canal para receber mensagens de boas-vindas. Aceita:
 
 ---
 
-**Kuromi** 💗 — Bot oficial da Cringelândia
+**Kuromiga** 💗 — sua amiga cringe da Cringelândia

@@ -1,4 +1,4 @@
-# 💖 Kuromi (botMelody) — Bot Oficial da Cringelândia & Painel Web
+# 💖 Kuromiga — sua amiga cringe da Cringelândia & Painel Web
 
 Um bot de Discord simples e elegante construído em Node.js (`discord.js` v14), acompanhado de um **Painel de Controle Web** interativo em Express.js e scripts de gerenciamento via terminal Windows.
 
@@ -80,7 +80,7 @@ e:/botMelody/
 │       └── botUtils.js       # Sistema de lock de processo e prefixo
 │
 ├── public/                   # Frontend do Painel Web
-│   └── index.html            # Dashboard responsivo com tema Kuromi
+│   └── index.html            # Dashboard responsivo com tema Kuromiga
 │
 ├── data/                     # Armazenamento de dados locais (JSON)
 │   ├── settings.json         # Configurações por servidor (canais de boas-vindas)
@@ -107,6 +107,8 @@ e:/botMelody/
 | `/carteira` | Exibe seu saldo de Moedinhas | `ku!carteira` |
 | `/ranking` | Exibe o ranking de Moedinhas | `ku!ranking` |
 | `/configeconomia` | Configura o mínimo e máximo do diário (administradores) | `ku!configeconomia 0 100` |
+
+Além dos comandos, a Kuromiga responde exatamente à mensagem `viadinho fofinho` com um GIF de Gacha Life.
 
 ---
 

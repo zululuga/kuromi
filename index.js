@@ -10,7 +10,7 @@ const { incrementCommand, incrementMessages, recordUniqueUser } = require('./src
 // Protege o bot contra duas instâncias rodando ao mesmo tempo.
 const lockAcquired = acquireBotLock();
 if (!lockAcquired) {
-  console.error('Outra instância do Kuromi já está em execução. Encerrando este processo...');
+  console.error('Outra instância da Kuromiga já está em execução. Encerrando este processo...');
   process.exit(1);
 }
 
@@ -35,7 +35,7 @@ async function sendStartupAnnouncement() {
 
   const startupEmbed = new EmbedBuilder()
     .setColor('#E60067')
-    .setTitle('✨ Kuromi conectado com sucesso!')
+    .setTitle('✨ Kuromiga conectada com sucesso!')
     .setDescription('O bot está online, monitorando o servidor e pronto para ajudar.')
     .addFields(
       { name: '🔗 Painel de Controle', value: 'Acesse: http://localhost:3000', inline: false },
@@ -45,16 +45,23 @@ async function sendStartupAnnouncement() {
     )
     .setImage(STATUS_IMAGE_URL)
     .setTimestamp()
-    .setFooter({ text: 'Kuromi • Bot oficial da Cringelândia' });
+    .setFooter({ text: 'Kuromiga • sua amiga cringe' });
 
   await channel.send({ embeds: [startupEmbed] }).catch((error) => {
     console.error('Erro ao enviar aviso de inicialização:', error);
   });
 }
 
+async function handleCringePhrase(message) {
+  if (message.content !== 'viadinho fofinho') return false;
+
+  await message.channel.send('https://klipy.com/gifs/gacha-life-gacha-boy');
+  return true;
+}
+
 client.once('ready', async () => {
   // Sinal de que o bot já conectou e está pronto para receber eventos.
-  console.log(`Kuromi conectado como ${client.user.tag}`);
+  console.log(`Kuromiga conectada como ${client.user.tag}`);
 
   client.user.setPresence({
     activities: [{ name: 'monitorando e ajudando pessoas', type: ActivityType.Watching }],
@@ -115,6 +122,10 @@ client.on('messageCreate', async (message) => {
 
   incrementMessages();
   recordUniqueUser(message.author.id);
+
+  if (await handleCringePhrase(message)) {
+    return;
+  }
 
   const prefix = getPrefix();
   if (!message.content.startsWith(prefix)) return;
@@ -197,7 +208,7 @@ async function handleSendEmbedCommand(data) {
       .setTitle(title)
       .setColor(embedColor)
       .setTimestamp()
-      .setFooter({ text: 'Kuromi • Bot oficial da Cringelândia' });
+      .setFooter({ text: 'Kuromiga • sua amiga cringe' });
 
     if (description && String(description).trim()) {
       embed.setDescription(String(description).trim());

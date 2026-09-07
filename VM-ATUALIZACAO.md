@@ -1,4 +1,4 @@
-# Atualizacao segura da Kuromi na VM
+# Atualizacao segura da Kuromiga na VM
 
 Este documento descreve como publicar alteracoes feitas em `E:\botMelody` na VM sem substituir o banco JSON que ja esta em producao.
 

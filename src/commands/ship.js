@@ -73,7 +73,7 @@ function buildShipEmbed(memberA, memberB, percent) {
       `**${percent}% de amor**\n\n` +
       `> *${verdict.message}*`
     )
-    .setFooter({ text: "Kuromi • Ship CRINGEEEEWWW" })
+    .setFooter({ text: "Kuromiga • sua amiga cringe • Ship CRINGEEEEWWW" })
     .setTimestamp();
 }
 

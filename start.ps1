@@ -1,4 +1,4 @@
-$host.UI.RawUI.WindowTitle = "KUROMI Control Panel"
+$host.UI.RawUI.WindowTitle = "KUROMIGA Control Panel"
 
 # Guarda o processo do bot em execução para monitorar o status da aplicação.
 $script:BotProcess = $null
@@ -6,7 +6,7 @@ $script:BotProcess = $null
 function ShowHeader {
     Write-Host ""
     Write-Host "===============================================" -ForegroundColor Cyan
-    Write-Host "             KUROMI - DISCORD BOT             " -ForegroundColor Magenta
+    Write-Host "          KUROMIGA - SUA AMIGA CRINGE          " -ForegroundColor Magenta
     Write-Host "===============================================" -ForegroundColor Cyan
     Write-Host ""
 }
@@ -53,8 +53,8 @@ function ShowPanel {
     Write-Host ""
 }
 
-function ShowAsciiKuromi {
-    # Arte ASCII inspirada em Kuromi, com tons rosa e preto para combinar com o visual do bot.
+function ShowAsciiKuromiga {
+    # Arte ASCII própria para combinar com o visual do bot.
     Write-Host "                 ___" -ForegroundColor Magenta
     Write-Host "           .-""   ""-." -ForegroundColor Magenta
     Write-Host "          /  .-. .-.  \" -ForegroundColor Magenta
@@ -104,7 +104,7 @@ while ($true) {
     Clear-Host
     ShowHeader
     ShowPanel
-    ShowAsciiKuromi
+    ShowAsciiKuromiga
 
     $status = if ($script:BotProcess -and -not $script:BotProcess.HasExited) { "ONLINE" } else { "OFFLINE" }
     $color = if ($status -eq "ONLINE") { "Green" } else { "Red" }

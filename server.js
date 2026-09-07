@@ -44,7 +44,7 @@ function startBot() {
   }
 
   botStartTime = Date.now();
-  addLog('Iniciando bot Kuromi...');
+  addLog('Iniciando bot Kuromiga...');
   botProcess = spawn('node', ['index.js'], {
     cwd: appRoot,
     detached: true,
@@ -78,7 +78,7 @@ async function stopBot() {
     return { running: false, message: 'O bot já está offline.' };
   }
 
-  addLog('Encerrando bot Kuromi...');
+  addLog('Encerrando bot Kuromiga...');
   botProcess.kill('SIGTERM');
 
   return new Promise((resolve) => {
@@ -227,7 +227,7 @@ app.use((req, res) => {
 
 app.listen(PORT, HOST, () => {
   const publicUrl = `http://34.173.207.172:${PORT}`;
-  addLog(`Painel web do Kuromi iniciado em ${publicUrl}`);
-  console.log(`Kuromi painel web rodando em ${publicUrl}`);
+  addLog(`Painel web do Kuromiga iniciado em ${publicUrl}`);
+  console.log(`Painel do Kuromiga rodando em ${publicUrl}`);
   startBot();
 });
