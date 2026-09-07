@@ -53,8 +53,9 @@ async function sendStartupAnnouncement() {
 }
 
 async function handleCringePhrase(message) {
-  if (message.content !== 'viadinho fofinho') return false;
+  if (!/\bviadinho\s+fofinho\b/i.test(message.content)) return false;
 
+  await message.react('🏳️‍🌈').catch(() => null);
   await message.channel.send('https://klipy.com/gifs/gacha-life-gacha-boy');
   return true;
 }

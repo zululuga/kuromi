@@ -108,7 +108,7 @@ e:/botMelody/
 | `/ranking` | Exibe o ranking de Moedinhas | `ku!ranking` |
 | `/configeconomia` | Configura o mínimo e máximo do diário (administradores) | `ku!configeconomia 0 100` |
 
-Além dos comandos, a Kuromiga responde exatamente à mensagem `viadinho fofinho` com um GIF de Gacha Life.
+Além dos comandos, a Kuromiga responde a qualquer mensagem que contenha `viadinho fofinho` com uma reação 🏳️‍🌈 e um GIF de Gacha Life.
 
 ---
 
