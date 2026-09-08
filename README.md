@@ -44,7 +44,7 @@ Crie ou edite o arquivo `.env` na raiz do projeto com o seguinte formato:
 DISCORD_TOKEN=seu_token_do_bot_aqui
 DISCORD_CLIENT_ID=seu_client_id_aqui
 PORT=3000
-# URL pública que contém os PNGs referenciados em data/tarot.json
+# URL pública que contém os PNGs referenciados em src/data/tarot.json
 TAROT_IMAGE_BASE_URL=https://seu-host/tarot
 ```
 

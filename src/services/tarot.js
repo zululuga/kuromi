@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const cards = require('../../data/tarot.json');
+const cards = require('../data/tarot.json');
 const stateFile = path.join(__dirname, '..', '..', 'data', 'tarot-state.json');
 const BRIBE_COST = 350;
 
