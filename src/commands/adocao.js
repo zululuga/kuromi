@@ -9,15 +9,15 @@ function getChoices() {
 
 function buildReply(result) {
   if (!result.adopted) {
-    if (result.reason === 'invalid') return '❌ Escolha um pet válido.';
-    return `❌ Você precisa de **${formatCoins(result.totalCost)}**. Seu saldo é **${formatCoins(result.balance)}**.`;
+    if (result.reason === 'invalid') return '❌ Escolha um pet válido. Eu não consigo adotar sua indecisão.';
+    return `❌ Você precisa de **${formatCoins(result.totalCost)}**. Seu saldo é **${formatCoins(result.balance)}**. Faça as contas antes do drama.`;
   }
 
   const shinyLabel = result.shiny ? ' ✨ Shiny' : '';
   const swapLabel = result.totalCost > result.pet.baseCost
     ? ` (inclui ${formatCoins(PET_SWAP_COST)} pelo sacrifício do pet anterior)`
     : '';
-  return `✅ Você adotou **${result.pet.label}${shinyLabel}** por **${formatCoins(result.totalCost)}**${swapLabel}. Saldo: **${formatCoins(result.balance)}**.`;
+  return `✅ Você adotou **${result.pet.label}${shinyLabel}** por **${formatCoins(result.totalCost)}**${swapLabel}. Saldo: **${formatCoins(result.balance)}**. Cuide bem dele; eu finjo que não me importo.`;
 }
 
 function normalizePet(value) {
@@ -29,7 +29,7 @@ module.exports = {
   aliases: ['adotar'],
   data: new SlashCommandBuilder()
     .setName(ADOPTION)
-    .setDescription('Adota um pet pelo custo base.')
+    .setDescription('Adota um pet pelo custo base. Escolha com carinho; eu não vou admitir que isso é fofo.')
     .addStringOption((option) => option.setName('pet').setDescription('Pet que você deseja adotar').setRequired(true).addChoices(...getChoices())),
   async executePrefix({ message, args }) {
     await message.reply(buildReply(adoptPet(message.author.id, normalizePet(args[0]))));

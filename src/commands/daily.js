@@ -5,10 +5,10 @@ const { DAILY } = require('./commandNames');
 
 function buildDailyReply(result) {
   if (!result.claimed) {
-    return `⏳ Você já resgatou suas Moedinhas hoje. Tente novamente em **${formatRemaining(result.remainingMs)}**.`;
+    return `⏳ Você já pegou suas Moedinhas hoje. Espere **${formatRemaining(result.remainingMs)}**; até a minha paciência tem cooldown.`;
   }
 
-  return `🪙 Você recebeu **${formatCoins(result.amount)}**! Seu saldo agora é **${formatCoins(result.balance)}**.`;
+  return `🪙 Você recebeu **${formatCoins(result.amount)}**. Não diga que eu nunca faço nada por você. Saldo: **${formatCoins(result.balance)}**.`;
 }
 
 module.exports = {
@@ -16,7 +16,7 @@ module.exports = {
   aliases: ['daily'],
   data: new SlashCommandBuilder()
     .setName(DAILY)
-    .setDescription('Resgata suas Moedinhas diárias.'),
+    .setDescription('Resgata suas Moedinhas diárias. Venha buscar seu agrado e finja que não ficou feliz.'),
   async executePrefix({ message }) {
     await message.reply(buildDailyReply(claimDaily(message.author.id)));
   },

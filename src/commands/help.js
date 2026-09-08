@@ -7,7 +7,7 @@ module.exports = {
   aliases: ['help'],
   data: new SlashCommandBuilder()
     .setName(HELP)
-    .setDescription('Mostra a lista de comandos e funções do bot.')
+    .setDescription('Mostra a lista de comandos e funções da Kuromi. Leia tudo antes de perguntar de novo.')
     .addIntegerOption((option) =>
       option.setName('pagina').setDescription('Número da página').setMinValue(1).setRequired(false)
     ),

@@ -5,8 +5,8 @@ const { STATUS } = require('./commandNames');
 function buildStatusEmbed(serverName, userTag) {
   return new EmbedBuilder()
     .setColor('#22c55e')
-    .setTitle('✅ Bot online')
-    .setDescription('Estou monitorando o servidor e pronto para ajudar!')
+    .setTitle('✅  ✦  Kuromi online')
+    .setDescription('Estou monitorando o servidor e pronta para ajudar. Não que eu estivesse esperando por você.')
     .addFields(
       { name: 'Servidor', value: serverName || 'N/A' },
       { name: 'Usuário', value: userTag }

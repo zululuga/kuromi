@@ -16,7 +16,7 @@ module.exports = {
   name: RANKING,
   data: new SlashCommandBuilder()
     .setName(RANKING)
-    .setDescription('Exibe o ranking de Moedinhas do servidor.'),
+    .setDescription('Exibe o ranking de Moedinhas do servidor. Prepare o orgulho para uma possível derrota.'),
   async executePrefix({ message }) {
     await message.reply({ embeds: [await buildReply(message.guild, message.author.id)] });
   },

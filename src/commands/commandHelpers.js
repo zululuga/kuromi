@@ -10,15 +10,15 @@ function buildHelpEmbed(requestedPage = 1) {
 
   return new EmbedBuilder()
     .setColor('#7c3aed')
-    .setTitle(`📚 Comandos da Cringelândia • Página ${page}/${totalPages}`)
-    .setDescription('Cada item mostra as versões slash e por prefixo:')
+    .setTitle(`📚  ✦  Manual da Kuromi • Página ${page}/${totalPages}`)
+    .setDescription('Cada item mostra as versões slash e por prefixo. Leia com atenção; eu não vou repetir tudo só porque você ignorou.')
     .addFields(
       ...pageCommands.map((command) => ({
         name: `${command.name}`,
         value: `• ${command.description}\n${command.usage.replace(/\n/g, '\n')}`,
       }))
     )
-    .setFooter({ text: `Cringelândia • Seu lugar de ser você • ${commandList.length} comandos • Use /ajuda pagina ou ku!ajuda 2` })
+    .setFooter({ text: `Kuromi • ${commandList.length} comandos • Use /ajuda pagina ou ku!ajuda 2` })
     .setTimestamp();
 }
 

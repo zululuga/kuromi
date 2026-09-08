@@ -19,16 +19,16 @@ module.exports = {
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addUserOption((option) => option.setName('usuario').setDescription('Usuário que terá a economia resetada').setRequired(true)),
   async executePrefix({ message, args }) {
-    if (!isManager(message)) return message.reply('❌ Apenas administradores podem resetar a economia.');
+    if (!isManager(message)) return message.reply('❌ Apenas administradores podem resetar a economia. Não tente apertar o botão vermelho sem permissão.');
     const target = getTargetUser(message, args);
-    if (!target) return message.reply('❌ Use: `ku!resetareconomia @usuário`.');
+    if (!target) return message.reply('❌ Use: `ku!resetareconomia @usuário`. Eu não reseto o caos por telepatia.');
     resetUserEconomy(target.id);
-    await message.reply(`✅ Economia de **${target}** resetada. Saldo: **0 Moedinhas**.`);
+    await message.reply(`✅ Economia de **${target}** resetada. Saldo: **0 Moedinhas**. Que recomeço dramático.`);
   },
   async executeSlash({ interaction }) {
-    if (!isManager(interaction)) return interaction.editReply('❌ Apenas administradores podem resetar a economia.');
+    if (!isManager(interaction)) return interaction.editReply('❌ Apenas administradores podem resetar a economia. Não tente apertar o botão vermelho sem permissão.');
     const target = getTargetUser(interaction);
     resetUserEconomy(target.id);
-    await interaction.editReply(`✅ Economia de **${target}** resetada. Saldo: **0 Moedinhas**.`);
+    await interaction.editReply(`✅ Economia de **${target}** resetada. Saldo: **0 Moedinhas**. Que recomeço dramático.`);
   },
 };

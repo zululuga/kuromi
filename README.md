@@ -2,6 +2,8 @@
 
 Um bot de Discord simples e elegante construído em Node.js (`discord.js` v14), acompanhado de um **Painel de Controle Web** interativo em Express.js e scripts de gerenciamento via terminal Windows.
 
+A identidade completa da personagem, incluindo voz, fontes, paleta e regras de tom, está documentada em [docs/KUROMI-IDENTIDADE.md](docs/KUROMI-IDENTIDADE.md).
+
 ---
 
 ## 🚀 Como Colocar o Site / Painel Web no Ar

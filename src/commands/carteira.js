@@ -11,7 +11,7 @@ module.exports = {
   name: WALLET,
   data: new SlashCommandBuilder()
     .setName(WALLET)
-    .setDescription('Exibe a quantidade de Moedinhas de um usuário.')
+    .setDescription('Exibe a quantidade de Moedinhas de um usuário. A Kuromi confere, sem tocar no seu dinheiro.')
     .addUserOption((option) => option.setName('usuario').setDescription('Usuário para consultar').setRequired(false)),
   async executePrefix({ message }) {
     const target = message.mentions.users.first() || message.author;

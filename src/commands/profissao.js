@@ -9,11 +9,11 @@ function getProfessionChoices() {
 }
 
 function getReply(result, profession) {
-  if (!result.changed && result.reason === 'same') return `❌ Você já é **${profession.label}**.`;
-  if (!result.changed && result.reason === 'insufficient') return `❌ Trocar de profissão custa **${formatCoins(50)}**. Seu saldo é **${formatCoins(result.balance)}**.`;
+  if (!result.changed && result.reason === 'same') return `❌ Você já é **${profession.label}**. Escolha uma crise diferente.`;
+  if (!result.changed && result.reason === 'insufficient') return `❌ Trocar de profissão custa **${formatCoins(50)}**. Seu saldo é **${formatCoins(result.balance)}**. Ambição sem orçamento é só teatro.`;
   return result.charged === 0
-    ? `✅ Sua profissão agora é **${profession.label}**. Essa escolha foi gratuita.`
-    : `✅ Sua profissão agora é **${profession.label}**. Foram cobradas **${formatCoins(50)}**.`;
+    ? `✅ Sua profissão agora é **${profession.label}**. Essa escolha foi gratuita. Não se acostume.`
+    : `✅ Sua profissão agora é **${profession.label}**. Foram cobradas **${formatCoins(50)}**. Pelo menos agora existe um plano.`;
 }
 
 function resolveProfession(value) {
@@ -23,7 +23,7 @@ function resolveProfession(value) {
 
 async function execute(source, reply, value) {
   const key = resolveProfession(value);
-  if (!key) return reply(`❌ Escolha uma profissão válida: ${Object.values(professions).map((item) => item.label).join(', ')}.`);
+  if (!key) return reply(`❌ Escolha uma profissão válida: ${Object.values(professions).map((item) => item.label).join(', ')}. Eu não vou transformar sua indecisão em carreira.`);
   const result = setProfession(source.user?.id || source.author.id, key);
   await reply(getReply(result, professions[key]));
 }

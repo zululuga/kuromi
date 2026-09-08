@@ -16,7 +16,7 @@ function isManager(source) {
 }
 
 function buildReply(config) {
-  return `✅ Diário configurado: entre **${config.minimum}** e **${config.maximum}** Moedinhas.`;
+  return `✅ Diário configurado: entre **${config.minimum}** e **${config.maximum}** Moedinhas. Agora até a economia tem regras, que emocionante.`;
 }
 
 module.exports = {
@@ -29,15 +29,15 @@ module.exports = {
     .addIntegerOption((option) => option.setName('minimo').setDescription('Valor mínimo').setMinValue(0).setRequired(true))
     .addIntegerOption((option) => option.setName('maximo').setDescription('Valor máximo').setMinValue(0).setRequired(true)),
   async executePrefix({ message, args }) {
-    if (!isManager(message)) return message.reply('❌ Apenas administradores podem configurar a economia.');
+    if (!isManager(message)) return message.reply('❌ Apenas administradores podem configurar a economia. Não tente bancar a autoridade sem permissão.');
     const values = parseValues(args[0], args[1]);
-    if (!values) return message.reply('❌ Use dois números válidos: `ku!configeconomia 0 100`.');
+    if (!values) return message.reply('❌ Use dois números válidos: `ku!configeconomia 0 100`. A matemática já está dramática o bastante.');
     await message.reply(buildReply(setEconomyConfig(values.minimum, values.maximum)));
   },
   async executeSlash({ interaction }) {
-    if (!isManager(interaction)) return interaction.editReply('❌ Apenas administradores podem configurar a economia.');
+    if (!isManager(interaction)) return interaction.editReply('❌ Apenas administradores podem configurar a economia. Não tente bancar a autoridade sem permissão.');
     const values = parseValues(interaction.options.getInteger('minimo'), interaction.options.getInteger('maximo'));
-    if (!values) return interaction.editReply('❌ O mínimo deve ser menor ou igual ao máximo.');
+    if (!values) return interaction.editReply('❌ O mínimo deve ser menor ou igual ao máximo. Até a Kuromi respeita a ordem das coisas.');
     await interaction.editReply(buildReply(setEconomyConfig(values.minimum, values.maximum)));
   },
 };

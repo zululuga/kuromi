@@ -18,34 +18,34 @@ module.exports = {
     ),
   async executePrefix({ message, args, prefix }) {
     if (!message.member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
-      await message.reply('❌ Apenas administradores podem configurar as boas-vindas.');
+      await message.reply('❌ Apenas administradores podem configurar as boas-vindas. A Kuromi não entrega as chaves da festa para qualquer um.');
       return;
     }
 
     const channel = message.mentions.channels.first() || message.guild?.channels.cache.get(args[0]);
 
     if (!channel || !channel.isTextBased()) {
-      await message.reply(`❌ Você precisa indicar um canal de texto válido. Use: ${prefix}boasvindas #canal`);
+      await message.reply(`❌ Você precisa indicar um canal de texto válido. Use: ${prefix}boasvindas #canal. Eu preciso de um endereço, não de uma intenção.`);
       return;
     }
 
     setWelcomeChannel(message.guildId, channel.id);
-    await message.reply({ content: `✅ Canal de boas-vindas configurado para ${channel}.` });
+    await message.reply({ content: `✅ Canal de boas-vindas configurado para ${channel}. Agora eu recebo as visitas. Tente não bagunçar.` });
   },
   async executeSlash({ interaction }) {
     if (!interaction.member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
-      await interaction.editReply('❌ Apenas administradores podem configurar as boas-vindas.');
+      await interaction.editReply('❌ Apenas administradores podem configurar as boas-vindas. A Kuromi não entrega as chaves da festa para qualquer um.');
       return;
     }
 
     const channel = interaction.options.getChannel('canal');
 
     if (!channel || !channel.isTextBased()) {
-      await interaction.editReply({ content: 'Você precisa indicar um canal de texto válido.' });
+      await interaction.editReply({ content: '❌ Você precisa indicar um canal de texto válido. Eu preciso de um endereço, não de uma intenção.' });
       return;
     }
 
     setWelcomeChannel(interaction.guildId, channel.id);
-    await interaction.editReply({ content: `Canal de boas-vindas configurado para ${channel}.` });
+    await interaction.editReply({ content: `✅ Canal de boas-vindas configurado para ${channel}. Agora eu recebo as visitas. Tente não bagunçar.` });
   },
 };

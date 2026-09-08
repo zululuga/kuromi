@@ -13,7 +13,7 @@ module.exports = {
   name: PROFILE,
   data: new SlashCommandBuilder()
     .setName(PROFILE)
-    .setDescription('Exibe o perfil, o cônjuge e todas as suas moedas.')
+    .setDescription('Exibe o perfil, o cônjuge e todas as suas moedas. Não esconda nada; eu descubro.')
     .addUserOption((option) => option.setName('usuario').setDescription('Usuário para consultar').setRequired(false)),
   async executePrefix({ message }) {
     const target = message.mentions.users.first() || message.author;

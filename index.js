@@ -42,7 +42,7 @@ function getRandomWelcomeHeart() {
 // Protege o bot contra duas instâncias rodando ao mesmo tempo.
 const lockAcquired = acquireBotLock();
 if (!lockAcquired) {
-  console.error('Outra instância da Kuromiga já está em execução. Encerrando este processo...');
+  console.error('Outra instância da Kuromi já está em execução. Ela não divide o palco. Encerrando este processo...');
   process.exit(1);
 }
 
@@ -67,17 +67,17 @@ async function sendStartupAnnouncement() {
 
   const startupEmbed = new EmbedBuilder()
     .setColor('#E60067')
-    .setTitle('✨ Kuromiga conectada com sucesso!')
-    .setDescription('O bot está online, monitorando o servidor e pronto para ajudar.')
+    .setTitle('✨  ✦  Kuromi entrou em cena')
+    .setDescription('Estou online, monitorando o servidor e pronta para ajudar. Não faça essa cara; eu também senti sua falta.')
     .addFields(
       { name: '🔗 Painel de Controle', value: 'Acesse: http://localhost:3000', inline: false },
       { name: '📍 Servidor', value: channel.guild?.name || 'Desconhecido', inline: true },
       { name: '✅ Status', value: 'Online e funcional', inline: true },
-      { name: '📚 Próximos passos', value: 'Use `/help` para ver os comandos disponíveis ou acesse o painel para configurar o bot.', inline: false }
+      { name: '📚 Próximos passos', value: 'Use `/ajuda` para ver os comandos disponíveis ou acesse o painel para configurar o bot. Leia direito.', inline: false }
     )
     .setImage(STATUS_IMAGE_URL)
     .setTimestamp()
-    .setFooter({ text: 'Cringelândia • Seu lugar de ser você' });
+    .setFooter({ text: 'Cringelândia • Kuromi supervisiona • Não transforme isso em bagunça' });
 
   await channel.send({ embeds: [startupEmbed] }).catch((error) => {
     console.error('Erro ao enviar aviso de inicialização:', error);
@@ -87,14 +87,14 @@ async function sendStartupAnnouncement() {
 function buildBumpGuideEmbed() {
   return new EmbedBuilder()
     .setColor('#E60067')
-    .setTitle('🚀 Como ajudar a Cringelândia')
+    .setTitle('🚀  ✦  Como ajudar a Cringelândia')
     .setDescription(
-      'Cada interação aumenta a visibilidade do servidor e ajuda novas pessoas a encontrarem a nossa comunidade. Escolha uma ou mais formas de apoiar:'
+      'Cada interação aumenta a visibilidade do servidor e ajuda novas pessoas a encontrarem a nossa comunidade. Escolha uma forma de ajudar. Eu estou agradecendo em silêncio, então aproveite:'
     )
     .addFields(
       {
         name: '📌 DISBOARD — `/bump`',
-        value: 'Use o comando **/bump** quando o DISBOARD permitir. Depois, aguarde o cooldown indicado pelo bot para fazer outro bump.',
+        value: 'Use **/bump** quando o DISBOARD permitir. Depois, aguarde o cooldown. Sim, até divulgar a casa exige paciência.',
       },
       {
         name: '🐢 Canudinho — `/bump`',
@@ -110,10 +110,10 @@ function buildBumpGuideEmbed() {
       },
       {
         name: '⭐ Review no DISBOARD',
-        value: 'Uma avaliação sincera também ajuda muito: conte como tem sido sua experiência na Cringelândia.',
+        value: 'Uma avaliação sincera também ajuda muito. Diga como tem sido sua experiência na Cringelândia; elogios são aceitos, mas não subam à cabeça.',
       }
     )
-    .setFooter({ text: 'Cringelândia • Seu lugar de ser você' })
+    .setFooter({ text: 'Cringelândia • Kuromi agradece, mas negará se você perguntar' })
     .setTimestamp();
 }
 
@@ -256,7 +256,7 @@ async function handleCringePhrase(message) {
 
 client.once('ready', async () => {
   // Sinal de que o bot já conectou e está pronto para receber eventos.
-  console.log(`Kuromiga conectada como ${client.user.tag}`);
+  console.log(`Kuromi conectada como ${client.user.tag}`);
 
   client.user.setPresence({
     activities: [{ name: 'Sendo cringe.', type: ActivityType.Watching }],
@@ -283,25 +283,25 @@ client.on('guildMemberAdd', async (member) => {
 
   const welcomeEmbed = new EmbedBuilder()
     .setColor('#8b5cf6')
-    .setTitle('🎉 Uma nova pessoa chegou!')
-    .setDescription(`Que bom ter você aqui, **${member.displayName}**! A Cringelândia fica mais acolhedora com a sua presença.`)
+    .setTitle('🎉  ✦  Uma nova pessoa chegou')
+    .setDescription(`Que bom ter você aqui, **${member.displayName}**. A Cringelândia ficou mais interessante; não me faça me arrepender.`)
     .addFields(
       {
         name: '📜 Comece pelas regras',
-        value: `Consulte <#${RULES_CHANNEL_ID}> para conhecer a casa e manter o ambiente seguro.`,
+        value: `Consulte <#${RULES_CHANNEL_ID}> para conhecer a casa e manter o ambiente seguro. Eu sei, regras são chatas. Ainda assim.`,
       },
       {
         name: '🧭 Explore o servidor',
-        value: `Veja vantagens e tutoriais em <#${GUIDES_CHANNEL_ID}>.`,
+        value: `Veja vantagens e tutoriais em <#${GUIDES_CHANNEL_ID}>. Tente não se perder logo de cara.`,
       },
       {
         name: '🎨 Personalize sua experiência',
-        value: `Confira as cores disponíveis em <#${COLORS_CHANNEL_ID}>.`,
+        value: `Confira as cores disponíveis em <#${COLORS_CHANNEL_ID}>. Até sua estética merece atenção.`,
       }
     )
     .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 256 }))
     .setImage('https://cdn.discordapp.com/attachments/1533657882862686218/1541908904487690321/dhj7hfn-842bcc59-b41f-4ef3-888b-dbfc210f4a5c.gif?ex=6a9b2b92&is=6a99da12&hm=7a41318a2f477b04a295a5b209c43de9517cfa47ac6ecf15e351c045aa104714&')
-    .setFooter({ text: 'Cringelândia • Seu lugar de ser você • Acolhimento em primeiro lugar' })
+    .setFooter({ text: 'Cringelândia • Kuromi finge que não ficou feliz com sua chegada' })
     .setTimestamp();
 
   try {
@@ -380,7 +380,7 @@ client.on('interactionCreate', async (interaction) => {
   const command = commandsByName.get(interaction.commandName);
   await interaction.deferReply({ ephemeral: command?.name === 'tarot' });
   if (!command || typeof command.executeSlash !== 'function') {
-    await interaction.editReply({ content: 'Esse comando ainda não está disponível.' });
+    await interaction.editReply({ content: 'Esse comando ainda não está disponível. Não olhe para mim assim; eu também estou investigando.' });
     return;
   }
 

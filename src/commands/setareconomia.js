@@ -17,7 +17,7 @@ function parseAmount(value) {
 }
 
 function buildReply(target, amount) {
-  return `✅ Economia de **${target}** definida para **${formatCoins(amount)}**.`;
+  return `✅ Economia de **${target}** definida para **${formatCoins(amount)}**. Pronto. Não diga que eu não cuido desta casa.`;
 }
 
 module.exports = {
@@ -30,15 +30,15 @@ module.exports = {
     .addUserOption((option) => option.setName('usuario').setDescription('Usuário que terá o saldo alterado').setRequired(true))
     .addIntegerOption((option) => option.setName('quantidade').setDescription('Novo saldo de Moedinhas').setMinValue(0).setRequired(true)),
   async executePrefix({ message, args }) {
-    if (!isManager(message)) return message.reply('❌ Apenas administradores podem alterar a economia.');
+    if (!isManager(message)) return message.reply('❌ Apenas administradores podem alterar a economia. A pose de autoridade não engana a Kuromi.');
     const target = getTargetUser(message, args);
     const amount = parseAmount(args[1]);
-    if (!target || amount === null) return message.reply('❌ Use: `ku!setareconomia @usuário quantidade`.');
+    if (!target || amount === null) return message.reply('❌ Use: `ku!setareconomia @usuário quantidade`. Eu preciso de dados, não de drama.');
     setUserBalance(target.id, amount);
     await message.reply(buildReply(target, amount));
   },
   async executeSlash({ interaction }) {
-    if (!isManager(interaction)) return interaction.editReply('❌ Apenas administradores podem alterar a economia.');
+    if (!isManager(interaction)) return interaction.editReply('❌ Apenas administradores podem alterar a economia. A pose de autoridade não engana a Kuromi.');
     const target = getTargetUser(interaction);
     const amount = interaction.options.getInteger('quantidade');
     setUserBalance(target.id, amount);

@@ -81,13 +81,13 @@ function buildShipEmbed(memberA, memberB, percent) {
 async function runShipPrefix(message) {
   const members = await message.guild.members.fetch().catch(() => null);
   if (!members) {
-    await message.reply("❌ Nao consegui buscar os membros do servidor.");
+    await message.reply('❌ Não consegui buscar os membros do servidor. Até a Kuromi tem limites, aparentemente.');
     return;
   }
 
   const pair = pickTwoRandom(members);
   if (!pair) {
-    await message.reply("❌ Precisamos de pelo menos 2 humanos no servidor para isso!");
+    await message.reply('❌ Precisamos de pelo menos 2 humanos no servidor para isso. Romance solitário é outro comando.');
     return;
   }
 
@@ -100,13 +100,13 @@ async function runShipPrefix(message) {
 async function runShipInteraction(interaction) {
   const members = await interaction.guild.members.fetch().catch(() => null);
   if (!members) {
-    await interaction.editReply("❌ Nao consegui buscar os membros do servidor.");
+    await interaction.editReply('❌ Não consegui buscar os membros do servidor. Até a Kuromi tem limites, aparentemente.');
     return;
   }
 
   const pair = pickTwoRandom(members);
   if (!pair) {
-    await interaction.editReply("❌ Precisamos de pelo menos 2 humanos no servidor para isso!");
+    await interaction.editReply('❌ Precisamos de pelo menos 2 humanos no servidor para isso. Romance solitário é outro comando.');
     return;
   }
 
