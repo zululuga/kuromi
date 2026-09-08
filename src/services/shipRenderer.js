@@ -79,7 +79,24 @@ async function loadMemberAvatar(member) {
   return loadImage(url).catch(() => null);
 }
 
-function getThemePalette(percent) {
+const SPECIAL_COUPLE_IDS = new Set(['214153735281180673', '1463644930080637140']);
+
+function isSpecialCouple(memberA, memberB) {
+  const idA = memberA?.id || memberA?.user?.id;
+  const idB = memberB?.id || memberB?.user?.id;
+  return SPECIAL_COUPLE_IDS.has(idA) && SPECIAL_COUPLE_IDS.has(idB) && idA !== idB;
+}
+
+function getThemePalette(percent, isSpecial = false) {
+  if (isSpecial) {
+    return {
+      accent: '#ff70a6',
+      accentGlow: 'rgba(255, 112, 166, 0.55)',
+      barStart: '#e60067',
+      barEnd: '#c084fc',
+      verdict: 'Esses usuários se amam mais do que qualquer coisa no mundo.',
+    };
+  }
   if (percent < 40) {
     return {
       accent: '#f43f5e',
@@ -110,7 +127,8 @@ function getThemePalette(percent) {
 async function renderShipCard(memberA, memberB, percent) {
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
-  const palette = getThemePalette(percent);
+  const isSpecial = isSpecialCouple(memberA, memberB);
+  const palette = getThemePalette(percent, isSpecial);
 
   // 1. Background Radial Gradient (Gothic Romantic Dark)
   const bg = ctx.createRadialGradient(WIDTH / 2, HEIGHT / 2, 60, WIDTH / 2, HEIGHT / 2, 750);

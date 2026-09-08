@@ -16,8 +16,24 @@ function buildShipName(nameA, nameB) {
   return shipName || 'Mistério';
 }
 
+const SPECIAL_COUPLE_IDS = new Set(['214153735281180673', '1463644930080637140']);
+
+function isSpecialCouple(memberA, memberB) {
+  const idA = memberA?.id || memberA?.user?.id;
+  const idB = memberB?.id || memberB?.user?.id;
+  return SPECIAL_COUPLE_IDS.has(idA) && SPECIAL_COUPLE_IDS.has(idB) && idA !== idB;
+}
+
 // Retorna a mensagem e cor do embed de acordo com a porcentagem.
-function getShipVerdict(percent) {
+function getShipVerdict(percent, isSpecial = false) {
+  if (isSpecial) {
+    return {
+      message: 'Esses usuários se amam mais do que qualquer coisa no mundo.',
+      color: '#E60067',
+      emoji: '💖',
+      isSpecial: true,
+    };
+  }
   if (percent < 40) {
     return { message: 'Química duvidosa, mas o drama está garantido.', color: '#F43F5E', emoji: '💔' };
   }
@@ -47,21 +63,38 @@ function pickTwoRandom(members) {
 function buildShipEmbed(memberA, memberB, percent) {
   const nameA = memberA.displayName;
   const nameB = memberB.displayName;
-  const verdict = getShipVerdict(percent);
+  const isSpecial = isSpecialCouple(memberA, memberB);
+  const verdict = getShipVerdict(percent, isSpecial);
   const shipName = buildShipName(nameA, nameB);
 
-  return new EmbedBuilder()
+  const embed = new EmbedBuilder()
     .setColor(verdict.color)
-    .setTitle(`${verdict.emoji}  ✦  Ship Cringelândia`)
-    .setDescription(
-      `**${nameA}** x **${nameB}**\n\n` +
-      `💑 Nome do casal: **${shipName}**\n\n` +
-      `**${percent}% de amor**\n\n` +
-      `> *${verdict.message}*`
-    )
     .setImage('attachment://casal_cringelandia.png')
-    .setFooter({ text: 'Cringelândia • Kuromi juntou, Kuromi supervisiona' })
     .setTimestamp();
+
+  if (isSpecial) {
+    embed
+      .setTitle(`💖  ✦  Ship Eterno da Cringelândia  ✦  💖`)
+      .setDescription(
+        `**${nameA}**  ✦  **${nameB}**\n\n` +
+        `💍 Nome do casal: **${shipName}**\n\n` +
+        `✨ **100% de amor absoluto** ✨\n\n` +
+        `> ✧ ✦ 💖 **${verdict.message}** 💖 ✦ ✧`
+      )
+      .setFooter({ text: 'Cringelândia • Conexão predestinada e inabalável • Kuromi aprova' });
+  } else {
+    embed
+      .setTitle(`${verdict.emoji}  ✦  Ship Cringelândia`)
+      .setDescription(
+        `**${nameA}** x **${nameB}**\n\n` +
+        `💑 Nome do casal: **${shipName}**\n\n` +
+        `**${percent}% de amor**\n\n` +
+        `> *${verdict.message}*`
+      )
+      .setFooter({ text: 'Cringelândia • Kuromi juntou, Kuromi supervisiona' });
+  }
+
+  return embed;
 }
 
 function getSelectedUsers(source) {
@@ -115,7 +148,8 @@ async function runShip(source, reply) {
     return;
   }
 
-  const percent = Math.floor(Math.random() * 101);
+  const isSpecial = isSpecialCouple(pair[0], pair[1]);
+  const percent = isSpecial ? 100 : Math.floor(Math.random() * 101);
   const attachment = await createShipAttachment(pair[0], pair[1], percent);
   const embed = buildShipEmbed(pair[0], pair[1], percent);
   await reply({ embeds: [embed], files: [attachment] });
