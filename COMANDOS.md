@@ -107,10 +107,10 @@ Resposta: Embed com status online
 ```
 
 ### `/ajuda`
-Lista todos os comandos e funções disponíveis.
+Lista todos os comandos e funções disponíveis em mensagem privada/efêmera com botões de navegação.
 ```
 Uso: /ajuda [pagina]
-Resposta: Embed com lista de comandos
+Resposta: Embed interativo com lista de comandos, botões de paginação (◀️ / ▶️) e visibilidade apenas para quem executou.
 ```
 
 ### `/boasvindas #canal`

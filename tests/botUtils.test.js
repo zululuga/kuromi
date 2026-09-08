@@ -8,6 +8,7 @@ const {
   getCommandList,
   getPrefix,
 } = require('../src/utils/botUtils');
+const { buildHelpMessage, buildHelpComponents } = require('../src/commands/commandHelpers');
 const { getWelcomeChannel, setWelcomeChannel } = require('../src/services/database');
 
 const lockFile = path.join(__dirname, '..', '.botmelody.lock');
@@ -33,6 +34,17 @@ try {
   const help = getCommandList();
   assert.ok(Array.isArray(help), 'A lista de comandos deve existir.');
   assert.ok(help.some((item) => item.name === '/ajuda'), 'O comando /ajuda deve estar na lista.');
+
+  const helpPage1 = buildHelpMessage(1, 'user-123');
+  assert.ok(helpPage1.embed, 'O embed da página 1 deve ser gerado.');
+  assert.equal(helpPage1.page, 1, 'A página retornada deve ser 1.');
+  assert.ok(helpPage1.components.length > 0, 'Componentes de botões devem estar presentes.');
+  
+  const rawComponents = helpPage1.components[0].toJSON();
+  assert.equal(rawComponents.components.length, 3, 'Deve conter 3 botões (Anterior, Indicador, Próximo).');
+  assert.equal(rawComponents.components[0].disabled, true, 'O botão Anterior deve estar desativado na página 1.');
+  assert.equal(rawComponents.components[1].disabled, true, 'O indicador de página deve estar desativado.');
+  assert.equal(rawComponents.components[2].disabled, helpPage1.totalPages <= 1, 'O botão Próximo deve estar ativado se houver mais de 1 página.');
 
   const defaultPrefix = getPrefix();
   assert.equal(defaultPrefix, 'ku!', 'O prefixo padrão deve ser ku!.');

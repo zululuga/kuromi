@@ -13,6 +13,7 @@ const { getWelcomeChannel, normalizeChannelValue } = require('./src/services/dat
 const { commandsByName, slashCommands } = require('./src/commands');
 const marriageCommand = require('./src/commands/casamento');
 const tarotCommand = require('./src/commands/tarot');
+const helpCommand = require('./src/commands/help');
 const { registerAutomation, updateAutomation } = require('./src/services/automationSchedule');
 const {
   DISCORD_TOKEN,
@@ -398,13 +399,21 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
+  if (helpCommand.isHelpButton(interaction)) {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await helpCommand.executeButton({ interaction });
+    return;
+  }
+
   if (!interaction.isChatInputCommand()) return;
 
   incrementCommand();
   recordUniqueUser(interaction.user.id);
 
   const command = commandsByName.get(interaction.commandName);
-  await interaction.deferReply({ ephemeral: command?.name === 'tarot' });
+  const isEphemeral = Boolean(command?.ephemeral || command?.name === 'tarot' || command?.name === 'ajuda');
+  await interaction.deferReply({ ephemeral: isEphemeral });
   if (!command || typeof command.executeSlash !== 'function') {
     await interaction.editReply({ content: 'Esse comando ainda não está disponível. Não olhe para mim assim; eu também estou investigando.' });
     return;
