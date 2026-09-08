@@ -12,6 +12,7 @@ const { acquireBotLock, releaseBotLock, getPrefix } = require('./src/utils/botUt
 const { getWelcomeChannel, normalizeChannelValue } = require('./src/services/database');
 const { commandsByName, slashCommands } = require('./src/commands');
 const marriageCommand = require('./src/commands/casamento');
+const tarotCommand = require('./src/commands/tarot');
 const {
   DISCORD_TOKEN,
   STARTUP_CHANNEL_ID,
@@ -23,11 +24,15 @@ const {
   RULES_CHANNEL_ID,
   GUIDES_CHANNEL_ID,
   COLORS_CHANNEL_ID,
+  TAROT_CHANNEL_ID,
+  TAROT_LOG_CHANNEL_ID,
+  TAROT_ROLE_ID,
 } = require('./src/config');
 const { incrementCommand, incrementMessages, recordUniqueUser } = require('./src/services/logging');
+const { getBrasiliaDate, resetDailyDraws } = require('./src/services/tarot');
 
 const welcomeHeartReactions = ['❤️', '🧡', '💛', '💚', '💙', '💜', '🩷', '🩵', '🖤', '🤍', '🤎'];
-const CRINGE_PHRASE_COOLDOWN_MS = 30 * 1000;
+const CRINGE_PHRASE_COOLDOWN_MS = 60 * 1000;
 const cringePhraseCooldowns = new Map();
 
 function getRandomWelcomeHeart() {
@@ -166,6 +171,73 @@ function startBumpGuideScheduler() {
   }, BUMP_GUIDE_INTERVAL_MS);
 }
 
+function buildTarotDailyEmbed() {
+  return new EmbedBuilder()
+    .setColor('#e60067')
+    .setTitle("🌙 Luna's Kuromi Tarot")
+    .setDescription('Uma carta por dia para iluminar seus caminhos. A leitura é privada e pode ser feita pelo botão ou por `/tarot`.')
+    .setFooter({ text: 'Luna observa. Kuromi julga. As cartas respondem.' })
+    .setTimestamp();
+}
+
+function buildTarotDailyComponents() {
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('tarot:draw')
+        .setLabel('Tirar Tarot do Dia')
+        .setStyle(ButtonStyle.Primary)
+    ),
+  ];
+}
+
+async function postTarotDailyAnnouncement(now = Date.now()) {
+  resetDailyDraws(now);
+  const channel = await client.channels.fetch(TAROT_CHANNEL_ID).catch(() => null);
+  if (!channel || !channel.isTextBased()) {
+    console.warn(`Canal do Tarot não encontrado ou inválido: ${TAROT_CHANNEL_ID}`);
+    return;
+  }
+
+  await channel.send({
+    content: `<@&${TAROT_ROLE_ID}>`,
+    embeds: [buildTarotDailyEmbed()],
+    components: buildTarotDailyComponents(),
+    allowedMentions: { roles: [TAROT_ROLE_ID] },
+  });
+}
+
+function startTarotScheduler() {
+  const currentCycle = getBrasiliaDate();
+  const nextMidnightUtc = Date.parse(`${currentCycle}T03:00:00.000Z`) + 24 * 60 * 60 * 1000;
+  const delay = Math.max(1000, nextMidnightUtc - Date.now());
+
+  setTimeout(() => {
+    postTarotDailyAnnouncement().catch((error) => console.error('Erro no anúncio diário do Tarot:', error));
+    setInterval(() => {
+      postTarotDailyAnnouncement().catch((error) => console.error('Erro no anúncio diário do Tarot:', error));
+    }, 24 * 60 * 60 * 1000);
+  }, delay);
+}
+
+async function logTarotResult({ user, result }) {
+  const channel = await client.channels.fetch(TAROT_LOG_CHANNEL_ID).catch(() => null);
+  if (!channel || !channel.isTextBased()) return;
+
+  const prefix = result.paid ? 'ué... Que estranho... Jurava que tinha lido outra coisa...' : '';
+  const embed = new EmbedBuilder()
+    .setColor(result.paid ? '#7c3aed' : '#e60067')
+    .setTitle('🌙 Registro de tiragem')
+    .setDescription(`${prefix}${prefix ? '\n\n' : ''}<@${user.id}> tirou **${result.card.name}** (${result.orientation}).`)
+    .setTimestamp();
+
+  await channel.send({
+    content: prefix || undefined,
+    embeds: [embed],
+    allowedMentions: { users: [] },
+  });
+}
+
 async function handleCringePhrase(message) {
   if (!/\bviadinho\s+fofinho\b/i.test(message.content)) return false;
 
@@ -187,12 +259,13 @@ client.once('ready', async () => {
   console.log(`Kuromiga conectada como ${client.user.tag}`);
 
   client.user.setPresence({
-    activities: [{ name: 'monitorando e ajudando pessoas', type: ActivityType.Watching }],
+    activities: [{ name: 'Sendo cringe.', type: ActivityType.Watching }],
     status: 'online',
   });
 
   await sendStartupAnnouncement();
   startBumpGuideScheduler();
+  startTarotScheduler();
 });
 
 // Mensagem de boas-vindas ao entrar no servidor.
@@ -277,6 +350,21 @@ client.on('messageCreate', async (message) => {
 
 // O registro compartilhado também encaminha cada slash command ao próprio arquivo.
 client.on('interactionCreate', async (interaction) => {
+  if (tarotCommand.isTarotButton(interaction)) {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await tarotCommand.executeButton({ interaction, logTarotResult });
+    return;
+  }
+
+  if (interaction.isButton() && interaction.customId === 'tarot:draw') {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await interaction.deferReply({ ephemeral: true });
+    await tarotCommand.executeSlash({ interaction, logTarotResult });
+    return;
+  }
+
   if (marriageCommand.isMarriageButton(interaction)) {
     incrementCommand();
     recordUniqueUser(interaction.user.id);
@@ -286,18 +374,17 @@ client.on('interactionCreate', async (interaction) => {
 
   if (!interaction.isChatInputCommand()) return;
 
-  await interaction.deferReply();
-
   incrementCommand();
   recordUniqueUser(interaction.user.id);
 
   const command = commandsByName.get(interaction.commandName);
+  await interaction.deferReply({ ephemeral: command?.name === 'tarot' });
   if (!command || typeof command.executeSlash !== 'function') {
     await interaction.editReply({ content: 'Esse comando ainda não está disponível.' });
     return;
   }
 
-  await command.executeSlash({ interaction });
+  await command.executeSlash({ interaction, logTarotResult });
 });
 
 client.on('error', (error) => {

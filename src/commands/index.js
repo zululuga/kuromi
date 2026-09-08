@@ -18,6 +18,7 @@ const commands = [
   require('./trabalho'),
   require('./adocao'),
   require('./petexplorar'),
+  require('./tarot'),
 ];
 
 const commandsByName = new Map(

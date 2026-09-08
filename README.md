@@ -44,6 +44,8 @@ Crie ou edite o arquivo `.env` na raiz do projeto com o seguinte formato:
 DISCORD_TOKEN=seu_token_do_bot_aqui
 DISCORD_CLIENT_ID=seu_client_id_aqui
 PORT=3000
+# URL pública que contém os PNGs referenciados em data/tarot.json
+TAROT_IMAGE_BASE_URL=https://seu-host/tarot
 ```
 
 ---
@@ -107,6 +109,7 @@ e:/botMelody/
 | `/carteira` | Exibe seu saldo de Moedinhas | `ku!carteira` |
 | `/ranking` | Exibe o ranking de Moedinhas | `ku!ranking` |
 | `/configeconomia` | Configura o mínimo e máximo do diário (administradores) | `ku!configeconomia 0 100` |
+| `/tarot` | Faz uma tiragem privada diária; uma nova custa 350 Moedinhas | — |
 
 Além dos comandos, a Kuromiga responde a qualquer mensagem que contenha `viadinho fofinho` com uma reação 🏳️‍🌈 e um GIF de Gacha Life.
 
