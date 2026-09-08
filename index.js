@@ -228,7 +228,7 @@ async function logTarotResult({ user, result }) {
   const embed = new EmbedBuilder()
     .setColor(result.paid ? '#7c3aed' : '#e60067')
     .setTitle('🌙 Registro de tiragem')
-    .setDescription(`${prefix}${prefix ? '\n\n' : ''}<@${user.id}> tirou **${result.card.name}** (${result.orientation}).`)
+    .setDescription(`${prefix}${prefix ? '\n\n' : ''}<@${user.id}> tirou **${tarotCommand.getDisplayCardName(result.card)}** (${tarotCommand.getDisplayOrientation(result.orientation)}).`)
     .setTimestamp();
 
   await channel.send({

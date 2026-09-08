@@ -12,13 +12,36 @@ const { TAROT_IMAGE_BASE_URL } = require('../config');
 
 const name = 'tarot';
 const BUTTON_PREFIX = `${name}:`;
+const MAJOR_NAMES = [
+  'O LOUCO', 'O MAGO', 'A SACERDOTISA', 'A IMPERATRIZ', 'O IMPERADOR', 'O HIEROFANTE',
+  'OS ENAMORADOS', 'O CARRO', 'A FORÇA', 'O EREMITA', 'A RODA DA FORTUNA', 'A JUSTIÇA',
+  'O ENFORCADO', 'A MORTE', 'A TEMPERANÇA', 'O DIABO', 'A TORRE', 'A ESTRELA',
+  'A LUA', 'O SOL', 'O JULGAMENTO', 'O MUNDO',
+];
+const SUIT_NAMES = { wands: 'PAUS', cups: 'COPAS', swords: 'ESPADAS', pentacles: 'OUROS' };
+const RANK_NAMES = { page: 'PAJEM', knight: 'CAVALEIRO', queen: 'RAINHA', king: 'REI' };
+
+function getDisplayCardName(card) {
+  if (card.id.startsWith('major_')) {
+    return MAJOR_NAMES[Number(card.id.slice('major_'.length))] || card.name;
+  }
+
+  const [, suit, rank] = card.id.match(/^(wands|cups|swords|pentacles)_(.+)$/) || [];
+  if (!suit || !rank) return card.name;
+  const translatedRank = RANK_NAMES[rank] || (rank === '01' ? 'ÁS' : rank);
+  return `${translatedRank} DE ${SUIT_NAMES[suit]}`;
+}
+
+function getDisplayOrientation(orientation) {
+  return orientation === 'REVERSED' ? 'INVERTIDA' : 'NORMAL';
+}
 
 function buildTarotEmbed(result) {
   const { card } = result;
   const embed = new EmbedBuilder()
     .setColor(result.orientation === 'REVERSED' ? '#7c3aed' : '#e60067')
-    .setTitle(`🌙 Luna's Kuromi Tarot • ${result.orientation}`)
-    .setDescription(`**${card.name}**\n\n${result.orientation === 'REVERSED' ? card.reversed : card.upright}`)
+    .setTitle(`🌙 Luna's Kuromi Tarot • ${getDisplayOrientation(result.orientation)}`)
+    .setDescription(`**${getDisplayCardName(card)}**\n\n${result.orientation === 'REVERSED' ? card.reversed : card.upright}`)
     .addFields(
       { name: 'Palavras-chave', value: card.keywords.join(' • ') },
       { name: 'Suborno', value: `Uma nova leitura custa ${formatCoins(BRIBE_COST)}.` }
@@ -90,6 +113,8 @@ async function executeButton({ interaction, logTarotResult }) {
 module.exports = {
   name,
   buildTarotEmbed,
+  getDisplayCardName,
+  getDisplayOrientation,
   isTarotButton,
   executeButton,
   data: new SlashCommandBuilder()
