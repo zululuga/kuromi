@@ -20,6 +20,7 @@ const MAJOR_NAMES = [
 ];
 const SUIT_NAMES = { wands: 'PAUS', cups: 'COPAS', swords: 'ESPADAS', pentacles: 'OUROS' };
 const RANK_NAMES = { page: 'PAJEM', knight: 'CAVALEIRO', queen: 'RAINHA', king: 'REI' };
+const TAROT_COLORS = { upright: '#f59e0b', reversed: '#8b5cf6' };
 
 function getDisplayCardName(card) {
   if (card.id.startsWith('major_')) {
@@ -39,14 +40,14 @@ function getDisplayOrientation(orientation) {
 function buildTarotEmbed(result) {
   const { card } = result;
   const embed = new EmbedBuilder()
-    .setColor(result.orientation === 'REVERSED' ? '#7c3aed' : '#e60067')
-    .setTitle(`🌙 Luna's Kuromi Tarot • ${getDisplayOrientation(result.orientation)}`)
+    .setColor(result.orientation === 'REVERSED' ? TAROT_COLORS.reversed : TAROT_COLORS.upright)
+    .setTitle(`🌙  ✦  Luna's Kuromi Tarot  ✦  ${getDisplayOrientation(result.orientation)}`)
     .setDescription(`**${getDisplayCardName(card)}**\n\n${result.orientation === 'REVERSED' ? card.reversed : card.upright}`)
     .addFields(
       { name: 'Palavras-chave', value: card.keywords.join(' • ') },
-      { name: 'Suborno', value: `Uma nova leitura custa ${formatCoins(BRIBE_COST)}.` }
+      { name: 'Uma ajudinha para a Kuromi', value: `Ela aceita ${formatCoins(BRIBE_COST)} por uma nova leitura.` }
     )
-    .setFooter({ text: 'Sua leitura é privada • O destino também gosta de suspense.' })
+    .setFooter({ text: 'Sua leitura é privada • Até o destino gosta de um pouco de drama.' })
     .setTimestamp();
 
   if (TAROT_IMAGE_BASE_URL) {
@@ -60,14 +61,14 @@ function buildBribeRow(userId) {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`${BUTTON_PREFIX}bribe:${userId}`)
-      .setLabel('Não gostou da sua tiragem para o dia? Suborne a Kuromi!')
+      .setLabel('💸 Fazer uma oferenda à Kuromi')
       .setStyle(ButtonStyle.Secondary)
   );
 }
 
 async function sendDraw({ interaction, userId, result, logTarotResult }) {
   if (!result.drawn && !result.bribed) {
-    await interaction.editReply({ content: '🔮 Você já tirou seu Tarot do dia. Amanhã as cartas podem tentar de novo.', components: [] });
+    await interaction.editReply({ content: '🔮 A carta de hoje já falou com você. Volte amanhã; ela adora suspense.', components: [] });
     return;
   }
 
@@ -85,24 +86,24 @@ function isTarotButton(interaction) {
 async function executeButton({ interaction, logTarotResult }) {
   const [, action, ownerId] = interaction.customId.split(':');
   if (action !== 'bribe' || ownerId !== interaction.user.id) {
-    await interaction.reply({ content: 'Essa oferta pertence a outra pessoa.', ephemeral: true });
+    await interaction.reply({ content: 'Essa oferenda já tem dona. A Kuromi sabe quem clicou primeiro.', ephemeral: true });
     return;
   }
 
   if (!hasActiveDraw(interaction.user.id)) {
-    await interaction.reply({ content: 'A leitura do dia não está mais disponível.', ephemeral: true });
+    await interaction.reply({ content: 'A janela da leitura fechou por hoje. Volte amanhã.', ephemeral: true });
     return;
   }
 
   const payment = spendCoins(interaction.user.id, BRIBE_COST);
   if (!payment.spent) {
-    await interaction.reply({ content: `❌ A Kuromi exige ${formatCoins(BRIBE_COST)}. Seu saldo é ${formatCoins(payment.balance)}.`, ephemeral: true });
+    await interaction.reply({ content: `💸 A Kuromi consultou seu saldo e fez uma carinha triste. Ela precisa de ${formatCoins(BRIBE_COST)}; você tem ${formatCoins(payment.balance)}.`, ephemeral: true });
     return;
   }
 
   const result = bribeKuromi(interaction.user.id);
   if (!result.bribed) {
-    await interaction.reply({ content: 'A leitura do dia não está mais disponível.', ephemeral: true });
+    await interaction.reply({ content: 'A janela da leitura fechou por hoje. Volte amanhã.', ephemeral: true });
     return;
   }
 

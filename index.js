@@ -174,9 +174,9 @@ function startBumpGuideScheduler() {
 function buildTarotDailyEmbed() {
   return new EmbedBuilder()
     .setColor('#e60067')
-    .setTitle("🌙 Luna's Kuromi Tarot")
-    .setDescription('Uma carta por dia para iluminar seus caminhos. A leitura é privada e pode ser feita pelo botão ou por `/tarot`.')
-    .setFooter({ text: 'Luna observa. Kuromi julga. As cartas respondem.' })
+    .setTitle("🌙  ✦  Luna's Kuromi Tarot  ✦")
+    .setDescription('Uma carta por dia para iluminar seus caminhos. A leitura é privada; escolha o botão ou use `/tarot`.')
+    .setFooter({ text: 'Luna embaralha • Kuromi supervisiona • O destino faz suspense.' })
     .setTimestamp();
 }
 
@@ -226,8 +226,8 @@ async function logTarotResult({ user, result }) {
 
   const prefix = result.paid ? 'ué... Que estranho... Jurava que tinha lido outra coisa...' : '';
   const embed = new EmbedBuilder()
-    .setColor(result.paid ? '#7c3aed' : '#e60067')
-    .setTitle('🌙 Registro de tiragem')
+    .setColor(result.paid ? '#8b5cf6' : '#f59e0b')
+    .setTitle('💌 Bilhetinho da Luna')
     .setDescription(`${prefix}${prefix ? '\n\n' : ''}<@${user.id}> tirou **${tarotCommand.getDisplayCardName(result.card)}** (${tarotCommand.getDisplayOrientation(result.orientation)}).`)
     .setTimestamp();
 
