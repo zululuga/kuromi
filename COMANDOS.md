@@ -70,6 +70,9 @@ Define o saldo de Moedinhas de um usuário. Disponível para administradores.
 ### `ku!resetareconomia @usuário`
 Zera as Moedinhas e o cooldown diário de um usuário. Disponível para administradores.
 
+### `ku!agenda`
+Mostra as próximas verificações e disparos automáticos do bot, com horário de Brasília, canal, frequência e contagem regressiva. Disponível para administradores.
+
 ### `ku!profissao <profissão>`
 Escolhe uma profissão. A primeira escolha é gratuita; trocar custa 50 Moedinhas.
 
@@ -137,6 +140,9 @@ Define o saldo de Moedinhas de um usuário. Disponível para administradores.
 
 ### `/resetareconomia usuario`
 Zera as Moedinhas e o cooldown diário de um usuário. Disponível para administradores.
+
+### `/agenda`
+Mostra as próximas verificações e disparos automáticos do bot. Disponível para administradores.
 
 ### `/profissao profissao`
 Escolhe uma profissão. A primeira escolha é gratuita; trocar custa 50 Moedinhas.

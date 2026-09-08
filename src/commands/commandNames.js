@@ -19,4 +19,5 @@ module.exports = {
   WORK: 'trabalho',
   ADOPTION: 'adocao',
   PET_EXPLORE: 'petexplorar',
+  AGENDA: 'agenda',
 };

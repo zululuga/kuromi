@@ -13,6 +13,7 @@ const { getWelcomeChannel, normalizeChannelValue } = require('./src/services/dat
 const { commandsByName, slashCommands } = require('./src/commands');
 const marriageCommand = require('./src/commands/casamento');
 const tarotCommand = require('./src/commands/tarot');
+const { registerAutomation, updateAutomation } = require('./src/services/automationSchedule');
 const {
   DISCORD_TOKEN,
   STARTUP_CHANNEL_ID,
@@ -160,11 +161,22 @@ async function postBumpGuide() {
 }
 
 function startBumpGuideScheduler() {
+  registerAutomation({
+    id: 'bump-guide',
+    emoji: '🚀',
+    name: 'Guia de apoio / bump',
+    action: 'verificação',
+    nextAt: Date.now() + BUMP_GUIDE_INTERVAL_MS,
+    channelId: BUMP_GUIDE_CHANNEL_ID,
+    frequency: 'a cada 12 horas',
+  });
+
   postBumpGuide().catch((error) => {
     console.error('Erro ao publicar o guia de bump:', error);
   });
 
   setInterval(() => {
+    updateAutomation('bump-guide', { nextAt: Date.now() + BUMP_GUIDE_INTERVAL_MS });
     postBumpGuide().catch((error) => {
       console.error('Erro ao publicar o guia de bump:', error);
     });
@@ -212,9 +224,21 @@ function startTarotScheduler() {
   const nextMidnightUtc = Date.parse(`${currentCycle}T03:00:00.000Z`) + 24 * 60 * 60 * 1000;
   const delay = Math.max(1000, nextMidnightUtc - Date.now());
 
+  registerAutomation({
+    id: 'tarot-daily',
+    emoji: '🌙',
+    name: 'Luna\'s Kuromi Tarot',
+    action: 'disparo',
+    nextAt: Date.now() + delay,
+    channelId: TAROT_CHANNEL_ID,
+    frequency: 'diário, à 00:00 BRT',
+  });
+
   setTimeout(() => {
+    updateAutomation('tarot-daily', { nextAt: Date.now() + 24 * 60 * 60 * 1000 });
     postTarotDailyAnnouncement().catch((error) => console.error('Erro no anúncio diário do Tarot:', error));
     setInterval(() => {
+      updateAutomation('tarot-daily', { nextAt: Date.now() + 24 * 60 * 60 * 1000 });
       postTarotDailyAnnouncement().catch((error) => console.error('Erro no anúncio diário do Tarot:', error));
     }, 24 * 60 * 60 * 1000);
   }, delay);

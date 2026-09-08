@@ -19,6 +19,7 @@ const commands = [
   require('./adocao'),
   require('./petexplorar'),
   require('./tarot'),
+  require('./agenda'),
 ];
 
 const commandsByName = new Map(
