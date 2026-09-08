@@ -22,9 +22,9 @@ function buildShipName(nameA, nameB) {
   };
   const a = half(nameA);
   const b = half(nameB);
-  if (!a && !b) return "Misterio";
+  if (!a && !b) return 'Mistério';
   const shipName = (a + b).replace(/^\w/, (c) => c.toUpperCase());
-  return shipName || "Misterio";
+  return shipName || 'Mistério';
 }
 
 // Retorna a mensagem e cor do embed de acordo com a porcentagem.
@@ -54,7 +54,7 @@ function pickTwoRandom(members) {
   return [arr[idxA], arr[idxB]];
 }
 
-// Constroi o embed principal do ship.
+// Constrói o embed principal do ship.
 function buildShipEmbed(memberA, memberB, percent) {
   const nameA = memberA.displayName;
   const nameB = memberB.displayName;

@@ -42,7 +42,7 @@ function buildTarotEmbed(result, guild) {
   const { card } = result;
   const embed = new EmbedBuilder()
     .setColor(result.orientation === 'REVERSED' ? TAROT_COLORS.reversed : TAROT_COLORS.upright)
-    .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Luna's Kuromi Tarot  ✦  ${getDisplayOrientation(result.orientation)}`)
+    .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Tarot da Cringelândia  ✦  ${getDisplayOrientation(result.orientation)}`)
     .setDescription(`**${getDisplayCardName(card)}**\n\n${result.orientation === 'REVERSED' ? card.reversed : card.upright}`)
     .addFields(
       { name: 'Palavras-chave', value: card.keywords.join(' • ') },
@@ -121,7 +121,7 @@ module.exports = {
   executeButton,
   data: new SlashCommandBuilder()
     .setName(name)
-    .setDescription('Receba uma tiragem privada do Luna\'s Kuromi Tarot.'),
+    .setDescription('Receba uma tiragem privada do Tarot da Cringelândia.'),
   async executeSlash({ interaction, logTarotResult }) {
     await sendDraw({ interaction, userId: interaction.user.id, result: drawTarot(interaction.user.id), logTarotResult });
   },

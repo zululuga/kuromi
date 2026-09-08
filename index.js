@@ -28,6 +28,7 @@ const {
   TAROT_CHANNEL_ID,
   TAROT_LOG_CHANNEL_ID,
   TAROT_ROLE_ID,
+  KUROMI_STARTUP_EMOJI,
 } = require('./src/config');
 const { incrementCommand, incrementMessages, recordUniqueUser } = require('./src/services/logging');
 const { getBrasiliaDate, resetDailyDraws } = require('./src/services/tarot');
@@ -69,7 +70,7 @@ async function sendStartupAnnouncement() {
 
   const startupEmbed = new EmbedBuilder()
     .setColor('#E60067')
-    .setTitle(`${getAnimatedEmoji(channel.guild, ['kuromi', 'sparkle', 'star'], '✨')}  ✦  Kuromi entrou em cena`)
+    .setTitle(`${KUROMI_STARTUP_EMOJI}  ✦  Kuromi entrou em cena`)
     .setDescription('Estou online, monitorando o servidor e pronta para ajudar. Não faça essa cara; eu também senti sua falta.')
     .addFields(
       { name: '🔗 Painel de Controle', value: 'Acesse: http://localhost:3000', inline: false },
@@ -187,9 +188,9 @@ function startBumpGuideScheduler() {
 function buildTarotDailyEmbed(guild) {
   return new EmbedBuilder()
     .setColor('#e60067')
-    .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Luna's Kuromi Tarot  ✦`)
+    .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Tarot da Cringelândia  ✦`)
     .setDescription('Uma carta por dia para iluminar seus caminhos. A leitura é privada; escolha o botão ou use `/tarot`.')
-    .setFooter({ text: 'Luna embaralha • Kuromi supervisiona • O destino faz suspense.' })
+    .setFooter({ text: 'O Tarot embaralha • Kuromi supervisiona • O destino faz suspense.' })
     .setTimestamp();
 }
 
@@ -228,7 +229,7 @@ function startTarotScheduler() {
   registerAutomation({
     id: 'tarot-daily',
     emoji: '🌙',
-    name: 'Luna\'s Kuromi Tarot',
+    name: 'Tarot da Cringelândia',
     action: 'disparo',
     nextAt: Date.now() + delay,
     channelId: TAROT_CHANNEL_ID,
@@ -252,7 +253,7 @@ async function logTarotResult({ user, result }) {
   const prefix = result.paid ? 'ué... Que estranho... Jurava que tinha lido outra coisa...' : '';
   const embed = new EmbedBuilder()
     .setColor(result.paid ? '#8b5cf6' : '#f59e0b')
-    .setTitle('💌 Bilhetinho da Luna')
+    .setTitle('💌 Bilhetinho do Tarot')
     .setDescription(`${prefix}${prefix ? '\n\n' : ''}<@${user.id}> tirou **${tarotCommand.getDisplayCardName(result.card)}** (${tarotCommand.getDisplayOrientation(result.orientation)}).`)
     .setTimestamp();
 

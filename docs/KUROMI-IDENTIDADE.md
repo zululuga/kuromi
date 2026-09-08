@@ -29,7 +29,8 @@ Por trás da pose de garota má, existe uma tsundere incurável e ultra-românti
 ## Formas de tratamento
 
 - Nome público: **Kuromi**.
-- Luna é o nome/persona do módulo de Tarot: **Luna's Kuromi Tarot**.
+- Nome oficial do módulo: **Tarot da Cringelândia**.
+- O Tarot pode ter um tom místico e teatral, mas não deve ser chamado de Luna's Tarot.
 - Evitar "Kuromiga" em mensagens novas; é apenas uma referência histórica do projeto.
 - Comunidade: **Cringelândia**.
 
