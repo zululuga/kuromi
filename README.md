@@ -112,12 +112,14 @@ e:/botMelody/
 | `/ranking` | Exibe o ranking de Moedinhas | `ku!ranking` |
 | `/configeconomia` | Configura o mínimo e máximo do diário (administradores) | `ku!configeconomia 0 100` |
 | `/tarot` | Faz uma tiragem privada diária; uma nova custa 350 Moedinhas | — |
+| `/agenda` | Mostra os próximos disparos e verificações automáticas (administradores) | `ku!agenda` |
+| `/emojis` | Baixa a lista de emojis customizados em JSON (administradores) | `ku!emojis` |
 
-Além dos comandos, a Kuromiga responde a qualquer mensagem que contenha `viadinho fofinho` com uma reação 🏳️‍🌈 e um GIF de Gacha Life.
+Além dos comandos, a Kuromi responde a qualquer mensagem que contenha `viadinho fofinho` com uma reação 🏳️‍🌈 e um GIF de Gacha Life.
 
 ### Guia de apoio da comunidade
 
-A Kuromiga publica automaticamente, a cada 12 horas, um embed no canal configurado para explicar como ajudar a Cringelândia com bumps no DISBOARD, Canudinho, Discadia, votos no Top.gg e reviews.
+A Kuromi publica automaticamente, a cada 12 horas, um embed no canal configurado para explicar como ajudar a Cringelândia com bumps no DISBOARD, Canudinho, Discadia, votos no Top.gg e reviews.
 
 ---
 

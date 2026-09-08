@@ -9,6 +9,7 @@ const { spendCoins } = require('../services/economy');
 const { BRIBE_COST, bribeKuromi, drawTarot, hasActiveDraw } = require('../services/tarot');
 const { formatCoins } = require('./economyHelpers');
 const { TAROT_IMAGE_BASE_URL } = require('../config');
+const { getAnimatedEmoji } = require('../utils/serverEmojis');
 
 const name = 'tarot';
 const BUTTON_PREFIX = `${name}:`;
@@ -37,11 +38,11 @@ function getDisplayOrientation(orientation) {
   return orientation === 'REVERSED' ? 'INVERTIDA' : 'NORMAL';
 }
 
-function buildTarotEmbed(result) {
+function buildTarotEmbed(result, guild) {
   const { card } = result;
   const embed = new EmbedBuilder()
     .setColor(result.orientation === 'REVERSED' ? TAROT_COLORS.reversed : TAROT_COLORS.upright)
-    .setTitle(`🌙  ✦  Luna's Kuromi Tarot  ✦  ${getDisplayOrientation(result.orientation)}`)
+    .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Luna's Kuromi Tarot  ✦  ${getDisplayOrientation(result.orientation)}`)
     .setDescription(`**${getDisplayCardName(card)}**\n\n${result.orientation === 'REVERSED' ? card.reversed : card.upright}`)
     .addFields(
       { name: 'Palavras-chave', value: card.keywords.join(' • ') },
@@ -73,7 +74,7 @@ async function sendDraw({ interaction, userId, result, logTarotResult }) {
   }
 
   await interaction.editReply({
-    embeds: [buildTarotEmbed(result)],
+    embeds: [buildTarotEmbed(result, interaction.guild)],
     components: result.paid ? [] : [buildBribeRow(userId)],
   });
   await logTarotResult({ user: interaction.user, result });
@@ -107,7 +108,7 @@ async function executeButton({ interaction, logTarotResult }) {
     return;
   }
 
-  await interaction.reply({ embeds: [buildTarotEmbed(result)], ephemeral: true });
+  await interaction.reply({ embeds: [buildTarotEmbed(result, interaction.guild)], ephemeral: true });
   await logTarotResult({ user: interaction.user, result });
 }
 

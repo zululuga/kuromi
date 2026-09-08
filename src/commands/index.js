@@ -20,6 +20,7 @@ const commands = [
   require('./petexplorar'),
   require('./tarot'),
   require('./agenda'),
+  require('./emojis'),
 ];
 
 const commandsByName = new Map(

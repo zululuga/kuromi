@@ -20,4 +20,5 @@ module.exports = {
   ADOPTION: 'adocao',
   PET_EXPLORE: 'petexplorar',
   AGENDA: 'agenda',
+  EMOJIS: 'emojis',
 };

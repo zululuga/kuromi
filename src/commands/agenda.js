@@ -2,6 +2,7 @@ const { PermissionFlagsBits, EmbedBuilder, SlashCommandBuilder } = require('disc
 const { BUMP_GUIDE_CHANNEL_ID, BUMP_GUIDE_INTERVAL_MS, TAROT_CHANNEL_ID } = require('../config');
 const { getAutomationSchedule } = require('../services/automationSchedule');
 const { AGENDA } = require('./commandNames');
+const { getAnimatedEmoji } = require('../utils/serverEmojis');
 
 function isManager(source) {
   return source.member?.permissions?.has(PermissionFlagsBits.ManageGuild);
@@ -23,11 +24,11 @@ function formatRemaining(remainingMs) {
   return [days ? `${days}d` : '', hours ? `${hours}h` : '', `${minutes}min`].filter(Boolean).join(' ');
 }
 
-function buildAgendaEmbed(now = Date.now()) {
+function buildAgendaEmbed(guild, now = Date.now()) {
   const schedule = getAutomationSchedule(now);
   const fields = schedule.length
     ? schedule.map((automation) => ({
-        name: `${automation.emoji} ${automation.name}`,
+        name: `${getAnimatedEmoji(guild, [automation.id, 'calendar', 'clock'], automation.emoji)} ${automation.name}`,
         value: `**Próxima ${automation.action}:** <t:${Math.floor(automation.nextAt / 1000)}:F>\n` +
           `**Em:** ${formatDate(automation.nextAt)} (Brasília)\n` +
           `**Falta:** ${formatRemaining(automation.remainingMs)}\n` +
@@ -60,11 +61,11 @@ module.exports = {
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
   async executePrefix({ message }) {
     if (!isManager(message)) return message.reply(buildUsage());
-    await message.reply({ embeds: [buildAgendaEmbed()] });
+    await message.reply({ embeds: [buildAgendaEmbed(message.guild)] });
   },
   async executeSlash({ interaction }) {
     if (!isManager(interaction)) return interaction.editReply(buildUsage());
-    await interaction.editReply({ embeds: [buildAgendaEmbed()] });
+    await interaction.editReply({ embeds: [buildAgendaEmbed(interaction.guild)] });
   },
   automationDefaults: {
     bump: { channelId: BUMP_GUIDE_CHANNEL_ID, intervalMs: BUMP_GUIDE_INTERVAL_MS },

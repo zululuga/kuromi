@@ -73,6 +73,9 @@ Zera as Moedinhas e o cooldown diário de um usuário. Disponível para administ
 ### `ku!agenda`
 Mostra as próximas verificações e disparos automáticos do bot, com horário de Brasília, canal, frequência e contagem regressiva. Disponível para administradores.
 
+### `ku!emojis`
+Baixa um arquivo JSON com a lista de emojis customizados do servidor, incluindo URLs, IDs e quais são animados. Disponível para administradores.
+
 ### `ku!profissao <profissão>`
 Escolhe uma profissão. A primeira escolha é gratuita; trocar custa 50 Moedinhas.
 
@@ -143,6 +146,9 @@ Zera as Moedinhas e o cooldown diário de um usuário. Disponível para administ
 
 ### `/agenda`
 Mostra as próximas verificações e disparos automáticos do bot. Disponível para administradores.
+
+### `/emojis`
+Baixa a lista de emojis customizados do servidor em JSON. Disponível para administradores.
 
 ### `/profissao profissao`
 Escolhe uma profissão. A primeira escolha é gratuita; trocar custa 50 Moedinhas.

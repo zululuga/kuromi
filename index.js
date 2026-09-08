@@ -31,6 +31,7 @@ const {
 } = require('./src/config');
 const { incrementCommand, incrementMessages, recordUniqueUser } = require('./src/services/logging');
 const { getBrasiliaDate, resetDailyDraws } = require('./src/services/tarot');
+const { getAnimatedEmoji } = require('./src/utils/serverEmojis');
 
 const welcomeHeartReactions = ['❤️', '🧡', '💛', '💚', '💙', '💜', '🩷', '🩵', '🖤', '🤍', '🤎'];
 const CRINGE_PHRASE_COOLDOWN_MS = 60 * 1000;
@@ -68,7 +69,7 @@ async function sendStartupAnnouncement() {
 
   const startupEmbed = new EmbedBuilder()
     .setColor('#E60067')
-    .setTitle('✨  ✦  Kuromi entrou em cena')
+    .setTitle(`${getAnimatedEmoji(channel.guild, ['kuromi', 'sparkle', 'star'], '✨')}  ✦  Kuromi entrou em cena`)
     .setDescription('Estou online, monitorando o servidor e pronta para ajudar. Não faça essa cara; eu também senti sua falta.')
     .addFields(
       { name: '🔗 Painel de Controle', value: 'Acesse: http://localhost:3000', inline: false },
@@ -85,10 +86,10 @@ async function sendStartupAnnouncement() {
   });
 }
 
-function buildBumpGuideEmbed() {
+function buildBumpGuideEmbed(guild) {
   return new EmbedBuilder()
     .setColor('#E60067')
-    .setTitle('🚀  ✦  Como ajudar a Cringelândia')
+    .setTitle(`${getAnimatedEmoji(guild, ['rocket', 'boost', 'star'], '🚀')}  ✦  Como ajudar a Cringelândia`)
     .setDescription(
       'Cada interação aumenta a visibilidade do servidor e ajuda novas pessoas a encontrarem a nossa comunidade. Escolha uma forma de ajudar. Eu estou agradecendo em silêncio, então aproveite:'
     )
@@ -145,7 +146,7 @@ async function postBumpGuide() {
   const lastGuide = recentMessages?.find(
     (message) =>
       message.author.id === client.user.id &&
-      message.embeds.some((embed) => embed.title === '🚀 Como ajudar a Cringelândia')
+      message.embeds.some((embed) => embed.title?.includes('Como ajudar a Cringelândia'))
   );
 
   if (lastGuide && Date.now() - lastGuide.createdTimestamp < BUMP_GUIDE_INTERVAL_MS) {
@@ -153,7 +154,7 @@ async function postBumpGuide() {
   }
 
   await channel.send({
-    embeds: [buildBumpGuideEmbed()],
+    embeds: [buildBumpGuideEmbed(channel.guild)],
     components: buildBumpGuideComponents(),
     allowedMentions: { parse: [] },
   });
@@ -183,10 +184,10 @@ function startBumpGuideScheduler() {
   }, BUMP_GUIDE_INTERVAL_MS);
 }
 
-function buildTarotDailyEmbed() {
+function buildTarotDailyEmbed(guild) {
   return new EmbedBuilder()
     .setColor('#e60067')
-    .setTitle("🌙  ✦  Luna's Kuromi Tarot  ✦")
+    .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Luna's Kuromi Tarot  ✦`)
     .setDescription('Uma carta por dia para iluminar seus caminhos. A leitura é privada; escolha o botão ou use `/tarot`.')
     .setFooter({ text: 'Luna embaralha • Kuromi supervisiona • O destino faz suspense.' })
     .setTimestamp();
@@ -213,7 +214,7 @@ async function postTarotDailyAnnouncement(now = Date.now()) {
 
   await channel.send({
     content: `<@&${TAROT_ROLE_ID}>`,
-    embeds: [buildTarotDailyEmbed()],
+    embeds: [buildTarotDailyEmbed(channel.guild)],
     components: buildTarotDailyComponents(),
     allowedMentions: { roles: [TAROT_ROLE_ID] },
   });
@@ -307,7 +308,7 @@ client.on('guildMemberAdd', async (member) => {
 
   const welcomeEmbed = new EmbedBuilder()
     .setColor('#8b5cf6')
-    .setTitle('🎉  ✦  Uma nova pessoa chegou')
+    .setTitle(`${getAnimatedEmoji(member.guild, ['heart', 'welcome', 'love'], '🎉')}  ✦  Uma nova pessoa chegou`)
     .setDescription(`Que bom ter você aqui, **${member.displayName}**. A Cringelândia ficou mais interessante; não me faça me arrepender.`)
     .addFields(
       {
