@@ -3,5 +3,7 @@ node_modules/
 npm-debug.log*
 data/logs.json
 data/stats.json
+data/tarot-state.json
 minhasnote/
+
 

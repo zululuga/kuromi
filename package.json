@@ -9,7 +9,7 @@
     "web": "node server.js",
     "dev": "node server.js",
     "register": "node src/registerSlashCommands.js",
-    "test": "node tests/botUtils.test.js && node tests/economy.test.js"
+    "test": "node tests/botUtils.test.js && node tests/economy.test.js && node tests/tarot.test.js"
   },
   "keywords": [
     "discord",
@@ -18,6 +18,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@napi-rs/canvas": "^1.0.8",
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
     "express": "^5.2.1"

@@ -7,6 +7,7 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  MessageFlags,
 } = require('discord.js');
 const { acquireBotLock, releaseBotLock, getPrefix } = require('./src/utils/botUtils');
 const { getWelcomeChannel, normalizeChannelValue } = require('./src/services/database');
@@ -83,7 +84,10 @@ async function sendStartupAnnouncement() {
     .setTimestamp()
     .setFooter({ text: 'Cringelândia • Kuromi supervisiona • Não transforme isso em bagunça' });
 
-  await channel.send({ embeds: [startupEmbed] }).catch((error) => {
+  await channel.send({
+    embeds: [startupEmbed],
+    flags: [MessageFlags.SuppressNotifications],
+  }).catch((error) => {
     console.error('Erro ao enviar aviso de inicialização:', error);
   });
 }
@@ -189,8 +193,13 @@ function startBumpGuideScheduler() {
 function buildTarotDailyEmbed(guild) {
   return new EmbedBuilder()
     .setColor('#e60067')
+    .setColor('#c084fc')
     .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Tarot da Cringelândia  ✦`)
     .setDescription('Uma carta por dia para iluminar seus caminhos. A leitura é privada; escolha o botão ou use `/tarot`.')
+    .setDescription(
+      'Uma carta por dia para iluminar seus caminhos. A leitura é privada e renderizada especialmente para você!\n\n' +
+      'Clique no botão abaixo ou use `/tarot` para receber a sua tiragem de hoje.'
+    )
     .setFooter({ text: 'O Tarot embaralha • Kuromi supervisiona • O destino faz suspense.' })
     .setTimestamp();
 }
@@ -201,6 +210,8 @@ function buildTarotDailyComponents() {
       new ButtonBuilder()
         .setCustomId('tarot:draw')
         .setLabel('Tirar Tarot do Dia')
+        .setCustomId('tarot_tirar_dia')
+        .setLabel('🔮 Tirar Tarot do Dia')
         .setStyle(ButtonStyle.Primary)
     ),
   ];
@@ -263,6 +274,7 @@ async function logTarotResult({ user, result }) {
     embeds: [embed],
     allowedMentions: { users: [] },
   });
+  await tarotCommand.logTarotToPublicChannel(client, { user, result });
 }
 
 async function handleCringePhrase(message) {

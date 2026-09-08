@@ -1,7 +1,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
-
 const cards = require('../data/tarot.json');
+const { getBalance, spendCoins } = require('./economy');
+
 const stateFile = path.join(__dirname, '..', '..', 'data', 'tarot-state.json');
 const BRIBE_COST = 350;
 
@@ -12,6 +13,23 @@ function getBrasiliaDate(now = Date.now()) {
     month: '2-digit',
     day: '2-digit',
   }).format(new Date(now));
+}
+
+function getTimeUntilMidnight(now = Date.now()) {
+  const todayStr = getBrasiliaDate(now);
+  // Meia-noite em Brasília (00:00 BRT) corresponde a 03:00 UTC do dia seguinte
+  const nextMidnightUtc = Date.parse(`${todayStr}T03:00:00.000Z`) + 24 * 60 * 60 * 1000;
+  const diffMs = Math.max(0, nextMidnightUtc - now);
+  const totalMinutes = Math.floor(diffMs / (60 * 1000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return {
+    hours,
+    minutes,
+    totalMinutes,
+    diffMs,
+    formatted: `${hours}h ${minutes}min`,
+  };
 }
 
 function readState() {
@@ -25,6 +43,8 @@ function readState() {
 }
 
 function writeState(state) {
+  const dir = path.dirname(stateFile);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(stateFile, JSON.stringify(state, null, 2), 'utf8');
 }
 
@@ -48,22 +68,64 @@ function drawCard(random = Math.random) {
 function drawTarot(userId, now = Date.now(), random = Math.random) {
   const state = ensureCurrentCycle(now);
   if (state.users[userId]) {
-    return { drawn: false, reason: 'already_drawn', cycle: state.cycle };
+    return {
+      drawn: false,
+      reason: 'already_drawn',
+      cycle: state.cycle,
+      remainingTime: getTimeUntilMidnight(now),
+      lastDraw: state.users[userId],
+    };
   }
 
   const result = drawCard(random);
-  state.users[userId] = { drawnAt: new Date(now).toISOString(), ...result };
+  state.users[userId] = {
+    drawnAt: new Date(now).toISOString(),
+    ...result,
+    paid: false,
+  };
   writeState(state);
   return { drawn: true, paid: false, cycle: state.cycle, ...result };
 }
 
 function bribeKuromi(userId, now = Date.now(), random = Math.random) {
   const state = ensureCurrentCycle(now);
-  if (!state.users[userId]) return { bribed: false, reason: 'no_draw' };
+  const currentBalance = getBalance(userId);
+
+  if (currentBalance < BRIBE_COST) {
+    return {
+      bribed: false,
+      reason: 'insufficient_funds',
+      balance: currentBalance,
+      required: BRIBE_COST,
+    };
+  }
+
+  const payment = spendCoins(userId, BRIBE_COST);
+  if (!payment.spent) {
+    return {
+      bribed: false,
+      reason: 'insufficient_funds',
+      balance: payment.balance,
+      required: BRIBE_COST,
+    };
+  }
+
   const result = drawCard(random);
-  state.users[userId] = { drawnAt: new Date(now).toISOString(), ...result, bribed: true };
+  state.users[userId] = {
+    drawnAt: new Date(now).toISOString(),
+    ...result,
+    paid: true,
+    bribed: true,
+  };
   writeState(state);
-  return { bribed: true, paid: true, cycle: state.cycle, ...result };
+
+  return {
+    bribed: true,
+    paid: true,
+    cycle: state.cycle,
+    balance: payment.balance,
+    ...result,
+  };
 }
 
 function hasActiveDraw(userId, now = Date.now()) {
@@ -88,8 +150,10 @@ module.exports = {
   cards,
   bribeKuromi,
   drawTarot,
+  drawCard,
   getBrasiliaDate,
   getCardCount,
+  getTimeUntilMidnight,
   hasActiveDraw,
   resetDailyDraws,
 };

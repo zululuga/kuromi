@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Tarot Cringelândia — Gerador Visual Canvas</title>
+  <style>
+    :root {
+      --bg: #0b0714;
+      --panel: #160e26;
+      --card-border: #351c54;
+      --accent-purple: #c084fc;
+      --accent-pink: #f472b6;
+      --accent-gold: #facc15;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    header h1 {
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, #f472b6, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+
+    .main-layout {
+      display: flex;
+      gap: 32px;
+      max-width: 1100px;
+      width: 100%;
+      align-items: flex-start;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* Visor do Canvas */
+    .canvas-wrapper {
+      background: #000;
+      padding: 14px;
+      border-radius: 18px;
+      border: 2px solid var(--card-border);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.8), 0 0 35px rgba(192, 132, 252, 0.2);
+    }
+    canvas {
+      display: block;
+      width: 330px;
+      height: 563px; /* Mantém a proporção nativa de 600x1024 */
+      border-radius: 12px;
+      background: #0d0517;
+    }
+
+    /* Painel Lateral */
+    .controls-panel {
+      background: var(--panel);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      width: 390px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .controls-panel h2 {
+      font-size: 1.15rem;
+      color: var(--accent-pink);
+      border-bottom: 1px solid #2a1b40;
+      padding-bottom: 8px;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: bold;
+    }
+    select, button {
+      background: #1f1435;
+      border: 1px solid #432468;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    select:focus, select:hover {
+      border-color: var(--accent-purple);
+    }
+    .btn-group {
+      display: flex;
+      gap: 10px;
+    }
+    button.primary {
+      background: linear-gradient(135deg, #a855f7, #ec4899);
+      border: none;
+      font-weight: bold;
+      flex: 1;
+      padding: 12px;
+    }
+    button.primary:hover {
+      filter: brightness(1.15);
+      transform: translateY(-1px);
+    }
+    button.secondary {
+      background: #25163f;
+      border: 1px solid var(--accent-purple);
+      color: var(--accent-purple);
+    }
+    button.secondary:hover {
+      background: #361c5e;
+    }
+    button.suborno-btn {
+      background: #78350f;
+      border: 1px solid #f59e0b;
+      color: #fef08a;
+      font-weight: bold;
+    }
+    button.suborno-btn:hover {
+      background: #92400e;
+    }
+
+    /* Simulação Embed Discord */
+    .discord-box {
+      background: #1e1f22;
+      border-left: 4px solid var(--accent-purple);
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 0.82rem;
+    }
+    .discord-title {
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .discord-desc {
+      color: #dbdee1;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🔮 Tarot Cringelândia</h1>
+    <p>Motor Visual Nativo em Canvas (600×1024 px) com a Kuromi</p>
+  </header>
+
+  <div class="main-layout">
+    <div class="canvas-wrapper">
+      <canvas id="tarotCanvas" width="600" height="1024"></canvas>
+    </div>
+
+    <div class="controls-panel">
+      <h2>⚙️ Painel de Tiragens</h2>
+
+      <div class="field">
+        <label>Escolha a Carta</label>
+        <select id="cardSelect"></select>
+      </div>
+
+      <div class="field">
+        <label>Orientação da Arcana</label>
+        <div class="btn-group">
+          <button type="button" id="btnUpright" class="secondary" style="flex:1;">⬆️ Posição Direta</button>
+          <button type="button" id="btnReversed" class="secondary" style="flex:1;">⬇️ Posição Invertida</button>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button id="btnRandom" class="primary">🎲 Nova Tiragem Diária</button>
+        <button id="btnSuborno" class="suborno-btn">🪙 Subornar Kuromi (350)</button>
+      </div>
+
+      <button id="btnDownload" class="secondary">💾 Baixar Imagem da Carta (600×1024)</button>
+
+      <div class="field">
+        <label>Simulação da Mensagem no Discord</label>
+        <div class="discord-box">
+          <div class="discord-title" id="embedTitle">🔮 O LOUCO — Posição Direta</div>
+          <div class="discord-desc" id="embedDesc">"Aja antes de ter medo..."</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const CARTAS_TAROT = [
+  {
+    id: "major_00",
+    num: "0",
+    name: "O LOUCO",
+    arcana: "Arcanos Maiores",
+    keywords: ["Liberdade", "Curiosidade", "Inocência", "Novo Início"],
+    upright: "Aja antes de ter medo. É o momento de abrir seu destino e desafiar-se com autoconfiança sem olhar para trás.",
+    reversed: "Falta de coragem para mudar a situação. Analise o momento com cautela e evite decisões sob pressão alheia."
+  },
+  {
+    id: "major_01",
+    num: "I",
+    name: "O MAGO",
+    arcana: "Arcanos Maiores",
+    keywords: ["Originalidade", "Criatividade", "Invenção", "Poder"],
+    upright: "Hora de demonstrar sua originalidade. Você tem nas mãos todas as ferramentas e poder para moldar o ambiente.",
+    reversed: "Perda de confiança perante provações. Pare, respire e refaça os planos para consertar pequenos erros."
+  },
+  {
+    id: "major_02",
+    num: "II",
+    name: "A SACERDOTISA",
+    arcana: "Arcanos Maiores",
+    keywords: ["Intuição", "Mistério", "Sabedoria", "Espiritualidade"],
+    upright: "Priorize o lado espiritual e seja honesto com seus sentimentos mais profundos. Confie na sua intuição.",
+    reversed: "Falta de receptividade a conselhos externos. Não se feche no próprio mundo; pense com calma antes de julgar."
+  },
+  {
+    id: "major_06",
+    num: "VI",
+    name: "OS ENAMORADOS",
+    arcana: "Arcanos Maiores",
+    keywords: ["Harmonia", "Amor", "Conexão", "Coração"],
+    upright: "Harmonia completa no ar. Siga seu coração e cultive conexões verdadeiras que iluminam o seu caminho.",
+    reversed: "Dúvidas internas e distrações perigosas. Cuidado com escolhas impulsivas tomadas no calor do momento."
+  },
+  {
+    id: "major_13",
+    num: "XIII",
+    name: "A MORTE",
+    arcana: "Arcanos Maiores",
+    keywords: ["Transformação", "Renascimento", "Fim de Ciclo"],
+    upright: "Aceite as mudanças necessárias. Um ciclo se encerra para que uma nova e brilhante oportunidade possa brotar.",
+    reversed: "Resistência teimosa ao inevitável. Liberte-se dos apegos e mágoas do passado para poder avançar em paz."
+  },
+  {
+    id: "major_18",
+    num: "XVIII",
+    name: "A LUA",
+    arcana: "Arcanos Maiores",
+    keywords: ["Ilusão", "Incerteza", "Sonhos", "Inconsciente"],
+    upright: "Incertezas passageiras povoam sua mente. Não complique pensamentos simples nem crie fantasmas onde não há.",
+    reversed: "A névoa se dissipa. A verdade vem à tona trazendo alívio para ansiedades e dissolvendo mal-entendidos."
+  },
+  {
+    id: "major_19",
+    num: "XIX",
+    name: "O SOL",
+    arcana: "Arcanos Maiores",
+    keywords: ["Vitória", "Alegria", "Clareza", "Entusiasmo"],
+    upright: "Energia positiva máxima! Suas ações brilham com força total, atraindo pessoas leais e celebrações merecidas.",
+    reversed: "Pequenos atrasos geram cansaço temporário. Mantenha o otimismo elevado para recarregar as energias vitais."
+  },
+  {
+    id: "major_21",
+    num: "XXI",
+    name: "O MUNDO",
+    arcana: "Arcanos Maiores",
+    keywords: ["Realização", "Plenitude", "Triunfo", "Gratidão"],
+    upright: "Conclusão majestosa de um grande objetivo. Desfrute da sensação de realização e celebre seu sucesso merecido.",
+    reversed: "Quase na linha de chegada! Não desista nos últimos metros; reavalie pequenos detalhes para vencer."
+  },
+  {
+    id: "cups_01",
+    num: "ÁS",
+    name: "ÁS DE COPAS",
+    arcana: "Arcanos Menores • Copas",
+    keywords: ["Amor Novo", "Inspiração", "Paz", "Emoção"],
+    upright: "Transbordamento de boas energias e intuição aguçada. O início de um momento emocionalmente enriquecedor.",
+    reversed: "Sentimentos reprimidos ou instabilidade. Dedique um tempo hoje para cuidar de si mesmo antes de cobrar o outro."
+  },
+  {
+    id: "swords_14",
+    num: "REI",
+    name: "REI DE ESPADAS",
+    arcana: "Arcanos Menores • Espadas",
+    keywords: ["Lógica", "Autoridade", "Justiça", "Clareza Mental"],
+    upright: "Decisões firmes baseadas na razão e na verdade. Sua mente estratégica e lúcida superará qualquer conflito.",
+    reversed: "Risco de parecer frio ou inflexível demais. Equilibre firmeza mental com empatia para manter aliados por perto."
+  }
+];
+
+let currentCard = CARTAS_TAROT[0];
+let currentOrientation = 'upright';
+
+// Inicializa o seletor
+const cardSelect = document.getElementById('cardSelect');
+CARTAS_TAROT.forEach((c, idx) => {
+  const opt = document.createElement('option');
+  opt.value = idx;
+  opt.textContent = `${c.num} — ${c.name}`;
+  cardSelect.appendChild(opt);
+});
+
+cardSelect.onchange = (e) => {
+  currentCard = CARTAS_TAROT[e.target.value];
+  renderCard();
+};
+
+document.getElementById('btnUpright').onclick = () => {
+  currentOrientation = 'upright';
+  renderCard();
+};
+
+document.getElementById('btnReversed').onclick = () => {
+  currentOrientation = 'reversed';
+  renderCard();
+};
+
+document.getElementById('btnRandom').onclick = () => {
+  const randIndex = Math.floor(Math.random() * CARTAS_TAROT.length);
+  currentCard = CARTAS_TAROT[randIndex];
+  currentOrientation = Math.random() < 0.5 ? 'upright' : 'reversed';
+  cardSelect.value = randIndex;
+  renderCard();
+};
+
+document.getElementById('btnSuborno').onclick = () => {
+  let newIndex;
+  do {
+    newIndex = Math.floor(Math.random() * CARTAS_TAROT.length);
+  } while (newIndex === cardSelect.value && CARTAS_TAROT.length > 1);
+  
+  currentCard = CARTAS_TAROT[newIndex];
+  currentOrientation = 'upright'; // Kuromi subornada favorece tiragem direta
+  cardSelect.value = newIndex;
+  renderCard(true);
+};
+
+// ========================================================
+// RENDERIZADOR CANVAS NATIVO — TAROT CRINGELÂNDIA
+// ========================================================
+function renderCard(isSuborno = false) {
+  const canvas = document.getElementById('tarotCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  const isReversed = currentOrientation === 'reversed';
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 1. FUNDO GÓTICO CRINGELÂNDIA
+  const bgGrad = ctx.createRadialGradient(W / 2, H / 2, 40, W / 2, H / 2, H / 1.3);
+  if (isReversed) {
+    bgGrad.addColorStop(0, '#2b0c1b');
+    bgGrad.addColorStop(0.6, '#16060f');
+    bgGrad.addColorStop(1, '#090206');
+  } else {
+    bgGrad.addColorStop(0, '#220e36');
+    bgGrad.addColorStop(0.6, '#130622');
+    bgGrad.addColorStop(1, '#08020e');
+  }
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Estrelinhas no fundo
+  ctx.fillStyle = isReversed ? 'rgba(244, 63, 94, 0.3)' : 'rgba(192, 132, 252, 0.25)';
+  const estrelas = [[80, 110], [520, 130], [90, 880], [510, 870], [130, 480], [480, 450]];
+  estrelas.forEach(([sx, sy]) => {
+    ctx.beginPath();
+    ctx.arc(sx, sy, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // 2. MOLDURAS DA CARTA
+  const corPrimaria = isReversed ? '#f43f5e' : (isSuborno ? '#facc15' : '#c084fc');
+  const corSecundaria = isReversed ? '#fda4af' : '#fbcfe8';
+
+  // Borda Externa Sólida
+  ctx.strokeStyle = corPrimaria;
+  ctx.lineWidth = 4;
+  ctx.strokeRect(18, 18, W - 36, H - 36);
+
+  // Borda Interna Pontilhada
+  ctx.strokeStyle = corSecundaria;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([8, 6]);
+  ctx.strokeRect(28, 28, W - 56, H - 56);
+  ctx.setLineDash([]);
+
+  // Estrelas nos 4 Cantos
+  ctx.fillStyle = corPrimaria;
+  ctx.font = '22px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  [[32, 32], [W - 32, 32], [32, H - 32], [W - 32, H - 32]].forEach(([cx, cy]) => {
+    ctx.fillText('✦', cx, cy);
+  });
+
+  // 3. CABEÇALHO (Arcano & Número)
+  ctx.fillStyle = corSecundaria;
+  ctx.font = 'bold 15px "Segoe UI", sans-serif';
+  ctx.letterSpacing = '5px';
+  ctx.fillText(currentCard.arcana.toUpperCase(), W / 2, 58);
+
+  ctx.fillStyle = corPrimaria;
+  ctx.font = 'bold 36px "Cinzel", "Times New Roman", serif';
+  ctx.letterSpacing = '2px';
+  ctx.fillText(currentCard.num, W / 2, 102);
+
+  // 4. PORTAL CENTRAL (Círculo Místico da Kuromi)
+  const centerX = W / 2;
+  const centerY = 370;
+  const raioPortal = 160;
+
+  ctx.save();
+  ctx.translate(centerX, centerY);
+
+  // Se invertida, o portal e a Kuromi giram 180°
+  if (isReversed) {
+    ctx.rotate(Math.PI);
+  }
+
+  // Anéis do Portal
+  ctx.strokeStyle = isReversed ? '#9f1239' : '#581c87';
+  ctx.lineWidth = 10;
+  ctx.beginPath();
+  ctx.arc(0, 0, raioPortal + 5, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.strokeStyle = corPrimaria;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(0, 0, raioPortal, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Fundo do Portal
+  ctx.fillStyle = isReversed ? '#1f0612' : '#17082a';
+  ctx.beginPath();
+  ctx.arc(0, 0, raioPortal - 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Raios Zodiacais
+  ctx.strokeStyle = corSecundaria;
+  ctx.lineWidth = 1.2;
+  for (let a = 0; a < 24; a++) {
+    const ang = (a * Math.PI) / 12;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(ang) * (raioPortal - 16), Math.sin(ang) * (raioPortal - 16));
+    ctx.lineTo(Math.cos(ang) * (raioPortal - 4), Math.sin(ang) * (raioPortal - 4));
+    ctx.stroke();
+  }
+
+  // ==========================================
+  // DESENHO OFICIAL E FOFO DA KUROMI
+  // ==========================================
+  drawKuromiMascot(ctx, isReversed);
+
+  ctx.restore();
+
+  // 5. STATUS DA ORIENTAÇÃO (Badge Central)
+  ctx.save();
+  const badgeY = 570;
+  const statusTexto = isReversed ? '✦ POSIÇÃO INVERTIDA ✦' : '✦ POSIÇÃO DIRETA ✦';
+  ctx.font = 'bold 15px sans-serif';
+  const textWidth = ctx.measureText(statusTexto).width;
+
+  ctx.fillStyle = isReversed ? '#4c0519' : '#3b0764';
+  ctx.strokeStyle = corPrimaria;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(centerX - textWidth / 2 - 20, badgeY - 14, textWidth + 40, 28, 14);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(statusTexto, centerX, badgeY);
+  ctx.restore();
+
+  // 6. NOME DA CARTA & PALAVRAS-CHAVE
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 32px "Cinzel", "Times New Roman", serif';
+  ctx.letterSpacing = '3px';
+  ctx.textAlign = 'center';
+  ctx.fillText(currentCard.name, centerX, 642);
+
+  // Linha divisória com brilho
+  ctx.strokeStyle = corPrimaria;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(centerX - 130, 662);
+  ctx.lineTo(centerX + 130, 662);
+  ctx.stroke();
+  ctx.fillStyle = corPrimaria;
+  ctx.fillText('✧', centerX, 663);
+
+  // Palavras-chave
+  ctx.fillStyle = corSecundaria;
+  ctx.font = 'bold 16px sans-serif';
+  ctx.letterSpacing = '1px';
+  ctx.fillText(currentCard.keywords.join('  •  '), centerX, 700);
+
+  // 7. QUADRO DE MENSAGEM / CONSELHO
+  const boxX = 46;
+  const boxY = 735;
+  const boxW = W - 92;
+  const boxH = 225;
+
+  ctx.fillStyle = 'rgba(18, 8, 30, 0.9)';
+  ctx.strokeStyle = isReversed ? '#881337' : '#4c1d95';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(boxX, boxY, boxW, boxH, 12);
+  ctx.fill();
+  ctx.stroke();
+
+  // Texto da Interpretação
+  const mensagem = isReversed ? currentCard.reversed : currentCard.upright;
+  ctx.fillStyle = '#f8fafc';
+  ctx.font = 'italic 20px "Segoe UI", serif';
+  wrapText(ctx, `"${mensagem}"`, centerX, boxY + 50, boxW - 44, 30);
+
+  // Rodapé Oficial
+  ctx.fillStyle = 'rgba(226, 232, 240, 0.45)';
+  ctx.font = '12px sans-serif';
+  ctx.letterSpacing = '4px';
+  ctx.fillText('TAROT CRINGELÂNDIA • BOT KUROMI', centerX, H - 36);
+
+  // Atualiza Mock do Discord
+  updateDiscordMock(isSuborno);
+}
+
+// ========================================================
+// DESENHO VETORIAL DA KUROMI (AUTÊNTICA & FOFA)
+// ========================================================
+function drawKuromiMascot(ctx, isReversed) {
+  ctx.save();
+  ctx.translate(0, 10); // Centraliza a Kuromi no portal
+
+  const capuzCor = '#1c102b';
+  const rosaKuromi = '#ff70a6';
+
+  // 1. ORELHAS DE BOBO DA CORTE DO CAPUZ (Pontudas e caídas)
+  ctx.fillStyle = capuzCor;
+  
+  // Orelha Esquerda
+  ctx.beginPath();
+  ctx.moveTo(-25, -35);
+  ctx.bezierCurveTo(-75, -85, -115, -45, -95, 10);
+  ctx.bezierCurveTo(-75, 5, -45, -10, -35, -20);
+  ctx.fill();
+
+  // Orelha Direita
+  ctx.beginPath();
+  ctx.moveTo(25, -35);
+  ctx.bezierCurveTo(75, -85, 115, -45, 95, 10);
+  ctx.bezierCurveTo(75, 5, 45, -10, 35, -20);
+  ctx.fill();
+
+  // Esferas Rosas nas pontas das orelhas
+  ctx.fillStyle = rosaKuromi;
+  ctx.beginPath();
+  ctx.arc(-95, 10, 11, 0, Math.PI * 2);
+  ctx.arc(95, 10, 11, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Brilho nas esferas
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(-98, 7, 3, 0, Math.PI * 2);
+  ctx.arc(92, 7, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2. GOLA DE BOBO DA CORTE (Com 3 pontas sob o queixo)
+  ctx.fillStyle = capuzCor;
+  ctx.beginPath();
+  ctx.moveTo(-50, 52);
+  ctx.lineTo(-30, 85);
+  ctx.lineTo(0, 60);
+  ctx.lineTo(30, 85);
+  ctx.lineTo(50, 52);
+  ctx.closePath();
+  ctx.fill();
+
+  // Esferas rosas na gola
+  ctx.fillStyle = rosaKuromi;
+  ctx.beginPath();
+  ctx.arc(-30, 85, 6, 0, Math.PI * 2);
+  ctx.arc(0, 60, 5, 0, Math.PI * 2);
+  ctx.arc(30, 85, 6, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 3. CABEÇA / CAPUZ EXTERNO
+  ctx.fillStyle = capuzCor;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 72, 64, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 4. ROSTINHO BRANCO FOFO (Chibi com bochechas salientes)
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(-48, 10);
+  ctx.bezierCurveTo(-52, 45, -20, 58, 0, 58);
+  ctx.bezierCurveTo(20, 58, 52, 45, 48, 10);
+  ctx.bezierCurveTo(45, -22, -45, -22, -48, 10);
+  ctx.fill();
+
+  // 5. CAVEIRINHA ROSA CLÁSSICA NA TESTA
+  ctx.fillStyle = rosaKuromi;
+  // Cabeça da caveirinha
+  ctx.beginPath();
+  ctx.arc(0, -32, 14, 0, Math.PI * 2);
+  ctx.fill();
+  // Queixinho da caveira
+  ctx.beginPath();
+  ctx.roundRect(-7, -22, 14, 8, 3);
+  ctx.fill();
+  // Olhinhos pretos da caveira
+  ctx.fillStyle = '#1c102b';
+  ctx.beginPath();
+  ctx.ellipse(-4.5, -32, 2.5, 3.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(4.5, -32, 2.5, 3.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 6. BOCHECHAS ROSADAS (Blush Kawaii)
+  ctx.fillStyle = 'rgba(255, 112, 166, 0.45)';
+  ctx.beginPath();
+  ctx.ellipse(-32, 26, 9, 6, 0, 0, Math.PI * 2);
+  ctx.ellipse(32, 26, 9, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 7. OLHOS EXPRESSIVOS DA KUROMI (Amendoados e com brilho duplo)
+  ctx.fillStyle = '#180f24';
+  
+  // Olho Esquerdo
+  ctx.beginPath();
+  ctx.ellipse(-22, 16, 9, 13, 0.12, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Olho Direito
+  ctx.beginPath();
+  ctx.ellipse(22, 16, 9, 13, -0.12, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Cílios delicados
+  ctx.strokeStyle = '#180f24';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(-31, 8); ctx.lineTo(-24, 5);
+  ctx.moveTo(31, 8); ctx.lineTo(24, 5);
+  ctx.stroke();
+
+  // Brilho Principal dos Olhos
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.ellipse(-24, 11, 4, 6, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(20, 11, 4, 6, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Brilho Secundário
+  ctx.beginPath();
+  ctx.arc(-19, 23, 2, 0, Math.PI * 2);
+  ctx.arc(25, 23, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 8. NARIZINHO E SORRISO SAPECA
+  // Nariz
+  ctx.fillStyle = rosaKuromi;
+  ctx.beginPath();
+  ctx.ellipse(0, 24, 2.5, 2, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Sorriso de gatinho em "w"
+  ctx.strokeStyle = '#180f24';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(-5, 33, 5, 0.1 * Math.PI, 0.85 * Math.PI, false);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(5, 33, 5, 0.15 * Math.PI, 0.9 * Math.PI, false);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+// Quebra de texto automática
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ');
+  let line = '';
+  let curY = y;
+
+  for (let n = 0; n < words.length; n++) {
+    const testLine = line + words[n] + ' ';
+    const testWidth = ctx.measureText(testLine).width;
+    if (testWidth > maxWidth && n > 0) {
+      ctx.fillText(line, x, curY);
+      line = words[n] + ' ';
+      curY += lineHeight;
+    } else {
+      line = testLine;
+    }
+  }
+  ctx.fillText(line, x, curY);
+}
+
+function updateDiscordMock(isSuborno) {
+  const isRev = currentOrientation === 'reversed';
+  const prefixo = isSuborno ? '👀 ué... Que estranho... Jurava que tinha lido outra coisa...\n\n' : '';
+  document.getElementById('embedTitle').textContent = `🔮 ${currentCard.num}. ${currentCard.name} — ${isRev ? 'Posição Invertida' : 'Posição Direta'}`;
+  document.getElementById('embedDesc').textContent = `${prefixo}"${isRev ? currentCard.reversed : currentCard.upright}"`;
+}
+
+// Download da Imagem
+document.getElementById('btnDownload').onclick = () => {
+  const canvas = document.getElementById('tarotCanvas');
+  const a = document.createElement('a');
+  a.download = `tarot_cringelandia_${currentCard.id}_${currentOrientation}.png`;
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+};
+
+// Render inicial
+renderCard();
+</script>
+</body>
+</html>
