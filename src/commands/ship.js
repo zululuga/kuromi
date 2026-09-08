@@ -19,12 +19,12 @@ function buildShipName(nameA, nameB) {
 // Retorna a mensagem e cor do embed de acordo com a porcentagem.
 function getShipVerdict(percent) {
   if (percent < 40) {
-    return { message: 'química duvidosa, mas o drama está garantido', color: '#E60067', emoji: '💔' };
+    return { message: 'Química duvidosa, mas o drama está garantido.', color: '#F43F5E', emoji: '💔' };
   }
   if (percent < 70) {
-    return { message: 'há faísca. Talvez. Não me pressionem.', color: '#F59E0B', emoji: '✦' };
+    return { message: 'Há faísca. Talvez. Não me pressionem.', color: '#EC4899', emoji: '💖' };
   }
-  return { message: 'isso está perigosamente romântico', color: '#8B5CF6', emoji: '💜' };
+  return { message: 'Isso está perigosamente romântico.', color: '#8B5CF6', emoji: '💜' };
 }
 
 
@@ -52,7 +52,7 @@ function buildShipEmbed(memberA, memberB, percent) {
 
   return new EmbedBuilder()
     .setColor(verdict.color)
-    .setTitle(`${verdict.emoji}  ✦  Casal da Cringelândia`)
+    .setTitle(`${verdict.emoji}  ✦  Ship Cringelândia`)
     .setDescription(
       `**${nameA}** x **${nameB}**\n\n` +
       `💑 Nome do casal: **${shipName}**\n\n` +
