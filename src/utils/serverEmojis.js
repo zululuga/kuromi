@@ -6,8 +6,7 @@ function getAnimatedEmoji(guild, preferredNames = [], fallback = '✨') {
   const preferred = emojiList.find((emoji) =>
     emoji.animated && preferredNames.some((name) => emoji.name?.toLowerCase().includes(name.toLowerCase()))
   );
-  const animated = preferred || emojiList.find((emoji) => emoji.animated);
-  return animated ? animated.toString() : fallback;
+  return preferred ? preferred.toString() : fallback;
 }
 
 function serializeGuildEmojis(guild) {
