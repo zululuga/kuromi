@@ -37,4 +37,8 @@ module.exports = {
   async executePrefix({ message, args }) {
     return petHubCommand.executePrefix({ message });
   },
+  isDungeonInteraction() {
+    return false;
+  },
+  async handleDungeonInteraction() {},
 };

@@ -19,6 +19,11 @@ const { TAROT_LOG_CHANNEL_ID } = require('../config');
 
 const name = 'tarot';
 
+function getDisplayCardName(card) {
+  if (!card) return 'Desconhecida';
+  return card.num ? `${card.num}. ${card.name}` : card.name;
+}
+
 function getDisplayOrientation(orientation) {
   return orientation === 'REVERSED' ? 'INVERTIDA' : 'DIRETA';
 }
@@ -189,6 +194,7 @@ module.exports = {
   buildAlreadyDrawnEmbed,
   buildBribeRow,
   getDisplayOrientation,
+  getDisplayCardName,
   logTarotToPublicChannel,
   data: new SlashCommandBuilder()
     .setName(name)

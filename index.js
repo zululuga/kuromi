@@ -435,56 +435,56 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
-  if (marriageCommand.isMarriageButton(interaction)) {
+  if (typeof marriageCommand?.isMarriageButton === 'function' && marriageCommand.isMarriageButton(interaction)) {
     incrementCommand();
     recordUniqueUser(interaction.user.id);
     await marriageCommand.executeButton({ interaction });
     return;
   }
 
-  if (helpCommand.isHelpButton(interaction)) {
+  if (typeof helpCommand?.isHelpButton === 'function' && helpCommand.isHelpButton(interaction)) {
     incrementCommand();
     recordUniqueUser(interaction.user.id);
     await helpCommand.executeButton({ interaction });
     return;
   }
 
-  if (shopCommand.isShopInteraction(interaction)) {
+  if (typeof shopCommand?.isShopInteraction === 'function' && shopCommand.isShopInteraction(interaction)) {
     incrementCommand();
     recordUniqueUser(interaction.user.id);
     await shopCommand.handleShopInteraction(interaction);
     return;
   }
 
-  if (inventoryCommand.isInventoryInteraction(interaction)) {
+  if (typeof inventoryCommand?.isInventoryInteraction === 'function' && inventoryCommand.isInventoryInteraction(interaction)) {
     incrementCommand();
     recordUniqueUser(interaction.user.id);
     await inventoryCommand.handleInventoryInteraction(interaction);
     return;
   }
 
-  if (petCommand.isPetInteraction(interaction)) {
+  if (typeof petCommand?.isPetInteraction === 'function' && petCommand.isPetInteraction(interaction)) {
     incrementCommand();
     recordUniqueUser(interaction.user.id);
     await petCommand.handlePetInteraction(interaction);
     return;
   }
 
-  if (adoptionCommand.isAdoptionInteraction(interaction)) {
+  if (typeof adoptionCommand?.isAdoptionInteraction === 'function' && adoptionCommand.isAdoptionInteraction(interaction)) {
     incrementCommand();
     recordUniqueUser(interaction.user.id);
     await adoptionCommand.handleAdoptionInteraction(interaction);
     return;
   }
 
-  if (dungeonCommand.isDungeonInteraction(interaction)) {
+  if (typeof dungeonCommand?.isDungeonInteraction === 'function' && dungeonCommand.isDungeonInteraction(interaction)) {
     incrementCommand();
     recordUniqueUser(interaction.user.id);
     await dungeonCommand.handleDungeonInteraction(interaction);
     return;
   }
 
-  if (duelCommand.isDuelInteraction(interaction)) {
+  if (typeof duelCommand?.isDuelInteraction === 'function' && duelCommand.isDuelInteraction(interaction)) {
     incrementCommand();
     recordUniqueUser(interaction.user.id);
     await duelCommand.handleDuelInteraction(interaction);
