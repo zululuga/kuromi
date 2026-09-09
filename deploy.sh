@@ -33,8 +33,7 @@ cp -a "$BACKUP/data" data
 [ -f "$BACKUP/prefix.json" ] && cp -a "$BACKUP/prefix.json" prefix.json
 
 npm ci --omit=dev
-pm2 restart kuromi --update-env
-pm2 startOrRestart ecosystem.config.js --update-env
+pm2 startOrReload ecosystem.config.js --update-env || pm2 restart all --update-env
 pm2 save
 pm2 status
 
