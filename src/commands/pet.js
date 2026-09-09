@@ -137,14 +137,9 @@ function buildPetTab(userId, userTag) {
       .setEmoji('💤')
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId(`hub_tab:shop:${userId}`)
-      .setLabel('Comprar Comida')
-      .setEmoji('🛒')
-      .setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder()
       .setCustomId(`hub_support_info:${userId}`)
       .setLabel('Apoiar')
-      .setEmoji('💖')
+      .setEmoji('✨')
       .setStyle(ButtonStyle.Secondary)
   );
 
@@ -229,14 +224,6 @@ function buildIncubatorTab(userId, userTag) {
           .setStyle(ButtonStyle.Success)
       );
     }
-  } else {
-    actionRow.addComponents(
-      new ButtonBuilder()
-        .setCustomId(`hub_tab:dungeon:${userId}`)
-        .setLabel('Buscar Ovos em Dungeons')
-        .setEmoji('🗺️')
-        .setStyle(ButtonStyle.Primary)
-    );
   }
 
   if (incubator.maxSlots < 5) {
@@ -249,7 +236,9 @@ function buildIncubatorTab(userId, userTag) {
     );
   }
 
-  components.push(actionRow);
+  if (actionRow.components.length > 0) {
+    components.push(actionRow);
+  }
 
   return { embeds: [embed], components };
 }
@@ -403,25 +392,17 @@ function buildInventoryTab(userId, userTag) {
     );
   }
 
-  const actions = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId(`hub_tab:shop:${userId}`)
-      .setLabel('Ir para Lojinha')
-      .setEmoji('🛒')
-      .setStyle(ButtonStyle.Primary)
-  );
-
   if (!hasClaimedStarterKit(userId)) {
-    actions.addComponents(
-      new ButtonBuilder()
-        .setCustomId(`hub_claim_kit:${userId}`)
-        .setLabel('Resgatar Kit Inicial')
-        .setEmoji('🎁')
-        .setStyle(ButtonStyle.Success)
+    components.push(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`hub_claim_kit:${userId}`)
+          .setLabel('Resgatar Kit Inicial')
+          .setEmoji('🎁')
+          .setStyle(ButtonStyle.Success)
+      )
     );
   }
-
-  components.push(actions);
 
   return { embeds: [embed], components };
 }
