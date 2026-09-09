@@ -62,3 +62,4 @@ runPerformanceTests().catch((err) => {
   console.error('Falha nos testes de performance:', err);
   process.exit(1);
 });
+

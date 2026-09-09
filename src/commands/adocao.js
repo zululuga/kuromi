@@ -1,23 +1,33 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { adoptPet, PETS, PET_SWAP_COST } = require('../services/pets');
+const { adoptPet, PETS_CATALOG } = require('../services/pets');
 const { formatCoins } = require('./economyHelpers');
 const { ADOPTION } = require('./commandNames');
 
 function getChoices() {
-  return PETS.map((pet) => ({ name: `${pet.label} - ${formatCoins(pet.baseCost)}`, value: pet.key }));
+  return Object.values(PETS_CATALOG)
+    .slice(0, 25)
+    .map((pet) => ({
+      name: `${pet.emoji} ${pet.name} — ${formatCoins(pet.baseCost)}`,
+      value: pet.key,
+    }));
 }
 
 function buildReply(result) {
-  if (!result.adopted) {
-    if (result.reason === 'invalid') return '❌ Escolha um pet válido. Eu não consigo adotar sua indecisão.';
-    return `❌ Você precisa de **${formatCoins(result.totalCost)}**. Seu saldo é **${formatCoins(result.balance)}**. Faça as contas antes do drama.`;
+  if (!result.success) {
+    if (result.reason === 'invalid_species') {
+      return '❌ Escolha uma espécie de pet válida. Eu não consigo adotar sua indecisão.';
+    }
+    if (result.reason === 'slots_full') {
+      return `❌ Sua mochila de pets está cheia (${result.currentCount}/${result.maxSlots} slots)! Compre uma **Expansão de Canil** na \`/loja\` para ter mais vagas.`;
+    }
+    if (result.reason === 'insufficient_funds') {
+      return `❌ Você precisa de **${formatCoins(result.cost)}**. Seu saldo é **${formatCoins(result.balance)}**. Faça as contas antes do drama.`;
+    }
+    return '❌ Não foi possível adotar este pet no momento.';
   }
 
-  const shinyLabel = result.shiny ? ' ✨ Shiny' : '';
-  const swapLabel = result.totalCost > result.pet.baseCost
-    ? ` (inclui ${formatCoins(PET_SWAP_COST)} pelo sacrifício do pet anterior)`
-    : '';
-  return `✅ Você adotou **${result.pet.label}${shinyLabel}** por **${formatCoins(result.totalCost)}**${swapLabel}. Saldo: **${formatCoins(result.balance)}**. Cuide bem dele; eu finjo que não me importo.`;
+  const shinyLabel = result.shiny ? ' ✨ **Shiny!**' : result.corrupt ? ' 🖤 **Corrompido!**' : '';
+  return `✅ Parabéns! Você adotou **${result.pet.emoji} ${result.pet.name}**${shinyLabel} por **${formatCoins(result.pet.baseCost || 0)}**!\nSaldo restante: **${formatCoins(result.balance)}**.\nUse \`/pet\` para visualizar seu novo companheiro!`;
 }
 
 function normalizePet(value) {
@@ -29,12 +39,23 @@ module.exports = {
   aliases: ['adotar'],
   data: new SlashCommandBuilder()
     .setName(ADOPTION)
-    .setDescription('Adota um pet pelo custo base. Escolha com carinho; eu não vou admitir que isso é fofo.')
-    .addStringOption((option) => option.setName('pet').setDescription('Pet que você deseja adotar').setRequired(true).addChoices(...getChoices())),
+    .setDescription('Adota um novo companheiro para a sua coleção de pets')
+    .addStringOption((option) =>
+      option
+        .setName('pet')
+        .setDescription('Espécie que você deseja adotar')
+        .setRequired(true)
+        .addChoices(...getChoices())
+    ),
   async executePrefix({ message, args }) {
+    if (!args[0]) {
+      await message.reply('❌ Informe o pet que deseja adotar. Exemplo: `ku!adocao gato`. Use `ku!ajuda` para ver mais.');
+      return;
+    }
     await message.reply(buildReply(adoptPet(message.author.id, normalizePet(args[0]))));
   },
   async executeSlash({ interaction }) {
-    await interaction.editReply(buildReply(adoptPet(interaction.user.id, interaction.options.getString('pet'))));
+    const petKey = interaction.options.getString('pet');
+    await interaction.editReply(buildReply(adoptPet(interaction.user.id, petKey)));
   },
 };

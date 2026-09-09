@@ -16,6 +16,11 @@ const { commandsByName, slashCommands } = require('./src/commands');
 const marriageCommand = require('./src/commands/casamento');
 const tarotCommand = require('./src/commands/tarot');
 const helpCommand = require('./src/commands/help');
+const shopCommand = require('./src/commands/loja');
+const inventoryCommand = require('./src/commands/inventario');
+const petCommand = require('./src/commands/pet');
+const dungeonCommand = require('./src/commands/petexplorar');
+const duelCommand = require('./src/commands/petduelo');
 const { registerAutomation, updateAutomation } = require('./src/services/automationSchedule');
 const {
   DISCORD_TOKEN,
@@ -34,6 +39,8 @@ const {
   KUROMI_STARTUP_EMOJI,
 } = require('./src/config');
 const { incrementCommand, incrementMessages, recordUniqueUser, flushSync } = require('./src/services/logging');
+const { flushInventorySync } = require('./src/services/inventory');
+const { flushPetsSync } = require('./src/services/pets');
 const { getBrasiliaDate, resetDailyDraws } = require('./src/services/tarot');
 const { getAnimatedEmoji } = require('./src/utils/serverEmojis');
 
@@ -215,8 +222,10 @@ function startBumpGuideScheduler() {
 
 function buildTarotDailyEmbed(guild) {
   return new EmbedBuilder()
+    .setColor('#e60067')
     .setColor('#c084fc')
     .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Tarot da Cringelândia  ✦`)
+    .setDescription('Uma carta por dia para iluminar seus caminhos. A leitura é privada; escolha o botão ou use `/tarot`.')
     .setDescription(
       'Uma carta por dia para iluminar seus caminhos. A leitura é privada e renderizada especialmente para você!\n\n' +
       'Clique no botão abaixo ou use `/tarot` para receber a sua tiragem de hoje.'
@@ -230,6 +239,8 @@ function buildTarotDailyComponents() {
     new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('tarot:draw')
+        .setLabel('Tirar Tarot do Dia')
+        .setCustomId('tarot_tirar_dia')
         .setLabel('🔮 Tirar Tarot do Dia')
         .setStyle(ButtonStyle.Primary)
     ),
@@ -437,13 +448,53 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
+  if (shopCommand.isShopInteraction(interaction)) {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await shopCommand.handleShopInteraction(interaction);
+    return;
+  }
+
+  if (inventoryCommand.isInventoryInteraction(interaction)) {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await inventoryCommand.handleInventoryInteraction(interaction);
+    return;
+  }
+
+  if (petCommand.isPetInteraction(interaction)) {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await petCommand.handlePetInteraction(interaction);
+    return;
+  }
+
+  if (dungeonCommand.isDungeonInteraction(interaction)) {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await dungeonCommand.handleDungeonInteraction(interaction);
+    return;
+  }
+
+  if (duelCommand.isDuelInteraction(interaction)) {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await duelCommand.handleDuelInteraction(interaction);
+    return;
+  }
+
   if (!interaction.isChatInputCommand()) return;
 
   incrementCommand();
   recordUniqueUser(interaction.user.id);
 
   const command = commandsByName.get(interaction.commandName);
-  const isEphemeral = Boolean(command?.ephemeral || command?.name === 'tarot' || command?.name === 'ajuda');
+  const isEphemeral = Boolean(
+    command?.ephemeral ||
+    command?.name === 'tarot' ||
+    command?.name === 'ajuda' ||
+    command?.name === 'inventario'
+  );
   await interaction.deferReply({ ephemeral: isEphemeral });
   if (!command || typeof command.executeSlash !== 'function') {
     await interaction.editReply({ content: 'Esse comando ainda não está disponível. Não olhe para mim assim; eu também estou investigando.' });
@@ -457,23 +508,25 @@ client.on('error', (error) => {
   console.error('Erro do cliente Discord:', error);
 });
 
-// Libera o lock e persiste dados pendentes ao encerrar o processo.
+function handleAppShutdown() {
+  flushSync();
+  flushInventorySync();
+  flushPetsSync();
+  releaseBotLock();
+}
 
 process.on('SIGINT', () => {
-  flushSync();
-  releaseBotLock();
+  handleAppShutdown();
   process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-  flushSync();
-  releaseBotLock();
+  handleAppShutdown();
   process.exit(0);
 });
 
 process.on('exit', () => {
-  flushSync();
-  releaseBotLock();
+  handleAppShutdown();
 });
 
 async function handleSendEmbedCommand(data) {

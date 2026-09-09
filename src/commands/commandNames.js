@@ -19,6 +19,13 @@ module.exports = {
   WORK: 'trabalho',
   ADOPTION: 'adocao',
   PET_EXPLORE: 'petexplorar',
+  PET: 'pet',
+  PET_DUEL: 'petduelo',
+  SHOP: 'loja',
+  BUY: 'comprar',
+  SELL: 'vender',
+  INVENTORY: 'inventario',
+  USE: 'usar',
   AGENDA: 'agenda',
   EMOJIS: 'emojis',
 };

@@ -1,0 +1,184 @@
+{
+  "racao_cringe": {
+    "id": "racao_cringe",
+    "name": "Ração Cringe",
+    "category": "comida",
+    "rarity": "COMUM",
+    "emoji": "🥣",
+    "buyPrice": 50,
+    "sellPrice": 15,
+    "description": "Ração básica balanceada. Não é gourmet, mas mantém seu pet alimentado.",
+    "effects": {
+      "hunger": 25,
+      "happiness": 5,
+      "energy": 0,
+      "heal": 0,
+      "xp": 5
+    }
+  },
+  "biscoito_morcego": {
+    "id": "biscoito_morcego",
+    "name": "Biscoito de Morcego",
+    "category": "comida",
+    "rarity": "COMUM",
+    "emoji": "🦇",
+    "buyPrice": 100,
+    "sellPrice": 30,
+    "description": "Biscoito crocante em formato de morceguinho. O pet adora a textura.",
+    "effects": {
+      "hunger": 40,
+      "happiness": 15,
+      "energy": 5,
+      "heal": 0,
+      "xp": 10
+    }
+  },
+  "sushizinho": {
+    "id": "sushizinho",
+    "name": "Sushizinho Nobre",
+    "category": "comida",
+    "rarity": "INCOMUM",
+    "emoji": "🍣",
+    "buyPrice": 250,
+    "sellPrice": 80,
+    "description": "Peixe fresco de primeira qualidade. Dá água na boca e alegra qualquer bicho.",
+    "effects": {
+      "hunger": 80,
+      "happiness": 35,
+      "energy": 15,
+      "heal": 10,
+      "xp": 25
+    }
+  },
+  "curativo_fofo": {
+    "id": "curativo_fofo",
+    "name": "Curativo de Coração",
+    "category": "cura",
+    "rarity": "COMUM",
+    "emoji": "🩹",
+    "buyPrice": 80,
+    "sellPrice": 25,
+    "description": "Cura ferimentos leves sofridos em expedições perigosas.",
+    "effects": {
+      "hunger": 0,
+      "happiness": 10,
+      "energy": 10,
+      "heal": 30,
+      "xp": 5
+    }
+  },
+  "pocao_vida": {
+    "id": "pocao_vida",
+    "name": "Poção Revitalizante",
+    "category": "cura",
+    "rarity": "INCOMUM",
+    "emoji": "🧪",
+    "buyPrice": 200,
+    "sellPrice": 60,
+    "description": "Bebida mágica e efervescente que restaura completamente a saúde e energia do pet.",
+    "effects": {
+      "hunger": 10,
+      "happiness": 20,
+      "energy": 100,
+      "heal": 100,
+      "xp": 15
+    }
+  },
+  "elixir_xp": {
+    "id": "elixir_xp",
+    "name": "Elixir de Experiência",
+    "category": "utilitario",
+    "rarity": "RARO",
+    "emoji": "⚡",
+    "buyPrice": 500,
+    "sellPrice": 150,
+    "description": "Líquido brilhante concentrado que concede sabedoria instantânea (+500 XP).",
+    "effects": {
+      "hunger": 0,
+      "happiness": 15,
+      "energy": 0,
+      "heal": 0,
+      "xp": 500
+    }
+  },
+  "gema_evolucao": {
+    "id": "gema_evolucao",
+    "name": "Cristal da Meia-Noite",
+    "category": "evolucao",
+    "rarity": "EPICO",
+    "emoji": "🔮",
+    "buyPrice": 2500,
+    "sellPrice": 800,
+    "description": "Cristal pulsante com energia arcana. Usado para aprimorar e despertar atributos.",
+    "effects": {
+      "hunger": 0,
+      "happiness": 50,
+      "energy": 50,
+      "heal": 50,
+      "xp": 1500
+    }
+  },
+  "fragmento_shiny": {
+    "id": "fragmento_shiny",
+    "name": "Fragmento Brilhante",
+    "category": "especial",
+    "rarity": "LENDARIO",
+    "emoji": "✨",
+    "buyPrice": null,
+    "sellPrice": 1000,
+    "description": "Fragmento cósmico extremamente raro encontrado apenas nas dungeons mais profundas.",
+    "effects": {
+      "hunger": 0,
+      "happiness": 100,
+      "energy": 0,
+      "heal": 0,
+      "xp": 1000
+    }
+  },
+  "bau_madeira": {
+    "id": "bau_madeira",
+    "name": "Baú Rústico",
+    "category": "bau",
+    "rarity": "COMUM",
+    "emoji": "📦",
+    "buyPrice": 300,
+    "sellPrice": 100,
+    "description": "Baú de madeira trancado. Ao abrir, revela moedas (100 a 600) ou comidas raras.",
+    "effects": {
+      "isChest": true,
+      "minCoins": 100,
+      "maxCoins": 600,
+      "possibleItems": ["racao_cringe", "biscoito_morcego", "curativo_fofo"]
+    }
+  },
+  "bau_caos": {
+    "id": "bau_caos",
+    "name": "Baú do Caos Kuromi",
+    "category": "bau",
+    "rarity": "EPICO",
+    "emoji": "🖤",
+    "buyPrice": 1800,
+    "sellPrice": 600,
+    "description": "Baú ornamentado com a insígnia da Kuromi. Contém grandes fortunas e itens épicos.",
+    "effects": {
+      "isChest": true,
+      "minCoins": 800,
+      "maxCoins": 3500,
+      "possibleItems": ["sushizinho", "pocao_vida", "elixir_xp", "gema_evolucao", "fragmento_shiny"]
+    }
+  },
+  "casinha_luxo": {
+    "id": "casinha_luxo",
+    "name": "Expansão de Canil",
+    "category": "melhoria",
+    "rarity": "RARO",
+    "emoji": "🏠",
+    "buyPrice": 3000,
+    "sellPrice": 1000,
+    "description": "Aumenta permanentemente o espaço de pets na sua mochila em +2 vagas.",
+    "effects": {
+      "isSlotExpansion": true,
+      "slots": 2
+    }
+  }
+}

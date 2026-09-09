@@ -300,6 +300,7 @@ ssh kuromi
 cd ~/kuromi
 pm2 status
 pm2 logs kuromi --lines 50
+pm2 restart kuromi --update-env
 ./deploy.sh
 ```
 

@@ -24,10 +24,12 @@ function ensureStorage() {
 
 function readJsonFile(filePath, fallback = {}) {
   ensureStorage();
+
   try {
     if (!fs.existsSync(filePath)) {
       return fallback;
     }
+
     const raw = fs.readFileSync(filePath, 'utf8');
     return raw ? JSON.parse(raw) : fallback;
   } catch (error) {
@@ -118,7 +120,6 @@ function getLogs(limit = 100) {
 
 function clearLogs() {
   cachedLogs = { entries: [] };
-  logsDirty = true;
   writeJsonFile(logsFile, cachedLogs);
   logsDirty = false;
 }
@@ -199,6 +200,7 @@ function resetStats() {
     uniqueUsers: '',
     uptimeMs: 0,
   };
+
   writeJsonFile(statsFile, cachedStats);
   statsDirty = false;
   return cachedStats;

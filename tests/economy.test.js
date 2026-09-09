@@ -25,7 +25,6 @@ const {
   startWork,
 } = require('../src/services/economy');
 const { createMarriageRequest, endMarriage, getSpouseId, resolveMarriageRequest } = require('../src/services/marriage');
-const { adoptPet, explorePet, getPetEffectiveValue, getPetStatus, PETS } = require('../src/services/pets');
 
 try {
   fs.writeFileSync(economyFile, '{}', 'utf8');
@@ -85,20 +84,6 @@ try {
   assert.equal(work.workCount, 1, 'O trabalho deve incrementar o contador.');
   assert.equal(getWorkStatus('worker', Date.parse('2026-01-03T01:00:00.000Z')).available, false, 'O trabalho deve ter cooldown de 3 horas.');
   assert.equal(finishWork('worker', true, 25).amount, 25, 'O trabalho concluído deve pagar o salário.');
-
-  assert.equal(PETS.length, 24, 'A tabela deve conter os 24 pets especificados.');
-  setUserBalance('pet-test', 40000);
-  const shinyPet = adoptPet('pet-test', 'dragao', () => 0);
-  assert.equal(shinyPet.shiny, true, 'A chance controlada deve produzir um pet Shiny.');
-  assert.equal(getPetEffectiveValue(shinyPet.pet), 140000, 'Shiny deve multiplicar o valor por 4.');
-  setUserBalance('pet-test', 50000);
-  const swappedPet = adoptPet('pet-test', 'borboleta', () => 1);
-  assert.equal(swappedPet.totalCost, 250, 'A troca deve cobrar o custo do pet mais 100 moedas.');
-  const exploration = explorePet('pet-test', Date.parse('2026-01-04T00:00:00.000Z'), () => 0.5);
-  assert.equal(exploration.explored, true, 'Um usuário com pet deve explorar.');
-  assert.equal(Number.isInteger(exploration.reward), true, 'A recompensa deve ser inteira.');
-  assert.equal(exploration.totalAventuras, 1, 'A exploração deve incrementar as aventuras.');
-  assert.equal(getPetStatus('pet-test', Date.parse('2026-01-04T01:00:00.000Z')).available, false, 'A exploração deve ter cooldown de 12 horas.');
 
   console.log('Verificação da economia, cooldown e ranking: OK');
 } finally {

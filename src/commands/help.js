@@ -1,31 +1,25 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { buildHelpMessage } = require('./commandHelpers');
+const { buildModularHelpEmbed, buildModularHelpComponents, HELP_MODULES } = require('./commandHelpers');
 const { HELP } = require('./commandNames');
 
-const BUTTON_PREFIX = 'help:';
-
 function isHelpButton(interaction) {
-  return interaction.isButton() && interaction.customId.startsWith(BUTTON_PREFIX);
+  return interaction.isStringSelectMenu() && interaction.customId.startsWith('help_module_select:');
 }
 
 async function executeButton({ interaction }) {
-  const [, action, targetPage, userId] = interaction.customId.split(':');
-
-  if (action === 'info') {
-    await interaction.deferUpdate().catch(() => null);
-    return;
-  }
+  const [, userId] = interaction.customId.split(':');
 
   if (userId && interaction.user.id !== userId) {
     await interaction.reply({
-      content: '❌ Apenas quem abriu o menu de ajuda pode navegar pelas páginas.',
+      content: '❌ Apenas quem abriu este menu de ajuda pode selecionar as categorias.',
       ephemeral: true,
     });
     return;
   }
 
-  const page = Number.parseInt(targetPage, 10) || 1;
-  const { embed, components } = buildHelpMessage(page, interaction.user.id);
+  const selectedModule = interaction.values[0] || 'todos';
+  const embed = buildModularHelpEmbed(selectedModule);
+  const components = buildModularHelpComponents(selectedModule, userId);
 
   await interaction.update({
     embeds: [embed],
@@ -33,26 +27,39 @@ async function executeButton({ interaction }) {
   });
 }
 
+function getModuleChoices() {
+  return HELP_MODULES.map((m) => ({
+    name: `${m.emoji} ${m.label}`,
+    value: m.id,
+  }));
+}
+
 module.exports = {
   name: HELP,
-  aliases: ['help'],
+  aliases: ['help', 'comandos', 'manual'],
   ephemeral: true,
   isHelpButton,
   executeButton,
   data: new SlashCommandBuilder()
     .setName(HELP)
-    .setDescription('Mostra a lista de comandos e funções da Kuromi. Leia tudo antes de perguntar de novo.')
-    .addIntegerOption((option) =>
-      option.setName('pagina').setDescription('Número da página inicial').setMinValue(1).setRequired(false)
+    .setDescription('Central de ajuda interativa categorizada por módulos e utilidades')
+    .addStringOption((option) =>
+      option
+        .setName('modulo')
+        .setDescription('Módulo que deseja consultar diretamente')
+        .setRequired(false)
+        .addChoices(...getModuleChoices())
     ),
   async executePrefix({ message, args }) {
-    const page = Number.parseInt(args[0], 10) || 1;
-    const { embed, components } = buildHelpMessage(page, message.author.id);
+    const mod = args[0] ? args[0].toLowerCase() : 'todos';
+    const embed = buildModularHelpEmbed(mod);
+    const components = buildModularHelpComponents(mod, message.author.id);
     await message.reply({ embeds: [embed], components });
   },
   async executeSlash({ interaction }) {
-    const page = interaction.options.getInteger('pagina') || 1;
-    const { embed, components } = buildHelpMessage(page, interaction.user.id);
+    const mod = interaction.options.getString('modulo') || 'todos';
+    const embed = buildModularHelpEmbed(mod);
+    const components = buildModularHelpComponents(mod, interaction.user.id);
     await interaction.editReply({ embeds: [embed], components });
   },
 };

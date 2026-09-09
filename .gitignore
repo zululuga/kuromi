@@ -4,6 +4,10 @@ npm-debug.log*
 data/logs.json
 data/stats.json
 data/tarot-state.json
+data/inventory.json
+data/pets.json
+data/economy.json
+data/backup/
 minhasnote/
 
 
