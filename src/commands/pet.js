@@ -249,6 +249,7 @@ function buildIncubatorTab(userId, userTag) {
     components.push(actionRow);
   }
 
+  return { embeds: [embed], components };
   return { embeds: [embed], components, files: [] };
 }
 
@@ -270,6 +271,8 @@ function buildDungeonTab(userId, userTag) {
       .setTitle(`🗺️  ✦  Expedições & Dungeons Procedurais — ${userTag}`)
       .setDescription(
         `Prepare **${activePet.name}** (${activePet.emoji} Nv. ${activePet.level}) para explorar labirintos mágicos!\n\n` +
+        `⚡ **Energia Atual:** **${activePet.energy}/100 ⚡** (Custo médio: **8 ⚡/passo**)\n` +
+        `💖 **HP Atual:** **${activePet.stats.hp}/${activePet.stats.maxHp}**\n\n` +
         `⚡ **Energia Atual:** **${activePet.energy}/100 ⚡** (Custo médio: **10 ⚡/passo**)\n` +
         `💖 **HP Atual:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  |  🍖 **Fome:** **${activePet.hunger}%**\n\n` +
         `**Zonas Disponíveis:**\n` +
@@ -277,6 +280,7 @@ function buildDungeonTab(userId, userTag) {
           .map((z) => `${z.emoji} **${z.name}** (Nv. Mín: ${z.minLevel})\n> *${z.desc}*`)
           .join('\n\n')
       )
+      .setFooter({ text: pyxieFooter('Consumo de Estamina por Passo • Encontros em RAM') })
       .setFooter({ text: pyxieFooter('Passos consom estamina • Fome 0% ou 0 HP impedem exploração') })
       .setTimestamp();
 
@@ -313,7 +317,6 @@ function buildDungeonTab(userId, userTag) {
     return { embeds: [embed], components, files: [] };
   }
 
-  // Em expedição ativa (Passo a passo)
   const isExhausted = activePet.energy < 8 || run.isExhausted;
   const embed = new EmbedBuilder()
     .setColor(isExhausted ? PYXIE_COLORS.crimson : PYXIE_COLORS.violet)
@@ -414,6 +417,7 @@ function buildInventoryTab(userId, userTag) {
     );
   }
 
+  return { embeds: [embed], components };
   return { embeds: [embed], components, files: [] };
 }
 
@@ -486,6 +490,7 @@ function buildShopTab(userId, userTag, category = 'comida') {
     );
   }
 
+  return { embeds: [embed], components };
   return { embeds: [embed], components, files: [] };
 }
 
@@ -520,6 +525,7 @@ function buildOnboardingView(userId, userDisplayName) {
       .setStyle(ButtonStyle.Primary)
   );
 
+  return { embeds: [embed], components: [row] };
   return { embeds: [embed], components: [row], files: [] };
 }
 

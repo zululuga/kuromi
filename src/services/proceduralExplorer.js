@@ -476,4 +476,3 @@ module.exports = {
   panicFlee,
   activeRuns,
 };
-

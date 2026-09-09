@@ -289,25 +289,6 @@ function startTarotScheduler() {
   }, delay);
 }
 
-async function logTarotResult({ user, result }) {
-  const channel = await client.channels.fetch(TAROT_LOG_CHANNEL_ID).catch(() => null);
-  if (!channel || !channel.isTextBased()) return;
-
-  const prefix = result.paid ? 'ué... Que estranho... Jurava que tinha lido outra coisa...' : '';
-  const embed = new EmbedBuilder()
-    .setColor(result.paid ? '#8b5cf6' : '#f59e0b')
-    .setTitle('💌 Bilhetinho do Tarot')
-    .setDescription(`${prefix}${prefix ? '\n\n' : ''}<@${user.id}> tirou **${tarotCommand.getDisplayCardName(result.card)}** (${tarotCommand.getDisplayOrientation(result.orientation)}).`)
-    .setTimestamp();
-
-  await channel.send({
-    content: prefix || undefined,
-    embeds: [embed],
-    allowedMentions: { users: [] },
-  });
-  await tarotCommand.logTarotToPublicChannel(client, { user, result });
-}
-
 async function handleCringePhrase(message) {
   if (!/\bviadinho\s+fofinho\b/i.test(message.content)) return false;
 
@@ -423,7 +404,7 @@ client.on('interactionCreate', async (interaction) => {
   if (tarotCommand.isTarotButton(interaction)) {
     incrementCommand();
     recordUniqueUser(interaction.user.id);
-    await tarotCommand.executeButton({ interaction, logTarotResult });
+    await tarotCommand.executeButton({ interaction });
     return;
   }
 
@@ -431,7 +412,7 @@ client.on('interactionCreate', async (interaction) => {
     incrementCommand();
     recordUniqueUser(interaction.user.id);
     await interaction.deferReply({ ephemeral: true });
-    await tarotCommand.executeSlash({ interaction, logTarotResult });
+    await tarotCommand.executeSlash({ interaction });
     return;
   }
 
@@ -509,7 +490,7 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
-  await command.executeSlash({ interaction, logTarotResult });
+  await command.executeSlash({ interaction });
 });
 
 client.on('error', (error) => {

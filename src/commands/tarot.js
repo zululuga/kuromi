@@ -148,9 +148,6 @@ async function executeButton({ interaction, logTarotResult }) {
     });
 
     await logTarotToPublicChannel(interaction.client, { user: interaction.user, result });
-    if (typeof logTarotResult === 'function') {
-      await logTarotResult({ user: interaction.user, result });
-    }
     return;
   }
 
@@ -179,9 +176,6 @@ async function executeButton({ interaction, logTarotResult }) {
     });
 
     await logTarotToPublicChannel(interaction.client, { user: interaction.user, result });
-    if (typeof logTarotResult === 'function') {
-      await logTarotResult({ user: interaction.user, result });
-    }
   }
 }
 
@@ -199,7 +193,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName(name)
     .setDescription('Receba uma tiragem privada do Tarot da Cringelândia renderizada na hora.'),
-  async executeSlash({ interaction, logTarotResult }) {
+  async executeSlash({ interaction }) {
     const result = drawTarot(interaction.user.id);
 
     if (!result.drawn) {
@@ -221,8 +215,5 @@ module.exports = {
     });
 
     await logTarotToPublicChannel(interaction.client, { user: interaction.user, result });
-    if (typeof logTarotResult === 'function') {
-      await logTarotResult({ user: interaction.user, result });
-    }
   },
 };
