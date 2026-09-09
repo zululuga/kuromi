@@ -2,7 +2,6 @@ const express = require('express');
 const path = require('node:path');
 const { spawn, execFile } = require('node:child_process');
 const { setWelcomeChannel, getWelcomeChannel, normalizeChannelValue, getEconomyConfig, setEconomyConfig } = require('./src/services/database');
-const { addLog: savePersistentLog, getLogs, getStats, updateStats, resetStats, clearLogs } = require('./src/services/logging');
 const { addLog: savePersistentLog, getLogs, getStats, updateStats, resetStats, clearLogs, flushSync } = require('./src/services/logging');
 
 const app = express();
@@ -46,7 +45,6 @@ function startBot() {
 
   botStartTime = Date.now();
   addLog('Iniciando bot Kuromiga...');
-  botProcess = spawn('node', ['index.js'], {
   botProcess = spawn('node', ['--max-old-space-size=192', 'index.js'], {
     cwd: appRoot,
     detached: true,
@@ -128,7 +126,6 @@ function registerSlashCommands() {
 }
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1d' }));
 
 app.get('/api/status', (req, res) => {
