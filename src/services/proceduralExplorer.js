@@ -72,11 +72,30 @@ function startProceduralRun(userId, zoneId = 'bosque', activePet) {
     return { success: false, reason: 'no_pet', message: 'Você precisa de um pet ativo para explorar.' };
   }
 
-  if (activePet.energy < 15) {
+  // Proibição: Pet desmaiado (0 HP)
+  if (activePet.stats && activePet.stats.hp <= 0) {
+    return {
+      success: false,
+      reason: 'fainted',
+      message: `💀 **Pet Desmaiado!** **${activePet.name}** está com **0 HP (desmaiado)**. Use um **Curativo** na Mochila ou deixe-o dormir para revivê-lo antes de explorar!`,
+    };
+  }
+
+  // Proibição: 0% de Fome
+  if (typeof activePet.hunger === 'number' && activePet.hunger <= 0) {
+    return {
+      success: false,
+      reason: 'starving',
+      message: `🍖 **Pet Faminto!** **${activePet.name}** está com **0% de fome** e fraco demais para se aventurar. Alimente-o na aba **Meu Pet** ou na **Mochila** antes de iniciar a exploração!`,
+    };
+  }
+
+  // Proibição: Energia insuficiente
+  if (activePet.energy < 8) {
     return {
       success: false,
       reason: 'low_energy',
-      message: `Seu pet ${activePet.name} está exausto (${activePet.energy}/100 ⚡). Deixe-o descansar ou use uma poção de energia!`,
+      message: `⚡ **Sem Energia!** **${activePet.name}** possui apenas **${activePet.energy} ⚡**. Deixe-o descansar ou use um **Frasco de Éter** na Mochila!`,
     };
   }
 
@@ -102,6 +121,7 @@ function startProceduralRun(userId, zoneId = 'bosque', activePet) {
     itemsFound: [],
     logs: [`🐾 **${activePet.name}** adentrou em **${zone.name}**!`],
     currentTerrain: TERRAINS[0],
+    isExhausted: false,
     lastActivityAt: Date.now(),
   };
 
@@ -118,6 +138,24 @@ function advanceStep(userId, activePet, awardXpFn) {
     return { success: false, reason: 'no_active_run', message: 'Você não tem nenhuma expedição ativa. Inicie uma nova!' };
   }
 
+  // Validação: Pet desmaiado
+  if (activePet.stats && activePet.stats.hp <= 0) {
+    return {
+      success: false,
+      reason: 'fainted',
+      message: `💀 **Pet Desmaiado!** **${activePet.name}** está com **0 HP**. Resgate os espólios ou cuide dele!`,
+    };
+  }
+
+  // Validação: 0% de Fome durante a aventura
+  if (typeof activePet.hunger === 'number' && activePet.hunger <= 0) {
+    return {
+      success: false,
+      reason: 'starving',
+      message: `🍖 **Fome Crítica!** **${activePet.name}** chegou a **0% de fome** e recusa-se a avançar sem comer. Alimente-o na Mochila para continuar!`,
+    };
+  }
+
   // Sorteia o terreno do passo
   const terrain = TERRAINS[Math.floor(Math.random() * TERRAINS.length)];
   run.currentTerrain = terrain;
@@ -126,18 +164,19 @@ function advanceStep(userId, activePet, awardXpFn) {
 
   // Valida energia
   if (activePet.energy < totalCost) {
+    run.isExhausted = true;
     return {
       success: false,
       reason: 'exhausted',
       cost: totalCost,
-      message: `⚡ **Exaustão!** ${activePet.name} não tem energia suficiente para atravessar o **${terrain.name}** (Precisa de ${totalCost}⚡, possui ${activePet.energy}⚡). Resgate seus espólios ou tome uma poção de éter!`,
+      message: `⚡ **Exaustão!** **${activePet.name}** não tem energia suficiente para atravessar o **${terrain.name}** (Precisa de ${totalCost} ⚡, possui ${activePet.energy} ⚡). Resgate seus espólios ou tome um Frasco de Éter!`,
     };
   }
 
   // Consome energia e fome
   activePet.energy = Math.max(0, activePet.energy - totalCost);
   activePet.lastEnergyUpdateAt = Date.now();
-  activePet.hunger = Math.max(0, activePet.hunger - 3);
+  activePet.hunger = Math.max(0, (typeof activePet.hunger === 'number' ? activePet.hunger : 80) - 3);
   run.step += 1;
   run.lastActivityAt = Date.now();
 
@@ -149,7 +188,7 @@ function advanceStep(userId, activePet, awardXpFn) {
     // 62% Batalha Selvagem (Combate Rápido em RAM)
     const enemyAtk = Math.max(5, Math.floor(activePet.stats.atk * 0.8 + Math.random() * 5));
     const damageTaken = Math.max(2, Math.floor(enemyAtk - activePet.stats.def * 0.3));
-    activePet.stats.hp = Math.max(1, activePet.stats.hp - damageTaken);
+    activePet.stats.hp = Math.max(0, activePet.stats.hp - damageTaken);
 
     const coinsWon = Math.floor(35 + Math.random() * 55 + activePet.level * 10);
     const xpWon = Math.floor(15 + Math.random() * 20);
@@ -200,7 +239,7 @@ function advanceStep(userId, activePet, awardXpFn) {
   } else if (roll < 0.95) {
     // 7% Armadilha / Emboscada
     const trapDmg = Math.floor(8 + Math.random() * 8);
-    activePet.stats.hp = Math.max(1, activePet.stats.hp - trapDmg);
+    activePet.stats.hp = Math.max(0, activePet.stats.hp - trapDmg);
 
     eventResult = {
       type: 'TRAP',
@@ -224,6 +263,54 @@ function advanceStep(userId, activePet, awardXpFn) {
 
   run.logs.push(`[Passo ${run.step} - ${terrain.emoji}] ${eventResult.description}`);
   if (run.logs.length > 5) run.logs.shift();
+
+  // VERIFICAÇÃO DE DESMAIO (HP zerado)
+  if (activePet.stats.hp <= 0) {
+    activePet.stats.hp = 0;
+    activePet.energy = 0;
+    activePet.happiness = Math.max(0, (activePet.happiness || 50) - 25);
+
+    // Penalidade crítica de desmaio: salva apenas 25% das moedas, perde todos os ovos
+    const faintCoins = Math.floor(run.coinsAccumulated * 0.25);
+    const lostCoins = run.coinsAccumulated - faintCoins;
+    const lostEggsCount = (run.eggsFound || []).length;
+
+    updateUserAccount(userId, (acc) => {
+      acc.coins = (Number(acc.coins) || 0) + faintCoins;
+    });
+
+    for (const chestId of (run.chestsFound || [])) {
+      addItem(userId, chestId, 1);
+    }
+
+    activeRuns.delete(userId);
+
+    const faintCompletionResult = {
+      fainted: true,
+      success: false,
+      coinsWon: faintCoins,
+      lostCoins,
+      lostEggs: lostEggsCount,
+      message: `💀 **DESMAIO EM COMBATE!** **${activePet.name}** sofreu ferimentos graves e chegou a **0 HP (desmaiado)**!\nUma fada socorrista de Pyxie o resgatou às pressas da dungeon: você recuperou apenas **+${faintCoins} moedas** (perdeu ${lostCoins} moedas abandonadas na fuga)${lostEggsCount > 0 ? `, todos os ${lostEggsCount} ovo(s) se quebraram` : ''} e o pet ficou com **0 HP e 0 ⚡**. Use um **Curativo** na Mochila ou deixe-o dormir!`,
+    };
+
+    return {
+      success: true,
+      run,
+      terrain,
+      cost: totalCost,
+      event: eventResult,
+      autoCompleted: true,
+      fainted: true,
+      completionResult: faintCompletionResult,
+      petStatus: {
+        hp: 0,
+        maxHp: activePet.stats.maxHp,
+        energy: activePet.energy,
+        hunger: activePet.hunger,
+      },
+    };
+  }
 
   // Se completou todos os passos da dungeon, finaliza com 100% dos espólios
   let autoCompleted = false;
@@ -251,7 +338,8 @@ function advanceStep(userId, activePet, awardXpFn) {
 }
 
 /**
- * Recuo voluntário da expedição: Salva 100% dos espólios e envia ovos e baús para a mochila.
+ * Recuo / Resgate de espólios da expedição.
+ * Se o pet estiver exausto (<8 ⚡ ou flagged isExhausted), aplica penalidades de carga pesada e cansaço.
  */
 function retreatRun(userId, activePet, awardXpFn) {
   const run = getProceduralRun(userId);
@@ -259,50 +347,90 @@ function retreatRun(userId, activePet, awardXpFn) {
     return { success: false, reason: 'no_active_run', message: 'Nenhuma expedição em andamento.' };
   }
 
+  const isExhaustedRescue = Boolean(run.isExhausted || (activePet && activePet.energy < 8));
+
+  let coinsWon = run.coinsAccumulated;
+  let xpWon = run.xpAccumulated;
+  let lostCoins = 0;
+  let lostEggsCount = 0;
+  const savedEggs = [];
+
+  if (isExhaustedRescue) {
+    // Penalidades de exaustão: -40% moedas, -30% XP, 50% de chance de quebra de ovos frágeis, -20 Humor
+    coinsWon = Math.floor(run.coinsAccumulated * 0.60);
+    lostCoins = run.coinsAccumulated - coinsWon;
+    xpWon = Math.floor(run.xpAccumulated * 0.70);
+
+    for (const eggId of (run.eggsFound || [])) {
+      if (Math.random() < 0.5) {
+        savedEggs.push(eggId);
+      } else {
+        lostEggsCount++;
+      }
+    }
+
+    if (activePet) {
+      activePet.happiness = Math.max(0, (activePet.happiness || 50) - 20);
+    }
+  } else {
+    savedEggs.push(...(run.eggsFound || []));
+  }
+
   // Adiciona moedas na economia
   updateUserAccount(userId, (acc) => {
-    acc.coins = (Number(acc.coins) || 0) + run.coinsAccumulated;
+    acc.coins = (Number(acc.coins) || 0) + coinsWon;
   });
 
-  // Adiciona os ovos no inventário
-  for (const eggId of (run.eggsFound || [])) {
+  // Adiciona os ovos salvos no inventário
+  for (const eggId of savedEggs) {
     addItem(userId, eggId, 1);
   }
 
-  // Adiciona os baús no inventário
+  // Adiciona todos os baús no inventário
   for (const chestId of (run.chestsFound || [])) {
     addItem(userId, chestId, 1);
   }
 
   // Concede XP ao pet se função fornecida
   let xpResult = null;
-  if (awardXpFn && run.xpAccumulated > 0) {
-    xpResult = awardXpFn(userId, activePet.id, run.xpAccumulated);
+  if (awardXpFn && xpWon > 0 && activePet) {
+    xpResult = awardXpFn(userId, activePet.id, xpWon);
   }
 
   activeRuns.delete(userId);
 
-  const eggCount = (run.eggsFound || []).length;
+  const eggCount = savedEggs.length;
   const chestCount = (run.chestsFound || []).length;
-  const lootParts = [`**+${run.coinsAccumulated} moedas**`, `**+${run.xpAccumulated} XP**`];
+  const lootParts = [`**+${coinsWon} moedas**`, `**+${xpWon} XP**`];
   if (eggCount > 0) lootParts.push(`**${eggCount} ovo(s)**`);
   if (chestCount > 0) lootParts.push(`**${chestCount} baú(s)**`);
 
+  let message = '';
+  if (isExhaustedRescue) {
+    const eggLossNote = lostEggsCount > 0 ? ` (${lostEggsCount} ovo(s) quebraram pelo cansaço)` : '';
+    message = `⚠️ **Resgate sob Exaustão Crítica!** **${activePet ? activePet.name : 'Seu pet'}** estava esgotado e precisou largar carga pesada pelo caminho: resgatou ${lootParts.join(', ')} (perdeu ${lostCoins} moedas${eggLossNote}) e sofreu estresse (-20 Humor).`;
+  } else {
+    message = `🎉 **Expedição Concluída com Sucesso!** Você resgatou ${lootParts.join(', ')} e todos os itens foram guardados na sua mochila!`;
+  }
+
   return {
     success: true,
-    coinsWon: run.coinsAccumulated,
-    xpWon: run.xpAccumulated,
-    eggsWon: run.eggsFound || [],
+    isExhaustedRescue,
+    coinsWon,
+    lostCoins,
+    xpWon,
+    eggsWon: savedEggs,
+    lostEggs: lostEggsCount,
     chestsWon: run.chestsFound || [],
     stepsWalked: run.step,
     leveledUp: xpResult ? xpResult.leveledUp : false,
-    newLevel: activePet.level,
-    message: `🎉 **Expedição Concluída com Sucesso!** Você resgatou ${lootParts.join(', ')} e todos os itens foram guardados na sua mochila!`,
+    newLevel: activePet ? activePet.level : 1,
+    message,
   };
 }
 
 /**
- * Fuga de emergência / pânico: Resgata 50% das moedas e perde todos os ovos coletados (baús são salvos).
+ * Fuga de emergência / pânico: Resgata 40% das moedas e perde todos os ovos coletados (baús são salvos).
  */
 function panicFlee(userId, activePet) {
   const run = getProceduralRun(userId);
@@ -310,7 +438,10 @@ function panicFlee(userId, activePet) {
     return { success: false, reason: 'no_active_run', message: 'Nenhuma expedição em andamento.' };
   }
 
-  const partialCoins = Math.floor(run.coinsAccumulated * 0.5);
+  const partialCoins = Math.floor(run.coinsAccumulated * 0.4);
+  const lostCoins = run.coinsAccumulated - partialCoins;
+  const lostEggsCount = (run.eggsFound || []).length;
+
   updateUserAccount(userId, (acc) => {
     acc.coins = (Number(acc.coins) || 0) + partialCoins;
   });
@@ -320,13 +451,19 @@ function panicFlee(userId, activePet) {
     addItem(userId, chestId, 1);
   }
 
+  if (activePet) {
+    activePet.energy = 0;
+    activePet.happiness = Math.max(0, (activePet.happiness || 50) - 25);
+  }
+
   activeRuns.delete(userId);
 
   return {
     success: true,
     partialCoins,
-    lostEggs: (run.eggsFound || []).length,
-    message: `💨 **Fuga Desesperada!** ${activePet.name} fugiu em pânico com energia esgotada. Conseguiu salvar apenas **+${partialCoins} moedas** (50%) e os ovos frágeis se quebraram na fuga.`,
+    lostCoins,
+    lostEggs: lostEggsCount,
+    message: `💨 **Fuga Desesperada!** **${activePet ? activePet.name : 'Seu pet'}** fugiu em pânico com energia esgotada. Conseguiu salvar apenas **+${partialCoins} moedas** (perdeu ${lostCoins} moedas), os ovos frágeis se perderam e a energia zerou.`,
   };
 }
 

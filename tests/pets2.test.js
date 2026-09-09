@@ -152,17 +152,46 @@ async function runPetTests() {
     assert.equal(getIncubator(USER_A).maxSlots, 5, 'Chocadeira deve ter 5 slots após expansão.');
 
     // 7. Exploração Procedural por Passos em RAM
-    const startRunRes = startProceduralRun(USER_A, 'bosque', getActivePet(USER_A));
+    const petA = getActivePet(USER_A);
+    petA.hunger = 80;
+    petA.energy = 100;
+    petA.stats.hp = petA.stats.maxHp;
+
+    const startRunRes = startProceduralRun(USER_A, 'bosque', petA);
     assert.equal(startRunRes.success, true, 'Deve iniciar expedição procedural.');
 
-    const initialEnergy = getActivePet(USER_A).energy;
-    const stepRes = advanceStep(USER_A, getActivePet(USER_A));
+    const initialEnergy = petA.energy;
+    const stepRes = advanceStep(USER_A, petA);
     assert.equal(stepRes.success, true, 'Deve avançar 1 passo na dungeon.');
-    assert.ok(getActivePet(USER_A).energy < initialEnergy || stepRes.event.type === 'FOUNTAIN', 'Passo deve consumir estamina ou acionar fonte.');
+    assert.ok(petA.energy < initialEnergy || stepRes.event.type === 'FOUNTAIN', 'Passo deve consumir estamina ou acionar fonte.');
 
-    // Resgate de espólios
-    const retreatRes = retreatRun(USER_A, getActivePet(USER_A), awardPetXp);
+    // Resgate de espólios com energia (sem penalidade)
+    const retreatRes = retreatRun(USER_A, petA, awardPetXp);
     assert.equal(retreatRes.success, true, 'Deve resgatar espólios voluntariamente.');
+    assert.equal(retreatRes.isExhaustedRescue, false, 'Não deve ter penalidade de exaustão.');
+
+    // Teste: Proibição com 0% de Fome
+    petA.hunger = 0;
+    const starvingStart = startProceduralRun(USER_A, 'bosque', petA);
+    assert.equal(starvingStart.success, false, 'Não deve permitir explorar com 0% de fome.');
+    assert.equal(starvingStart.reason, 'starving');
+    petA.hunger = 80;
+
+    // Teste: Proibição com 0 HP (Desmaiado)
+    petA.stats.hp = 0;
+    const faintedStart = startProceduralRun(USER_A, 'bosque', petA);
+    assert.equal(faintedStart.success, false, 'Não deve permitir explorar com 0 HP.');
+    assert.equal(faintedStart.reason, 'fainted');
+    petA.stats.hp = petA.stats.maxHp;
+
+    // Teste: Resgate sob Exaustão (Penalidade de carga)
+    const exhaustRun = startProceduralRun(USER_A, 'bosque', petA);
+    assert.equal(exhaustRun.success, true);
+    petA.energy = 2; // Força exaustão
+    const exhaustRetreat = retreatRun(USER_A, petA, awardPetXp);
+    assert.equal(exhaustRetreat.success, true);
+    assert.equal(exhaustRetreat.isExhaustedRescue, true, 'Deve registrar resgate com penalidade de exaustão.');
+    petA.energy = 100;
 
     // 8. Duelo PvP entre Pets
     adoptPet(USER_B, 'sonivoro');

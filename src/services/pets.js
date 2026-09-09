@@ -151,18 +151,18 @@ function migrateLegacyPet(userId, userRecord) {
 function updateDynamicPetState(pet) {
   const now = Date.now();
 
-  // 1. Fome: decai ~2.5% por hora (5% a cada 2 horas)
+  // 1. Fome: decai ~2.5% por hora (5% a cada 2 horas), pode chegar a 0%
   if (!pet.lastFedAt) pet.lastFedAt = now;
   const hoursSinceFed = Math.max(0, (now - pet.lastFedAt) / (1000 * 60 * 60));
   if (hoursSinceFed >= 1) {
     const hungerDecay = Math.floor(hoursSinceFed * 2.5);
-    pet.hunger = Math.max(5, Math.min(100, (typeof pet.hunger === 'number' ? pet.hunger : 80) - hungerDecay));
+    pet.hunger = Math.max(0, Math.min(100, (typeof pet.hunger === 'number' ? pet.hunger : 80) - hungerDecay));
     pet.lastFedAt = now - ((now - pet.lastFedAt) % (1000 * 60 * 60));
   }
 
   // 2. Humor: perde um pouco se estiver com fome crítica (< 30)
-  if (pet.hunger < 30) {
-    pet.happiness = Math.max(10, Math.min(100, (pet.happiness || 50) - 10));
+  if (typeof pet.hunger === 'number' && pet.hunger < 30) {
+    pet.happiness = Math.max(0, Math.min(100, (pet.happiness || 50) - 10));
   }
 
   // 3. Energia: regenera +1 ⚡ a cada 3 minutos reais (20 ⚡ por hora)

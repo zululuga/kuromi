@@ -2,7 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const { getActivePet } = require('../services/pets');
 const { startProceduralRun } = require('../services/proceduralExplorer');
 const { PET_EXPLORE } = require('./commandNames');
-const petHubCommand = require('./pet');
+const { buildDungeonTab } = require('./pet');
 
 module.exports = {
   name: PET_EXPLORE,
@@ -24,6 +24,7 @@ module.exports = {
   aliases: ['dungeon', 'explorar', 'expedicao', 'aventura'],
   async executeSlash({ interaction }) {
     const userId = interaction.user.id;
+    const userTag = interaction.user.displayName || interaction.user.username;
     const directZone = interaction.options?.getString('zona');
 
     if (directZone) {
@@ -31,11 +32,15 @@ module.exports = {
       startProceduralRun(userId, directZone, activePet);
     }
 
-    // Abre na aba de Dungeon do Hub
-    return petHubCommand.executeSlash({ interaction });
+    // Abre diretamente na aba de Dungeon do Hub (sem imagem pesada)
+    const view = buildDungeonTab(userId, userTag);
+    await interaction.editReply(view);
   },
-  async executePrefix({ message, args }) {
-    return petHubCommand.executePrefix({ message });
+  async executePrefix({ message }) {
+    const userId = message.author.id;
+    const userTag = message.author.displayName || message.author.username;
+    const view = buildDungeonTab(userId, userTag);
+    await message.reply(view);
   },
   isDungeonInteraction() {
     return false;

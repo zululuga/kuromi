@@ -249,7 +249,7 @@ function buildIncubatorTab(userId, userTag) {
     components.push(actionRow);
   }
 
-  return { embeds: [embed], components };
+  return { embeds: [embed], components, files: [] };
 }
 
 // 3. Tab Dungeons & Exploração Procedural
@@ -270,14 +270,14 @@ function buildDungeonTab(userId, userTag) {
       .setTitle(`🗺️  ✦  Expedições & Dungeons Procedurais — ${userTag}`)
       .setDescription(
         `Prepare **${activePet.name}** (${activePet.emoji} Nv. ${activePet.level}) para explorar labirintos mágicos!\n\n` +
-        `⚡ **Energia Atual:** **${activePet.energy}/100 ⚡** (Custo médio: **8 ⚡/passo**)\n` +
-        `💖 **HP Atual:** **${activePet.stats.hp}/${activePet.stats.maxHp}**\n\n` +
+        `⚡ **Energia Atual:** **${activePet.energy}/100 ⚡** (Custo médio: **10 ⚡/passo**)\n` +
+        `💖 **HP Atual:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  |  🍖 **Fome:** **${activePet.hunger}%**\n\n` +
         `**Zonas Disponíveis:**\n` +
         zones
           .map((z) => `${z.emoji} **${z.name}** (Nv. Mín: ${z.minLevel})\n> *${z.desc}*`)
           .join('\n\n')
       )
-      .setFooter({ text: pyxieFooter('Consumo de Estamina por Passo • Encontros em RAM') })
+      .setFooter({ text: pyxieFooter('Passos consom estamina • Fome 0% ou 0 HP impedem exploração') })
       .setTimestamp();
 
     const zoneOptions = zones.map((z) => ({
@@ -310,12 +310,13 @@ function buildDungeonTab(userId, userTag) {
     );
     components.push(actionRow);
 
-    return { embeds: [embed], components };
+    return { embeds: [embed], components, files: [] };
   }
 
   // Em expedição ativa (Passo a passo)
+  const isExhausted = activePet.energy < 8 || run.isExhausted;
   const embed = new EmbedBuilder()
-    .setColor(PYXIE_COLORS.violet)
+    .setColor(isExhausted ? PYXIE_COLORS.crimson : PYXIE_COLORS.violet)
     .setTitle(`🧭  ✦  ${run.zone.emoji} ${run.zone.name} — Passo ${run.step}/${run.maxSteps}`)
     .setDescription(
       `**Explorador:** ${activePet.name} (${activePet.emoji} Nv. ${activePet.level})\n` +
@@ -326,7 +327,7 @@ function buildDungeonTab(userId, userTag) {
       `📜 **Diário da Expedição:**\n` +
       run.logs.map((l) => `> ${l}`).join('\n')
     )
-    .setFooter({ text: pyxieFooter('Avançar consome 8⚡ base • Resgate salva 100% dos espólios') })
+    .setFooter({ text: pyxieFooter('Resgate voluntário salva 100% • Exaustão penaliza carga • 0 HP causa KO') })
     .setTimestamp();
 
   const runActions = new ActionRowBuilder().addComponents(
@@ -337,19 +338,19 @@ function buildDungeonTab(userId, userTag) {
       .setStyle(ButtonStyle.Success),
     new ButtonBuilder()
       .setCustomId(`hub_dungeon_retreat:${userId}`)
-      .setLabel('Resgatar Espólios (100%)')
+      .setLabel(isExhausted ? 'Resgatar Espólios (Exausto)' : 'Resgatar Espólios (100%)')
       .setEmoji('🏃')
-      .setStyle(ButtonStyle.Primary),
+      .setStyle(isExhausted ? ButtonStyle.Secondary : ButtonStyle.Primary),
     new ButtonBuilder()
       .setCustomId(`hub_dungeon_flee:${userId}`)
-      .setLabel('Fuga de Emergência (50%)')
+      .setLabel('Fuga de Pânico (40%)')
       .setEmoji('💨')
       .setStyle(ButtonStyle.Danger)
   );
 
   components.push(runActions);
 
-  return { embeds: [embed], components };
+  return { embeds: [embed], components, files: [] };
 }
 
 // 4. Tab Mochila / Inventário
@@ -413,7 +414,7 @@ function buildInventoryTab(userId, userTag) {
     );
   }
 
-  return { embeds: [embed], components };
+  return { embeds: [embed], components, files: [] };
 }
 
 // 5. Tab Lojinha
@@ -485,7 +486,7 @@ function buildShopTab(userId, userTag, category = 'comida') {
     );
   }
 
-  return { embeds: [embed], components };
+  return { embeds: [embed], components, files: [] };
 }
 
 // Onboarding View para novos usuários
@@ -519,7 +520,7 @@ function buildOnboardingView(userId, userDisplayName) {
       .setStyle(ButtonStyle.Primary)
   );
 
-  return { embeds: [embed], components: [row] };
+  return { embeds: [embed], components: [row], files: [] };
 }
 
 // --- Handler de Interações do Hub ---
@@ -879,6 +880,11 @@ module.exports = {
   aliases: ['pets', 'bicho', 'mascote', 'p'],
   buildPetEmbed: (pet, userTag) => buildPetTab(userTag, userTag).embeds[0],
   buildHubView: buildPetTab,
+  buildPetTab,
+  buildDungeonTab,
+  buildInventoryTab,
+  buildIncubatorTab,
+  buildShopTab,
   isPetInteraction: isHubInteraction,
   handlePetInteraction: handleHubInteraction,
   async executeSlash({ interaction }) {
