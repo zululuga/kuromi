@@ -10,14 +10,14 @@ const ELEMENT_THEMES = {
     glow: 'rgba(0, 245, 212, 0.4)',
     bgInner: '#0b2638',
     bgOuter: '#020d14',
-    badgeText: '🫧 ORVALHO',
+    badgeText: '💧 ORVALHO',
   },
   BRISA: {
     accent: '#38bdf8',
     glow: 'rgba(56, 189, 248, 0.4)',
     bgInner: '#0e1f3b',
     bgOuter: '#030814',
-    badgeText: '🪽 BRISA',
+    badgeText: '🪶 BRISA',
   },
   SILVESTRE: {
     accent: '#10b981',
@@ -67,7 +67,7 @@ const ELEMENT_THEMES = {
     glow: 'rgba(0, 245, 212, 0.4)',
     bgInner: '#0b2638',
     bgOuter: '#020d14',
-    badgeText: '🫧 ORVALHO',
+    badgeText: '💧 ORVALHO',
   },
 };
 

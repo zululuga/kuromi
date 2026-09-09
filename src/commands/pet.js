@@ -502,7 +502,7 @@ function buildShopTab(userId, userTag, category = 'comida') {
 function buildOnboardingView(userId, userDisplayName) {
   const embed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.lilac)
-    .setTitle('✨ ✦ Boas-vindas ao Reino de Mascotes de Pyxie! ✦ 🪽')
+    .setTitle('✨ ✦ Boas-vindas ao Reino de Mascotes de Pyxie! ✦ ✨')
     .setDescription(
       `Ora, ora, **${userDisplayName}**! Parece que você ainda não tem nenhum mascote para chamar de seu.\n\n` +
       `Pyxie preparou um **Kit Inicial de Aventureiro** gratuito para você dar os primeiros passos no bosque mágico!\n\n` +

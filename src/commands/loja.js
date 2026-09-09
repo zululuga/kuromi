@@ -12,11 +12,11 @@ const { formatCoins } = require('./economyHelpers');
 const { SHOP } = require('./commandNames');
 
 const CATEGORIES = [
-  { label: 'Comidas & Nutrição', value: 'comida', emoji: '🍖', desc: 'Rações naturais e guloseimas para saciar a fome do pet' },
-  { label: 'Cura & Estamina', value: 'cura', emoji: '🩹', desc: 'Curativos e poções de estamina para expedições' },
-  { label: 'Utilitários & Ampulhetas', value: 'utilitario', emoji: '⏳', desc: 'Ampulhetas de aceleração de choco e elixires' },
-  { label: 'Baús Misteriosos', value: 'bau', emoji: '📦', desc: 'Baús com moedas, comidas e itens raros' },
-  { label: 'Melhorias & Ninhos', value: 'melhoria', emoji: '🪺', desc: 'Ninhos encantados e expansões de mochila' },
+  { label: 'Comidas & Nutrição', value: 'comida', emoji: '🍖', desc: 'Rações e petiscos para o pet' },
+  { label: 'Cura & Estamina', value: 'cura', emoji: '🩹', desc: 'Curativos e poções de estamina' },
+  { label: 'Utilitários & Aceleração', value: 'utilitario', emoji: '⏳', desc: 'Ampulhetas de choco e elixires' },
+  { label: 'Baús Misteriosos', value: 'bau', emoji: '📦', desc: 'Baús com moedas e itens raros' },
+  { label: 'Melhorias & Ninhos', value: 'melhoria', emoji: '🪺', desc: 'Ninhos e expansões de mochila' },
 ];
 
 function buildShopEmbed(category = 'comida') {

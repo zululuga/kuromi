@@ -20,12 +20,12 @@ const { formatCoins } = require('./economyHelpers');
 const { ADOPTION } = require('./commandNames');
 
 const ELEMENTS = [
-  { label: '🌟 Todos os Elementos', value: 'TODOS', emoji: '🌟', desc: 'Ver todas as 18 espécies autorais disponíveis' },
-  { label: '🫧 Elemento Orvalho', value: 'ORVALHO', emoji: '🫧', desc: 'Mascotes aquáticos e cristalinos com alta defesa e vida' },
-  { label: '🪽 Elemento Brisa', value: 'BRISA', emoji: '🪽', desc: 'Criaturas aladas e ágeis com alto ataque e velocidade' },
-  { label: '🍃 Elemento Silvestre', value: 'SILVESTRE', emoji: '🍃', desc: 'Bichinhos dos bosques e campinas equilibrados e resistentes' },
-  { label: '🎀 Elemento Charme', value: 'CHARME', emoji: '🎀', desc: 'Mascotes nobres e fofos com alta felicidade e presença' },
-  { label: '🖤 Elemento Travessura', value: 'TRAVESSURA', emoji: '🖤', desc: 'Criaturas rebeldes e místicas com altíssimo ataque e dano' },
+  { label: 'Todos os Elementos', value: 'TODOS', emoji: '⭐', desc: 'Ver todas as 18 espécies' },
+  { label: 'Elemento Orvalho', value: 'ORVALHO', emoji: '💧', desc: 'Alta defesa e regeneração de HP' },
+  { label: 'Elemento Brisa', value: 'BRISA', emoji: '🪶', desc: 'Ágeis com alto ataque e velocidade' },
+  { label: 'Elemento Silvestre', value: 'SILVESTRE', emoji: '🌿', desc: 'Equilibrados e resistentes' },
+  { label: 'Elemento Charme', value: 'CHARME', emoji: '🌸', desc: 'Foco em carisma e felicidade' },
+  { label: 'Elemento Travessura', value: 'TRAVESSURA', emoji: '🔮', desc: 'Místicos com altíssimo dano' },
 ];
 
 function getChoices() {

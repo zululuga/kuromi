@@ -7,8 +7,8 @@ const activeRuns = new Map();
 
 const TERRAINS = [
   { id: 'plana', name: 'Trilha Plana', emoji: '🌿', costModifier: 0, desc: 'Caminho limpo e seguro.' },
-  { id: 'lamacal', name: 'Pântano de Orvalho', emoji: '🫧', costModifier: 4, desc: 'Lama viscosa que exige esforço extra (+4 ⚡).' },
-  { id: 'vento', name: 'Corredor de Vento', emoji: '🪽', costModifier: -3, desc: 'Correntes de ar favoráveis ajudam a planar (-3 ⚡).' },
+  { id: 'lamacal', name: 'Pântano de Orvalho', emoji: '💧', costModifier: 4, desc: 'Lama viscosa que exige esforço extra (+4 ⚡).' },
+  { id: 'vento', name: 'Corredor de Vento', emoji: '🪶', costModifier: -3, desc: 'Correntes de ar favoráveis ajudam a planar (-3 ⚡).' },
 ];
 
 const DUNGEON_ZONES = [
@@ -24,7 +24,7 @@ const DUNGEON_ZONES = [
     id: 'recife',
     name: 'Recifes Cantantes',
     minLevel: 2,
-    emoji: '🫧',
+    emoji: '💧',
     desc: 'Litoral mágico de águas cintilantes e corais de cristal.',
     eggs: ['ovo_orvalho', 'ovo_brisa'],
   },
@@ -32,7 +32,7 @@ const DUNGEON_ZONES = [
     id: 'colina',
     name: 'Colinas do Vento Doce',
     minLevel: 3,
-    emoji: '🪽',
+    emoji: '🪶',
     desc: 'Montanhas suaves com brisas perfumadas e ninhos de pássaros arcanos.',
     eggs: ['ovo_brisa', 'ovo_charme'],
   },
@@ -165,10 +165,10 @@ function advanceStep(userId, activePet) {
     // 20% Ninho Selvagem com Ovo
     const possibleEggs = run.zone.eggs;
     const eggId = possibleEggs[Math.floor(Math.random() * possibleEggs.length)];
-    const eggName = eggId === 'ovo_orvalho' ? 'Ovo de Orvalho 🫧'
-      : eggId === 'ovo_brisa' ? 'Ovo de Brisa 🪽'
-      : eggId === 'ovo_silvestre' ? 'Ovo Silvestre 🍃'
-      : eggId === 'ovo_charme' ? 'Ovo de Charme 🎀' : 'Ovo de Travessura 🖤';
+    const eggName = eggId === 'ovo_orvalho' ? 'Ovo de Orvalho 💧'
+      : eggId === 'ovo_brisa' ? 'Ovo de Brisa 🪶'
+      : eggId === 'ovo_silvestre' ? 'Ovo Silvestre 🌿'
+      : eggId === 'ovo_charme' ? 'Ovo de Charme 🌸' : 'Ovo de Travessura 🔮';
 
     run.eggsFound.push(eggId);
     run.xpAccumulated += 25;

@@ -16,8 +16,8 @@ module.exports = {
         .setRequired(false)
         .addChoices(
           { name: '🌲 Bosque dos Guizos (Nv. 1+)', value: 'bosque' },
-          { name: '🫧 Recifes Cantantes (Nv. 2+)', value: 'recife' },
-          { name: '🪽 Colinas do Vento Doce (Nv. 3+)', value: 'colina' },
+          { name: '💧 Recifes Cantantes (Nv. 2+)', value: 'recife' },
+          { name: '🪶 Colinas do Vento Doce (Nv. 3+)', value: 'colina' },
           { name: '🏰 Castelo Travesso de Pyxie (Nv. 5+)', value: 'castelo' }
         )
     ),
