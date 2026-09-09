@@ -237,10 +237,10 @@
     "name": "Ninho Encantado",
     "category": "melhoria",
     "rarity": "EPICO",
-    "emoji": "🪺",
+    "emoji": "🏡",
     "buyPrice": 4000,
     "sellPrice": 1200,
-    "description": "Expande a Chocadeira de Pyxie permanentemente em +2 slots adicionais (máx 5 slots).",
+    "description": "Expande a Chocadeira em +2 ninhos.",
     "effects": {
       "isIncubatorExpansion": true,
       "extraSlots": 2
@@ -254,7 +254,7 @@
     "emoji": "⏳",
     "buyPrice": 350,
     "sellPrice": 100,
-    "description": "Acelera o tempo mágico, adiantando 2 horas de incubação em um ovo na chocadeira.",
+    "description": "Adianta 2 horas de choco na chocadeira.",
     "effects": {
       "isHourglass": true,
       "reduceMs": 7200000
@@ -268,7 +268,7 @@
     "emoji": "⌛",
     "buyPrice": 650,
     "sellPrice": 200,
-    "description": "Acelera o tempo mágico, adiantando 4 horas de incubação em um ovo na chocadeira.",
+    "description": "Adianta 4 horas de choco na chocadeira.",
     "effects": {
       "isHourglass": true,
       "reduceMs": 14400000
@@ -282,7 +282,7 @@
     "emoji": "📦",
     "buyPrice": 300,
     "sellPrice": 100,
-    "description": "Baú de madeira trancado com moedas (100 a 600) ou comidas mágicas.",
+    "description": "Contém 100 a 600 moedas e comidas úteis.",
     "effects": {
       "isChest": true,
       "minCoins": 100,
@@ -298,7 +298,7 @@
     "emoji": "💜",
     "buyPrice": 1800,
     "sellPrice": 600,
-    "description": "Baú ornamentado com guizos e o selo de Pyxie. Contém grandes fortunas e itens raros.",
+    "description": "Contém 800 a 3500 moedas e itens raros.",
     "effects": {
       "isChest": true,
       "minCoins": 800,
@@ -314,7 +314,7 @@
     "emoji": "🏠",
     "buyPrice": 3000,
     "sellPrice": 1000,
-    "description": "Aumenta permanentemente o espaço de pets na sua mochila em +2 vagas.",
+    "description": "Aumenta o limite de pets em +2 vagas.",
     "effects": {
       "isSlotExpansion": true,
       "slots": 2

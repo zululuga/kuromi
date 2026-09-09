@@ -16,7 +16,7 @@ const CATEGORIES = [
   { label: 'Cura & Estamina', value: 'cura', emoji: '🩹', desc: 'Curativos e poções de estamina' },
   { label: 'Utilitários & Aceleração', value: 'utilitario', emoji: '⏳', desc: 'Ampulhetas de choco e elixires' },
   { label: 'Baús Misteriosos', value: 'bau', emoji: '📦', desc: 'Baús com moedas e itens raros' },
-  { label: 'Melhorias & Ninhos', value: 'melhoria', emoji: '🪺', desc: 'Ninhos e expansões de mochila' },
+  { label: 'Melhorias & Ninhos', value: 'melhoria', emoji: '🏡', desc: 'Ninhos e expansões de mochila' },
 ];
 
 function buildShopEmbed(category = 'comida') {
@@ -60,7 +60,7 @@ function buildShopComponents(currentCategory = 'comida', userId = '') {
       CATEGORIES.map((cat) => ({
         label: cat.label,
         value: cat.value,
-        description: cat.desc.slice(0, 50),
+        description: cat.desc,
         emoji: cat.emoji,
         default: cat.value === currentCategory,
       }))
@@ -72,11 +72,11 @@ function buildShopComponents(currentCategory = 'comida', userId = '') {
   if (items.length > 0) {
     const buyMenu = new StringSelectMenuBuilder()
       .setCustomId(`shop_buy_select:${userId}`)
-      .setPlaceholder('🪙 Comprar item com 1 clique...')
+      .setPlaceholder('🛒 Comprar item com 1 clique...')
       .addOptions(
         items.map((i) => ({
-          label: `Comprar ${i.name} (${formatCoins(i.buyPrice)})`,
-          description: i.description.slice(0, 50),
+          label: `${i.name} (${formatCoins(i.buyPrice)})`,
+          description: (i.description || '').slice(0, 45),
           value: i.id,
           emoji: i.emoji,
         }))

@@ -21,6 +21,7 @@ const {
   getIncubator,
   putEggInIncubator,
   hatchIncubatorEgg,
+  awardPetXp,
   useHourglassOnIncubator,
   expandUserIncubator,
   CARINHO_COOLDOWN_MS,
@@ -35,7 +36,14 @@ const {
   getDungeonZones,
 } = require('../services/proceduralExplorer');
 const { createPetAttachment } = require('../services/petRenderer');
-const { getUserInventory, getItemDefinition, formatItemEffects, getItemsByCategory, buyItem } = require('../services/inventory');
+const {
+  getUserInventory,
+  getItemDefinition,
+  formatItemEffects,
+  getItemsByCategory,
+  buyItem,
+  openChest,
+} = require('../services/inventory');
 const { getUserAccount } = require('../services/economy');
 const { PYXIE_COLORS, pyxieFooter, getRandomPhrase } = require('../utils/pyxieVoice');
 const { formatCoins, formatRemaining } = require('./economyHelpers');
@@ -204,7 +212,7 @@ function buildIncubatorTab(userId, userTag) {
       new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
           .setCustomId(`hub_incubator_place_egg:${userId}`)
-          .setPlaceholder('🪺 Escolha um ovo da mochila para chocar...')
+          .setPlaceholder('🥚 Escolha um ovo da mochila para chocar...')
           .addOptions(eggOptions.slice(0, 25))
       )
     );
@@ -231,7 +239,7 @@ function buildIncubatorTab(userId, userTag) {
       new ButtonBuilder()
         .setCustomId(`hub_expand_incubator:${userId}`)
         .setLabel('Expandir (+2 Ninhos)')
-        .setEmoji('🪺')
+        .setEmoji('🏡')
         .setStyle(ButtonStyle.Secondary)
     );
   }
@@ -442,9 +450,9 @@ function buildShopTab(userId, userTag, category = 'comida') {
   const catOptions = [
     { label: 'Comidas & Nutrição', value: 'comida', emoji: '🍖', default: category === 'comida' },
     { label: 'Cura & Estamina', value: 'cura', emoji: '🩹', default: category === 'cura' },
-    { label: 'Utilitários & Ampulhetas', value: 'utilitario', emoji: '⏳', default: category === 'utilitario' },
+    { label: 'Utilitários & Aceleração', value: 'utilitario', emoji: '⏳', default: category === 'utilitario' },
     { label: 'Baús Misteriosos', value: 'bau', emoji: '📦', default: category === 'bau' },
-    { label: 'Melhorias & Ninhos', value: 'melhoria', emoji: '🪺', default: category === 'melhoria' },
+    { label: 'Melhorias & Ninhos', value: 'melhoria', emoji: '🏡', default: category === 'melhoria' },
   ];
 
   components.push(
@@ -460,8 +468,8 @@ function buildShopTab(userId, userTag, category = 'comida') {
   const buyableItems = items.filter((i) => i.buyPrice);
   if (buyableItems.length > 0) {
     const buyOptions = buyableItems.map((item) => ({
-      label: `Comprar ${item.name} (${formatCoins(item.buyPrice)})`,
-      description: item.description.slice(0, 50),
+      label: `${item.name} (${formatCoins(item.buyPrice)})`,
+      description: (item.description || '').slice(0, 45),
       value: item.id,
       emoji: item.emoji,
     }));
@@ -470,7 +478,7 @@ function buildShopTab(userId, userTag, category = 'comida') {
       new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
           .setCustomId(`hub_shop_buy_item:${userId}`)
-          .setPlaceholder('🪙 Escolha um item para comprar...')
+          .setPlaceholder('🛒 Escolha um item para comprar...')
           .addOptions(buyOptions)
       )
     );
@@ -713,18 +721,24 @@ async function handleHubInteraction(interaction) {
   // 9. Dungeons: Avançar Passo
   if (action === 'hub_dungeon_step') {
     const activePet = getActivePet(userId);
-    const stepRes = advanceStep(userId, activePet);
+    const stepRes = advanceStep(userId, activePet, awardPetXp);
     if (!stepRes.success) {
       return interaction.reply({ content: `❌ ${stepRes.message}`, flags: 64 });
     }
     const view = buildDungeonTab(userId, userTag);
+    if (stepRes.autoCompleted) {
+      return interaction.update({
+        content: stepRes.completionResult?.message || '🎉 **Expedição Concluída com Sucesso!**',
+        ...view,
+      });
+    }
     return interaction.update(view);
   }
 
   // 10. Dungeons: Resgatar Espólios
   if (action === 'hub_dungeon_retreat') {
     const activePet = getActivePet(userId);
-    const retreatRes = retreatRun(userId, activePet);
+    const retreatRes = retreatRun(userId, activePet, awardPetXp);
     if (!retreatRes.success) {
       return interaction.reply({ content: `❌ ${retreatRes.message}`, flags: 64 });
     }
@@ -759,9 +773,44 @@ async function handleHubInteraction(interaction) {
     return interaction.update(view);
   }
 
-  // 13. Mochila: Usar Item Selecionado
+  // 13. Mochila: Usar / Abrir / Chocar Item Selecionado
   if (action === 'hub_inventory_use_item') {
     const itemId = interaction.values[0];
+    const itemDef = getItemDefinition(itemId);
+
+    if (itemDef?.effects?.isChest) {
+      const openRes = openChest(userId, itemId);
+      if (!openRes.success) {
+        return interaction.reply({ content: '❌ Não foi possível abrir o baú.', flags: 64 });
+      }
+      const itemsWonStr = (openRes.itemsWon && openRes.itemsWon.length > 0) ? ` e encontrou **1x ${openRes.itemsWon.join(', ')}**` : '';
+      const view = buildInventoryTab(userId, userTag);
+      return interaction.update({
+        content: `🔓 **Baú Aberto com Sucesso!** Você resgatou **+${formatCoins(openRes.coinsWon)}**${itemsWonStr}!`,
+        ...view,
+      });
+    }
+
+    if (itemDef?.effects?.isEgg) {
+      const incubator = getIncubator(userId);
+      const emptySlot = incubator.slots.find((s) => s.empty);
+      if (!emptySlot) {
+        return interaction.reply({
+          content: '❌ Todos os ninhos da sua Chocadeira estão ocupados! Vá na aba **Chocadeira** para chocar ovos prontos ou expandir.',
+          flags: 64,
+        });
+      }
+      const placeRes = putEggInIncubator(userId, itemId, emptySlot.slotIndex);
+      if (!placeRes.success) {
+        return interaction.reply({ content: `❌ ${placeRes.message}`, flags: 64 });
+      }
+      const view = buildInventoryTab(userId, userTag);
+      return interaction.update({
+        content: `🥚 **Ovo no Ninho!** ${itemDef.emoji} **${itemDef.name}** foi colocado no Ninho #${emptySlot.slotIndex + 1}! Vá na aba **Chocadeira** para acompanhar o tempo de choco.`,
+        ...view,
+      });
+    }
+
     const useRes = useItemOnActivePet(userId, itemId);
     if (!useRes.success) {
       return interaction.reply({
@@ -770,7 +819,10 @@ async function handleHubInteraction(interaction) {
       });
     }
     const view = buildInventoryTab(userId, userTag);
-    return interaction.update(view);
+    return interaction.update({
+      content: useRes.message || `✨ Item **${useRes.item ? useRes.item.name : itemId}** utilizado!`,
+      ...view,
+    });
   }
 
   // 14. Lojinha: Mudar Categoria

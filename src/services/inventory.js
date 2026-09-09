@@ -207,7 +207,9 @@ function openChest(userId, chestId) {
     success: true,
     chest,
     coinsAwarded,
+    coinsWon: coinsAwarded,
     droppedItem,
+    itemsWon: droppedItem ? [droppedItem.name] : [],
     balance: updatedAccount.coins,
   };
 }

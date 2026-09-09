@@ -98,6 +98,7 @@ function startProceduralRun(userId, zoneId = 'bosque', activePet) {
     coinsAccumulated: 0,
     xpAccumulated: 0,
     eggsFound: [],
+    chestsFound: [],
     itemsFound: [],
     logs: [`🐾 **${activePet.name}** adentrou em **${zone.name}**!`],
     currentTerrain: TERRAINS[0],
@@ -111,7 +112,7 @@ function startProceduralRun(userId, zoneId = 'bosque', activePet) {
 /**
  * Executa um passo na expedição procedural, consumindo estamina do pet.
  */
-function advanceStep(userId, activePet) {
+function advanceStep(userId, activePet, awardXpFn) {
   const run = getProceduralRun(userId);
   if (!run) {
     return { success: false, reason: 'no_active_run', message: 'Você não tem nenhuma expedição ativa. Inicie uma nova!' };
@@ -143,8 +144,8 @@ function advanceStep(userId, activePet) {
   const roll = Math.random();
   let eventResult = {};
 
-  if (roll < 0.40) {
-    // 40% Encontro Selvagem (Combate Rápido em RAM)
+  if (roll < 0.50) {
+    // 50% Encontro Selvagem (Combate Rápido em RAM)
     const enemyAtk = Math.max(5, Math.floor(activePet.stats.atk * 0.8 + Math.random() * 5));
     const damageTaken = Math.max(2, Math.floor(enemyAtk - activePet.stats.def * 0.3));
     activePet.stats.hp = Math.max(1, activePet.stats.hp - damageTaken);
@@ -161,26 +162,23 @@ function advanceStep(userId, activePet) {
       title: 'Monstro das Sombras!',
       description: `${activePet.name} venceu uma criatura selvagem e recolheu **+${coinsWon} moedas** e **+${xpWon} XP** (Sofreu -${damageTaken} HP).`,
     };
-  } else if (roll < 0.60) {
-    // 20% Ninho Selvagem com Ovo
-    const possibleEggs = run.zone.eggs;
-    const eggId = possibleEggs[Math.floor(Math.random() * possibleEggs.length)];
-    const eggName = eggId === 'ovo_orvalho' ? 'Ovo de Orvalho 💧'
-      : eggId === 'ovo_brisa' ? 'Ovo de Brisa 🪶'
-      : eggId === 'ovo_silvestre' ? 'Ovo Silvestre 🌿'
-      : eggId === 'ovo_charme' ? 'Ovo de Charme 🌸' : 'Ovo de Travessura 🔮';
-
-    run.eggsFound.push(eggId);
-    run.xpAccumulated += 25;
+  } else if (roll < 0.70) {
+    // 20% Baú de Tesouro Encontrado!
+    const isRareChest = Math.random() < 0.25;
+    const chestId = isRareChest ? 'bau_caos' : 'bau_madeira';
+    const chestName = isRareChest ? 'Baú Travesso de Pyxie 💜' : 'Baú Rústico 📦';
+    run.chestsFound = run.chestsFound || [];
+    run.chestsFound.push(chestId);
+    run.xpAccumulated += 15;
 
     eventResult = {
-      type: 'EGG_NEST',
-      emoji: '🪺',
-      title: 'Ninho Secreto Descoberto!',
-      description: `Entre folhas mágicas, ${activePet.name} encontrou um **${eggName}** intacto! O ovo foi guardado nos espólios da viagem.`,
+      type: 'CHEST',
+      emoji: '📦',
+      title: 'Baú Misterioso Encontrado!',
+      description: `${activePet.name} encontrou um **${chestName}** trancado entre as raízes! Guardado nos espólios.`,
     };
-  } else if (roll < 0.80) {
-    // 20% Fonte Restauradora
+  } else if (roll < 0.85) {
+    // 15% Fonte Restauradora
     const recoveredEnergy = 15;
     activePet.energy = Math.min(100, activePet.energy + recoveredEnergy);
     run.xpAccumulated += 10;
@@ -191,8 +189,27 @@ function advanceStep(userId, activePet) {
       title: 'Fonte Cristalina de Pyxie',
       description: `Uma água pura e revigorante restaurou **+${recoveredEnergy} ⚡ de Energia** para ${activePet.name}!`,
     };
+  } else if (roll < 0.93) {
+    // 8% Ninho Selvagem com Ovo Raro
+    const possibleEggs = run.zone.eggs;
+    const eggId = possibleEggs[Math.floor(Math.random() * possibleEggs.length)];
+    const eggName = eggId === 'ovo_orvalho' ? 'Ovo de Orvalho 💧'
+      : eggId === 'ovo_brisa' ? 'Ovo de Brisa 🪶'
+      : eggId === 'ovo_silvestre' ? 'Ovo Silvestre 🌿'
+      : eggId === 'ovo_charme' ? 'Ovo de Charme 🌸' : 'Ovo de Travessura 🔮';
+
+    run.eggsFound = run.eggsFound || [];
+    run.eggsFound.push(eggId);
+    run.xpAccumulated += 30;
+
+    eventResult = {
+      type: 'EGG_NEST',
+      emoji: '🥚',
+      title: 'Ninho Secreto Descoberto!',
+      description: `Com muita sorte, ${activePet.name} encontrou um **${eggName}** raro! Guardado nos espólios.`,
+    };
   } else {
-    // 20% Armadilha / Emboscada
+    // 7% Armadilha / Emboscada
     const trapDmg = Math.floor(8 + Math.random() * 8);
     activePet.stats.hp = Math.max(1, activePet.stats.hp - trapDmg);
 
@@ -207,12 +224,22 @@ function advanceStep(userId, activePet) {
   run.logs.push(`[Passo ${run.step} - ${terrain.emoji}] ${eventResult.description}`);
   if (run.logs.length > 5) run.logs.shift();
 
+  // Se completou todos os passos da dungeon, finaliza com 100% dos espólios
+  let autoCompleted = false;
+  let completionResult = null;
+  if (run.step >= run.maxSteps) {
+    autoCompleted = true;
+    completionResult = retreatRun(userId, activePet, awardXpFn);
+  }
+
   return {
     success: true,
     run,
     terrain,
     cost: totalCost,
     event: eventResult,
+    autoCompleted,
+    completionResult,
     petStatus: {
       hp: activePet.stats.hp,
       maxHp: activePet.stats.maxHp,
@@ -223,7 +250,7 @@ function advanceStep(userId, activePet) {
 }
 
 /**
- * Recuo voluntário da expedição: Salva 100% dos espólios e envia ovos para a mochila.
+ * Recuo voluntário da expedição: Salva 100% dos espólios e envia ovos e baús para a mochila.
  */
 function retreatRun(userId, activePet, awardXpFn) {
   const run = getProceduralRun(userId);
@@ -236,9 +263,14 @@ function retreatRun(userId, activePet, awardXpFn) {
     acc.coins = (Number(acc.coins) || 0) + run.coinsAccumulated;
   });
 
-  // Adiciona os ovos e itens no inventário
-  for (const eggId of run.eggsFound) {
+  // Adiciona os ovos no inventário
+  for (const eggId of (run.eggsFound || [])) {
     addItem(userId, eggId, 1);
+  }
+
+  // Adiciona os baús no inventário
+  for (const chestId of (run.chestsFound || [])) {
+    addItem(userId, chestId, 1);
   }
 
   // Concede XP ao pet se função fornecida
@@ -249,20 +281,27 @@ function retreatRun(userId, activePet, awardXpFn) {
 
   activeRuns.delete(userId);
 
+  const eggCount = (run.eggsFound || []).length;
+  const chestCount = (run.chestsFound || []).length;
+  const lootParts = [`**+${run.coinsAccumulated} moedas**`, `**+${run.xpAccumulated} XP**`];
+  if (eggCount > 0) lootParts.push(`**${eggCount} ovo(s)**`);
+  if (chestCount > 0) lootParts.push(`**${chestCount} baú(s)**`);
+
   return {
     success: true,
     coinsWon: run.coinsAccumulated,
     xpWon: run.xpAccumulated,
-    eggsWon: run.eggsFound,
+    eggsWon: run.eggsFound || [],
+    chestsWon: run.chestsFound || [],
     stepsWalked: run.step,
     leveledUp: xpResult ? xpResult.leveledUp : false,
     newLevel: activePet.level,
-    message: `🎉 **Expedição Concluída com Sucesso!** Você resgatou **${run.coinsAccumulated} moedas**, **+${run.xpAccumulated} XP** e **${run.eggsFound.length} ovos**!`,
+    message: `🎉 **Expedição Concluída com Sucesso!** Você resgatou ${lootParts.join(', ')} e todos os itens foram guardados na sua mochila!`,
   };
 }
 
 /**
- * Fuga de emergência / pânico: Resgata 50% das moedas e perde todos os ovos coletados.
+ * Fuga de emergência / pânico: Resgata 50% das moedas e perde todos os ovos coletados (baús são salvos).
  */
 function panicFlee(userId, activePet) {
   const run = getProceduralRun(userId);
@@ -275,13 +314,18 @@ function panicFlee(userId, activePet) {
     acc.coins = (Number(acc.coins) || 0) + partialCoins;
   });
 
+  // Salva baús no inventário
+  for (const chestId of (run.chestsFound || [])) {
+    addItem(userId, chestId, 1);
+  }
+
   activeRuns.delete(userId);
 
   return {
     success: true,
     partialCoins,
-    lostEggs: run.eggsFound.length,
-    message: `💨 **Fuga Desesperada!** ${activePet.name} fugiu em pânico com energia esgotada. Conseguiu salvar apenas **${partialCoins} moedas** (50%) e os ${run.eggsFound.length} ovos foram perdidos no caminho.`,
+    lostEggs: (run.eggsFound || []).length,
+    message: `💨 **Fuga Desesperada!** ${activePet.name} fugiu em pânico com energia esgotada. Conseguiu salvar apenas **+${partialCoins} moedas** (50%) e os ovos frágeis se quebraram na fuga.`,
   };
 }
 
