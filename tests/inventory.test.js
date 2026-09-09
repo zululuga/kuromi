@@ -83,3 +83,4 @@ try {
   fs.writeFileSync(inventoryFile, originalInventory, 'utf8');
   fs.writeFileSync(economyFile, originalEconomy, 'utf8');
 }
+

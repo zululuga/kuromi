@@ -212,6 +212,26 @@ function openChest(userId, chestId) {
   };
 }
 
+function formatItemEffects(item) {
+  if (!item || !item.effects) return '';
+  const fx = item.effects;
+  const parts = [];
+
+  if (fx.isChest) {
+    return `🎁 Contém ${fx.minCoins} a ${fx.maxCoins} moedas + chance de itens raros`;
+  }
+  if (fx.isSlotExpansion) {
+    return `🏠 +${fx.slots || 2} vagas de pets na mochila`;
+  }
+  if (fx.hunger) parts.push(`🍖 +${fx.hunger}% Fome`);
+  if (fx.happiness) parts.push(`💖 +${fx.happiness}% Felicidade`);
+  if (fx.energy) parts.push(`⚡ +${fx.energy}% Energia`);
+  if (fx.heal) parts.push(`🩹 +${fx.heal} HP`);
+  if (fx.xp) parts.push(`✨ +${fx.xp} XP`);
+
+  return parts.join(' • ');
+}
+
 module.exports = {
   getUserInventory,
   getItemDefinition,
@@ -223,5 +243,7 @@ module.exports = {
   buyItem,
   sellItem,
   openChest,
+  formatItemEffects,
   flushInventorySync,
 };
+

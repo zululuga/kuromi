@@ -6,7 +6,7 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require('discord.js');
-const { getItemsByCategory, getItemDefinition, buyItem } = require('../services/inventory');
+const { getItemsByCategory, getItemDefinition, buyItem, formatItemEffects } = require('../services/inventory');
 const { formatCoins } = require('./economyHelpers');
 const { SHOP } = require('./commandNames');
 
@@ -38,9 +38,11 @@ function buildShopEmbed(category = 'comida') {
   } else {
     items.forEach((item) => {
       const priceTag = item.buyPrice ? `**${formatCoins(item.buyPrice)}**` : '*Item não vendível*';
+      const fxText = formatItemEffects(item);
+      const fxLine = fxText ? `\n> 📊 **Efeito:** ${fxText}` : '';
       embed.addFields({
         name: `${item.emoji} ${item.name} — ${priceTag}`,
-        value: `> ${item.description}\n> *ID para compra:* \`${item.id}\``,
+        value: `> ${item.description}${fxLine}\n> *ID para compra:* \`${item.id}\``,
         inline: false,
       });
     });
@@ -160,3 +162,4 @@ module.exports = {
   isShopInteraction,
   handleShopInteraction,
 };
+

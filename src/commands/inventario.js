@@ -6,7 +6,7 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require('discord.js');
-const { getUserInventory, getItemDefinition, sellItem, openChest } = require('../services/inventory');
+const { getUserInventory, getItemDefinition, sellItem, openChest, formatItemEffects } = require('../services/inventory');
 const { useItemOnActivePet, getActivePet } = require('../services/pets');
 const { formatCoins } = require('./economyHelpers');
 const { INVENTORY } = require('./commandNames');
@@ -37,9 +37,11 @@ function buildInventoryEmbed(userId, userTag, selectedItemId = null) {
       if (item) {
         const isSelected = item.id === selectedItemId;
         const pointer = isSelected ? '👉 ' : '';
+        const fxText = formatItemEffects(item);
+        const fxLine = fxText ? `\n> 📊 **Efeito:** ${fxText}` : '';
         embed.addFields({
           name: `${pointer}${item.emoji} ${item.name} (x${count})`,
-          value: `> *${item.description}*\n> Categoria: \`${item.category}\` • Valor de Venda: **${formatCoins(item.sellPrice || 0)}**`,
+          value: `> *${item.description}*${fxLine}\n> Categoria: \`${item.category}\` • Valor de Venda: **${formatCoins(item.sellPrice || 0)}**`,
           inline: false,
         });
       }
@@ -59,11 +61,12 @@ function buildInventoryComponents(userId, selectedItemId = null) {
 
   const options = entries.slice(0, 25).map(([itemId, count]) => {
     const item = getItemDefinition(itemId);
+    const fxSummary = item ? formatItemEffects(item) : '';
     return {
       label: `${item ? item.name : itemId} (x${count})`,
       value: itemId,
       emoji: item ? item.emoji : '📦',
-      description: item ? item.description.slice(0, 50) : '',
+      description: fxSummary ? fxSummary.slice(0, 50) : (item ? item.description.slice(0, 50) : ''),
       default: itemId === selectedItemId,
     };
   });
@@ -91,25 +94,21 @@ function buildInventoryComponents(userId, selectedItemId = null) {
       actionButtons.push(
         new ButtonBuilder()
           .setCustomId(`inv_use:${userId}:${selectedItemId}`)
-          .setLabel(`Usar no Pet (${selectedItem?.name || 'Item'})`)
+          .setLabel(`Usar no Pet`)
           .setEmoji('✨')
-          .setStyle(ButtonStyle.Primary)
+          .setStyle(ButtonStyle.Success)
       );
     }
 
-    if (selectedItem?.sellPrice) {
-      actionButtons.push(
-        new ButtonBuilder()
-          .setCustomId(`inv_sell:${userId}:${selectedItemId}:1`)
-          .setLabel(`Vender 1x (+${selectedItem.sellPrice}🪙)`)
-          .setEmoji('🪙')
-          .setStyle(ButtonStyle.Secondary)
-      );
-    }
+    actionButtons.push(
+      new ButtonBuilder()
+        .setCustomId(`inv_sell:${userId}:${selectedItemId}:1`)
+        .setLabel(`Vender 1x (${selectedItem?.sellPrice || 0}🪙)`)
+        .setEmoji('🪙')
+        .setStyle(ButtonStyle.Secondary)
+    );
 
-    if (actionButtons.length > 0) {
-      rows.push(new ActionRowBuilder().addComponents(actionButtons));
-    }
+    rows.push(new ActionRowBuilder().addComponents(actionButtons));
   }
 
   return rows;
@@ -165,12 +164,15 @@ async function handleInventoryInteraction(interaction) {
       extraMsg = `\n🎉 **LEVEL UP!** Seu pet atingiu o **Nível ${result.newLevel}**! Seus atributos aumentaram!`;
     }
 
+    const effectsText = result.effectsSummary ? `\n📊 **Efeitos:** ${result.effectsSummary}` : '';
+    const statusText = result.statusSummary ? `\n🐾 **Status atual de ${result.pet.name}:** ${result.statusSummary}` : '';
+
     const embed = buildInventoryEmbed(ownerId, interaction.user.displayName, null);
     const components = buildInventoryComponents(ownerId, null);
 
     await interaction.update({ embeds: [embed], components });
     await interaction.followUp({
-      content: `✨ Você usou **${result.item.emoji} ${result.item.name}** no seu pet **${result.pet?.name || 'Pet'}**!${extraMsg}`,
+      content: `✨ Você usou **${result.item.emoji} ${result.item.name}** no seu pet **${result.pet?.name || 'Pet'}**!${effectsText}${statusText}${extraMsg}`,
       ephemeral: true,
     });
     return;
@@ -241,3 +243,4 @@ module.exports = {
   isInventoryInteraction,
   handleInventoryInteraction,
 };
+

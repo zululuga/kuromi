@@ -71,6 +71,8 @@ async function runPetTests() {
     addItem(USER_A, 'sushizinho', 1);
     const feedRes = feedPet(USER_A, 'sushizinho');
     assert.equal(feedRes.success, true, 'Pet deve ser alimentado com sucesso.');
+    assert.ok(feedRes.effectsSummary.includes('Fome'), 'Deve conter sumário de efeitos aplicados.');
+    assert.ok(feedRes.statusSummary.includes('HP:'), 'Deve conter sumário de status do pet.');
 
     const carinhoRes = petCarinho(USER_A, Date.now() + 100000000);
     assert.equal(carinhoRes.success, true, 'Carinho deve conceder XP e humor.');
@@ -117,3 +119,4 @@ runPetTests().catch((err) => {
   console.error('Falha nos testes de pets:', err);
   process.exit(1);
 });
+

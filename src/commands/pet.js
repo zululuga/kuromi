@@ -18,7 +18,7 @@ const {
   SLEEP_COOLDOWN_MS,
 } = require('../services/pets');
 const { createPetAttachment } = require('../services/petRenderer');
-const { getUserInventory, getItemDefinition } = require('../services/inventory');
+const { getUserInventory, getItemDefinition, formatItemEffects } = require('../services/inventory');
 const { formatRemaining } = require('./economyHelpers');
 const { PET } = require('./commandNames');
 
@@ -146,11 +146,12 @@ async function handlePetInteraction(interaction) {
       .addOptions(
         foodEntries.slice(0, 25).map(([id, count]) => {
           const item = getItemDefinition(id);
+          const fxSummary = item ? formatItemEffects(item) : '';
           return {
             label: `${item.name} (Você tem: ${count})`,
             value: id,
             emoji: item.emoji,
-            description: `Recupera +${item.effects?.hunger || 0}% de fome`,
+            description: fxSummary ? fxSummary.slice(0, 50) : `Recupera +${item.effects?.hunger || 0}% de fome`,
           };
         })
       );
@@ -178,8 +179,11 @@ async function handlePetInteraction(interaction) {
       lvlMsg = `\n🎉 **LEVEL UP!** Seu pet subiu para o **Nível ${result.newLevel}**!`;
     }
 
+    const effectsText = result.effectsSummary ? `\n📊 **Efeitos:** ${result.effectsSummary}` : '';
+    const statusText = result.statusSummary ? `\n🐾 **Status atual:** ${result.statusSummary}` : '';
+
     await interaction.update({
-      content: `🍖 Seu pet **${result.pet.name}** comeu **${result.item.name}** com alegria!\n💖 Fome agora está em **${result.pet.hunger}%** e Humor em **${result.pet.happiness}%**.${lvlMsg}`,
+      content: `🍖 Seu pet **${result.pet.name}** comeu **${result.item.name}** com alegria!${effectsText}${statusText}${lvlMsg}`,
       components: [],
     });
     return;
@@ -464,3 +468,4 @@ module.exports = {
   isPetInteraction,
   handlePetInteraction,
 };
+

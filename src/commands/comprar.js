@@ -60,3 +60,4 @@ module.exports = {
     await interaction.editReply(buildReply(buyItem(interaction.user.id, itemId, amount)));
   },
 };
+

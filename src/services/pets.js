@@ -287,18 +287,36 @@ function feedPet(userId, foodItemId) {
   }
 
   const fx = foodItem.effects || {};
-  activePet.hunger = Math.min(100, (activePet.hunger || 0) + (fx.hunger || 20));
-  activePet.happiness = Math.min(100, (activePet.happiness || 0) + (fx.happiness || 5));
-  activePet.energy = Math.min(100, (activePet.energy || 0) + (fx.energy || 0));
+  const hungerGained = fx.hunger || 20;
+  const happinessGained = fx.happiness || 5;
+  const energyGained = fx.energy || 0;
+  const healGained = fx.heal || 0;
+  const xpGained = fx.xp || 10;
+
+  activePet.hunger = Math.min(100, (activePet.hunger || 0) + hungerGained);
+  activePet.happiness = Math.min(100, (activePet.happiness || 0) + happinessGained);
+  activePet.energy = Math.min(100, (activePet.energy || 0) + energyGained);
+  if (healGained) {
+    activePet.stats.hp = Math.min(activePet.stats.maxHp, (activePet.stats.hp || 0) + healGained);
+  }
   activePet.lastFedAt = Date.now();
 
-  const xpResult = awardPetXp(userId, activePet.id, fx.xp || 10);
+  const xpResult = awardPetXp(userId, activePet.id, xpGained);
   schedulePetsSave();
+
+  const effectsApplied = [];
+  if (hungerGained) effectsApplied.push(`🍖 +${hungerGained}% Fome`);
+  if (happinessGained) effectsApplied.push(`💖 +${happinessGained}% Felicidade`);
+  if (energyGained) effectsApplied.push(`⚡ +${energyGained}% Energia`);
+  if (healGained) effectsApplied.push(`🩹 +${healGained} HP`);
+  if (xpGained) effectsApplied.push(`✨ +${xpGained} XP`);
 
   return {
     success: true,
     pet: activePet,
     item: foodItem,
+    effectsSummary: effectsApplied.join(' • '),
+    statusSummary: `HP: ${activePet.stats.hp}/${activePet.stats.maxHp} • Fome: ${activePet.hunger}% • Humor: ${activePet.happiness}% • Energia: ${activePet.energy}%`,
     leveledUp: xpResult.leveledUp,
     newLevel: activePet.level,
   };
@@ -415,28 +433,46 @@ function useItemOnActivePet(userId, itemId) {
   }
 
   const fx = item.effects || {};
-  if (fx.heal) {
-    activePet.stats.hp = Math.min(activePet.stats.maxHp, activePet.stats.hp + fx.heal);
+  const healGained = fx.heal || 0;
+  const energyGained = fx.energy || 0;
+  const happinessGained = fx.happiness || 0;
+  const hungerGained = fx.hunger || 0;
+  const xpGained = fx.xp || 0;
+
+  if (healGained) {
+    activePet.stats.hp = Math.min(activePet.stats.maxHp, activePet.stats.hp + healGained);
   }
-  if (fx.energy) {
-    activePet.energy = Math.min(100, (activePet.energy || 0) + fx.energy);
+  if (energyGained) {
+    activePet.energy = Math.min(100, (activePet.energy || 0) + energyGained);
   }
-  if (fx.happiness) {
-    activePet.happiness = Math.min(100, (activePet.happiness || 0) + fx.happiness);
+  if (happinessGained) {
+    activePet.happiness = Math.min(100, (activePet.happiness || 0) + happinessGained);
+  }
+  if (hungerGained) {
+    activePet.hunger = Math.min(100, (activePet.hunger || 0) + hungerGained);
   }
 
   let xpResult = { leveledUp: false };
-  if (fx.xp) {
-    xpResult = awardPetXp(userId, activePet.id, fx.xp);
+  if (xpGained) {
+    xpResult = awardPetXp(userId, activePet.id, xpGained);
   }
 
   schedulePetsSave();
+
+  const effectsApplied = [];
+  if (healGained) effectsApplied.push(`🩹 +${healGained} HP`);
+  if (energyGained) effectsApplied.push(`⚡ +${energyGained}% Energia`);
+  if (happinessGained) effectsApplied.push(`💖 +${happinessGained}% Felicidade`);
+  if (hungerGained) effectsApplied.push(`🍖 +${hungerGained}% Fome`);
+  if (xpGained) effectsApplied.push(`✨ +${xpGained} XP`);
 
   return {
     success: true,
     applied: 'buff',
     pet: activePet,
     item,
+    effectsSummary: effectsApplied.join(' • '),
+    statusSummary: `HP: ${activePet.stats.hp}/${activePet.stats.maxHp} • Fome: ${activePet.hunger}% • Humor: ${activePet.happiness}% • Energia: ${activePet.energy}%`,
     leveledUp: xpResult.leveledUp,
     newLevel: activePet.level,
   };

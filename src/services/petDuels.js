@@ -224,3 +224,4 @@ module.exports = {
   getDuelChallenge,
   resolveDuelChallenge,
 };
+
