@@ -5,6 +5,17 @@ const dataDir = path.join(__dirname, '..', '..', 'data');
 const logsFile = path.join(dataDir, 'logs.json');
 const statsFile = path.join(dataDir, 'stats.json');
 
+const MAX_LOG_ENTRIES = 200;
+const STATS_FLUSH_INTERVAL_MS = 10 * 1000; // Salva estatísticas a cada 10s se houver alterações
+const LOGS_FLUSH_INTERVAL_MS = 5 * 1000;   // Salva logs a cada 5s se houver alterações
+
+let cachedLogs = null;
+let cachedStats = null;
+let logsDirty = false;
+let statsDirty = false;
+let logsSaveTimeout = null;
+let statsSaveTimeout = null;
+
 function ensureStorage() {
   if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
@@ -13,12 +24,10 @@ function ensureStorage() {
 
 function readJsonFile(filePath, fallback = {}) {
   ensureStorage();
-
   try {
     if (!fs.existsSync(filePath)) {
       return fallback;
     }
-
     const raw = fs.readFileSync(filePath, 'utf8');
     return raw ? JSON.parse(raw) : fallback;
   } catch (error) {
@@ -28,36 +37,94 @@ function readJsonFile(filePath, fallback = {}) {
 
 function writeJsonFile(filePath, data) {
   ensureStorage();
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+  const tempFile = `${filePath}.${process.pid}.${Date.now()}.tmp`;
+  try {
+    fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf8');
+    fs.renameSync(tempFile, filePath);
+  } catch (error) {
+    if (fs.existsSync(tempFile)) {
+      try { fs.unlinkSync(tempFile); } catch (_) {}
+    }
+    // Fallback de escrita direta se renomeação falhar
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+  }
+}
+
+function scheduleLogsSave() {
+  logsDirty = true;
+  if (!logsSaveTimeout) {
+    logsSaveTimeout = setTimeout(() => {
+      logsSaveTimeout = null;
+      if (logsDirty && cachedLogs) {
+        writeJsonFile(logsFile, cachedLogs);
+        logsDirty = false;
+      }
+    }, LOGS_FLUSH_INTERVAL_MS);
+    if (logsSaveTimeout.unref) logsSaveTimeout.unref();
+  }
+}
+
+function scheduleStatsSave() {
+  statsDirty = true;
+  if (!statsSaveTimeout) {
+    statsSaveTimeout = setTimeout(() => {
+      statsSaveTimeout = null;
+      if (statsDirty && cachedStats) {
+        writeJsonFile(statsFile, cachedStats);
+        statsDirty = false;
+      }
+    }, STATS_FLUSH_INTERVAL_MS);
+    if (statsSaveTimeout.unref) statsSaveTimeout.unref();
+  }
+}
+
+function flushSync() {
+  if (logsDirty && cachedLogs) {
+    writeJsonFile(logsFile, cachedLogs);
+    logsDirty = false;
+  }
+  if (statsDirty && cachedStats) {
+    writeJsonFile(statsFile, cachedStats);
+    statsDirty = false;
+  }
 }
 
 function addLog(message) {
   const timestamp = new Date().toISOString();
-  const logs = readJsonFile(logsFile, { entries: [] });
+  if (!cachedLogs) {
+    cachedLogs = readJsonFile(logsFile, { entries: [] });
+    if (!Array.isArray(cachedLogs.entries)) cachedLogs.entries = [];
+  }
 
-  logs.entries.push({
+  cachedLogs.entries.push({
     timestamp,
     message,
   });
 
-  if (logs.entries.length > 500) {
-    logs.entries = logs.entries.slice(-500);
+  if (cachedLogs.entries.length > MAX_LOG_ENTRIES) {
+    cachedLogs.entries = cachedLogs.entries.slice(-MAX_LOG_ENTRIES);
   }
 
-  writeJsonFile(logsFile, logs);
+  scheduleLogsSave();
 }
 
 function getLogs(limit = 100) {
-  const logs = readJsonFile(logsFile, { entries: [] });
-  return logs.entries.slice(-limit).reverse();
+  if (!cachedLogs) {
+    cachedLogs = readJsonFile(logsFile, { entries: [] });
+    if (!Array.isArray(cachedLogs.entries)) cachedLogs.entries = [];
+  }
+  return cachedLogs.entries.slice(-limit).reverse();
 }
 
 function clearLogs() {
-  writeJsonFile(logsFile, { entries: [] });
+  cachedLogs = { entries: [] };
+  logsDirty = true;
+  writeJsonFile(logsFile, cachedLogs);
+  logsDirty = false;
 }
 
 function normalizeStats(stats = {}) {
-  const safeStats = {
+  return {
     startTime: stats.startTime || new Date().toISOString(),
     commandsExecuted: Number(stats.commandsExecuted || 0),
     messagesProcessed: Number(stats.messagesProcessed || 0),
@@ -69,62 +136,62 @@ function normalizeStats(stats = {}) {
         : '',
     uptimeMs: Number(stats.uptimeMs || 0),
   };
-
-  return safeStats;
 }
 
 function getStats() {
-  const stats = readJsonFile(statsFile, {
-    startTime: new Date().toISOString(),
-    commandsExecuted: 0,
-    messagesProcessed: 0,
-    usersEngaged: 0,
-    uniqueUsers: '',
-    uptimeMs: 0,
-  });
-
-  const normalized = normalizeStats(stats);
-  writeJsonFile(statsFile, normalized);
-  return normalized;
+  if (!cachedStats) {
+    const fromDisk = readJsonFile(statsFile, {
+      startTime: new Date().toISOString(),
+      commandsExecuted: 0,
+      messagesProcessed: 0,
+      usersEngaged: 0,
+      uniqueUsers: '',
+      uptimeMs: 0,
+    });
+    cachedStats = normalizeStats(fromDisk);
+  }
+  return cachedStats;
 }
 
 function updateStats(updates) {
-  const stats = getStats();
-  const updated = normalizeStats({ ...stats, ...updates });
-  writeJsonFile(statsFile, updated);
-  return updated;
+  const current = getStats();
+  cachedStats = normalizeStats({ ...current, ...updates });
+  scheduleStatsSave();
+  return cachedStats;
 }
 
 function incrementCommand() {
-  const stats = getStats();
+  const current = getStats();
   return updateStats({
-    commandsExecuted: Number(stats.commandsExecuted || 0) + 1,
+    commandsExecuted: Number(current.commandsExecuted || 0) + 1,
   });
 }
 
 function incrementMessages() {
-  const stats = getStats();
+  const current = getStats();
   return updateStats({
-    messagesProcessed: Number(stats.messagesProcessed || 0) + 1,
+    messagesProcessed: Number(current.messagesProcessed || 0) + 1,
   });
 }
 
 function recordUniqueUser(userId) {
-  const stats = getStats();
-  const uniqueUsersStr = typeof stats.uniqueUsers === 'string' ? stats.uniqueUsers : '';
-  const users = new Set(uniqueUsersStr.split(',').filter(Boolean));
-  users.add(String(userId));
+  const current = getStats();
+  const uniqueUsersStr = typeof current.uniqueUsers === 'string' ? current.uniqueUsers : '';
+  const userSet = new Set(uniqueUsersStr.split(',').filter(Boolean));
+  
+  if (!userSet.has(String(userId))) {
+    userSet.add(String(userId));
+    return updateStats({
+      uniqueUsers: Array.from(userSet).join(','),
+      usersEngaged: userSet.size,
+    });
+  }
 
-  const updated = {
-    uniqueUsers: Array.from(users).join(','),
-    usersEngaged: users.size,
-  };
-
-  return updateStats(updated);
+  return current;
 }
 
 function resetStats() {
-  const stats = {
+  cachedStats = {
     startTime: new Date().toISOString(),
     commandsExecuted: 0,
     messagesProcessed: 0,
@@ -132,9 +199,9 @@ function resetStats() {
     uniqueUsers: '',
     uptimeMs: 0,
   };
-
-  writeJsonFile(statsFile, stats);
-  return stats;
+  writeJsonFile(statsFile, cachedStats);
+  statsDirty = false;
+  return cachedStats;
 }
 
 module.exports = {
@@ -147,4 +214,5 @@ module.exports = {
   incrementMessages,
   recordUniqueUser,
   resetStats,
+  flushSync,
 };

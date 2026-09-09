@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('node:path');
 const { spawn, execFile } = require('node:child_process');
 const { setWelcomeChannel, getWelcomeChannel, normalizeChannelValue, getEconomyConfig, setEconomyConfig } = require('./src/services/database');
-const { addLog: savePersistentLog, getLogs, getStats, updateStats, resetStats, clearLogs } = require('./src/services/logging');
+const { addLog: savePersistentLog, getLogs, getStats, updateStats, resetStats, clearLogs, flushSync } = require('./src/services/logging');
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -45,7 +45,7 @@ function startBot() {
 
   botStartTime = Date.now();
   addLog('Iniciando bot Kuromiga...');
-  botProcess = spawn('node', ['index.js'], {
+  botProcess = spawn('node', ['--max-old-space-size=192', 'index.js'], {
     cwd: appRoot,
     detached: true,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -126,7 +126,7 @@ function registerSlashCommands() {
 }
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1d' }));
 
 app.get('/api/status', (req, res) => {
   res.json(getBotStatus());
@@ -231,3 +231,15 @@ app.listen(PORT, HOST, () => {
   console.log(`Painel do Kuromiga rodando em ${publicUrl}`);
   startBot();
 });
+
+function handleServerShutdown() {
+  flushSync();
+  if (botProcess && !botProcess.killed) {
+    try { botProcess.kill('SIGTERM'); } catch (_) {}
+  }
+  process.exit(0);
+}
+
+process.on('SIGINT', handleServerShutdown);
+process.on('SIGTERM', handleServerShutdown);
+process.on('exit', () => { flushSync(); });

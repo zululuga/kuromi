@@ -264,6 +264,10 @@ function drawKuromi(ctx, cx, cy, isReversed) {
   ctx.restore();
 }
 
+// Cache LRU em memória para buffers de imagens renderizadas (economiza CPU/RAM)
+const tarotCardCache = new Map();
+const MAX_TAROT_CACHE_SIZE = 40;
+
 /**
  * Renders the entire tarot card onto a 600x1024 Canvas and returns a PNG buffer.
  * @param {Object} card Card data from tarot.json
@@ -271,6 +275,11 @@ function drawKuromi(ctx, cx, cy, isReversed) {
  * @returns {Buffer}
  */
 function renderTarotCard(card, orientation = 'UPRIGHT') {
+  const cacheKey = `${card?.id || card?.name || 'unknown'}_${orientation}`;
+  if (tarotCardCache.has(cacheKey)) {
+    return tarotCardCache.get(cacheKey);
+  }
+
   const isReversed = orientation === 'REVERSED';
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
@@ -489,7 +498,15 @@ function renderTarotCard(card, orientation = 'UPRIGHT') {
   ctx.font = 'bold 11px sans-serif';
   ctx.fillText('TAROT CRINGELÂNDIA  •  BOT KUROMI', 300, 978);
 
-  return canvas.toBuffer('image/png');
+  const buffer = canvas.toBuffer('image/png');
+
+  if (tarotCardCache.size >= MAX_TAROT_CACHE_SIZE) {
+    const oldestKey = tarotCardCache.keys().next().value;
+    if (oldestKey) tarotCardCache.delete(oldestKey);
+  }
+  tarotCardCache.set(cacheKey, buffer);
+
+  return buffer;
 }
 
 /**

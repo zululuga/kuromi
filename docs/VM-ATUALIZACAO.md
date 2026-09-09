@@ -270,6 +270,29 @@ scp -r -i "$HOME\.ssh\kuromi_access" src public tests kuromi:/home/leandrosdclh/
 
 Nunca use `scp -r E:\botMelody ...` sem excluir `data/` e `.env`, pois isso pode substituir o banco da VM.
 
+## Otimizações de Recursos para GCP Free Tier (e2-micro)
+
+A instância gratuita do Google Cloud (`e2-micro`) possui **1 GB de RAM compartilhada** e limite de I/O em disco. Para evitar travamentos e quedas por falta de memória (OOM):
+
+1. **Configuração do PM2 via `ecosystem.config.js`:**
+   - Limite de heap do V8: `--max-old-space-size=192`
+   - Reinício automático se passar de 200MB: `max_memory_restart: '200M'`
+2. **Ativação recomendada de Swap na VM (executar uma única vez na VM):**
+   ```bash
+   # Cria um arquivo de Swap de 1GB no disco
+   sudo fallocate -l 1G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=1024
+   sudo chmod 600 /swapfile
+   sudo mkswap /swapfile
+   sudo swapon /swapfile
+   # Adiciona ao fstab para persistir após reinicializações
+   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+   ```
+3. **Monitoramento rápido:**
+   ```bash
+   pm2 monit
+   free -m
+   ```
+
 ## Comandos rapidos do dia a dia
 
 ```bash
@@ -277,7 +300,8 @@ ssh kuromi
 cd ~/kuromi
 pm2 status
 pm2 logs kuromi --lines 50
-pm2 restart kuromi --update-env
+./deploy.sh
 ```
 
 O IP externo atual e temporario. O alias `kuromi` e preferivel ao uso direto do IP, desde que o `HostName` no arquivo SSH esteja atualizado.
+

@@ -8,6 +8,7 @@ const {
   ButtonBuilder,
   ButtonStyle,
   MessageFlags,
+  Options,
 } = require('discord.js');
 const { acquireBotLock, releaseBotLock, getPrefix } = require('./src/utils/botUtils');
 const { getWelcomeChannel, normalizeChannelValue } = require('./src/services/database');
@@ -32,7 +33,7 @@ const {
   TAROT_ROLE_ID,
   KUROMI_STARTUP_EMOJI,
 } = require('./src/config');
-const { incrementCommand, incrementMessages, recordUniqueUser } = require('./src/services/logging');
+const { incrementCommand, incrementMessages, recordUniqueUser, flushSync } = require('./src/services/logging');
 const { getBrasiliaDate, resetDailyDraws } = require('./src/services/tarot');
 const { getAnimatedEmoji } = require('./src/utils/serverEmojis');
 
@@ -59,6 +60,28 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
   ],
+  // Otimização severa de memória para ambientes restritos (GCP e2-micro 1GB RAM)
+  makeCache: Options.cacheWithLimits({
+    MessageManager: 25, // Mantém apenas 25 mensagens recentes por canal
+    StageInstanceManager: 0,
+    VoiceStateManager: 0,
+    AutoModerationRuleManager: 0,
+    GuildScheduledEventManager: 0,
+    ThreadMemberManager: 0,
+    PresenceManager: 0,
+    ReactionManager: 0,
+  }),
+  sweepers: {
+    ...Options.DefaultSweeperSettings,
+    messages: {
+      interval: 3600, // Limpeza a cada 1 hora
+      lifetime: 1800, // Remove mensagens mais antigas que 30 min da RAM
+    },
+    users: {
+      interval: 3600,
+      filter: () => (user) => user.id !== client.user?.id,
+    },
+  },
 });
 
 // Envia uma mensagem de inicialização para o canal de alerta do servidor.
@@ -192,10 +215,8 @@ function startBumpGuideScheduler() {
 
 function buildTarotDailyEmbed(guild) {
   return new EmbedBuilder()
-    .setColor('#e60067')
     .setColor('#c084fc')
     .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Tarot da Cringelândia  ✦`)
-    .setDescription('Uma carta por dia para iluminar seus caminhos. A leitura é privada; escolha o botão ou use `/tarot`.')
     .setDescription(
       'Uma carta por dia para iluminar seus caminhos. A leitura é privada e renderizada especialmente para você!\n\n' +
       'Clique no botão abaixo ou use `/tarot` para receber a sua tiragem de hoje.'
@@ -209,8 +230,6 @@ function buildTarotDailyComponents() {
     new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('tarot:draw')
-        .setLabel('Tirar Tarot do Dia')
-        .setCustomId('tarot_tirar_dia')
         .setLabel('🔮 Tirar Tarot do Dia')
         .setStyle(ButtonStyle.Primary)
     ),
@@ -438,19 +457,22 @@ client.on('error', (error) => {
   console.error('Erro do cliente Discord:', error);
 });
 
-// Libera o lock ao encerrar o processo para permitir reinício limpo.
+// Libera o lock e persiste dados pendentes ao encerrar o processo.
 
 process.on('SIGINT', () => {
+  flushSync();
   releaseBotLock();
   process.exit(0);
 });
 
 process.on('SIGTERM', () => {
+  flushSync();
   releaseBotLock();
   process.exit(0);
 });
 
 process.on('exit', () => {
+  flushSync();
   releaseBotLock();
 });
 
