@@ -58,3 +58,4 @@ module.exports = {
   KUROMI_FOOTER: PYXIE_FOOTER,
   kuromiFooter: pyxieFooter,
 };
+
