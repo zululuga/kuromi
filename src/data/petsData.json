@@ -1,267 +1,200 @@
 {
-  "borboleta": {
-    "key": "borboleta",
-    "name": "Borboleta",
-    "element": "FOFURA",
-    "emoji": "🦋",
+  "spiralo": {
+    "key": "spiralo",
+    "name": "Spiralo",
+    "element": "ORVALHO",
+    "emoji": "🐌",
     "baseCost": 150,
     "tier": 1,
     "rarity": "COMUM",
-    "description": "Pequena e graciosa, adora esvoaçar pela grama da Cringelândia.",
-    "baseStats": { "hp": 45, "atk": 8, "def": 5, "spd": 15 }
+    "description": "Caracol místico com concha de cristal líquido. Deixa um rastro cintilante por onde passa.",
+    "baseStats": { "hp": 55, "atk": 8, "def": 18, "spd": 8 }
   },
-  "vespa": {
-    "key": "vespa",
-    "name": "Vespa",
-    "element": "CAOS",
-    "emoji": "🐝",
-    "baseCost": 250,
+  "goticoide": {
+    "key": "goticoide",
+    "name": "Goticóide",
+    "element": "ORVALHO",
+    "emoji": "🫧",
+    "baseCost": 300,
     "tier": 2,
     "rarity": "COMUM",
-    "description": "Zumbido irritante e ferrão afiado. Não peça carinho se estiver zangada.",
-    "baseStats": { "hp": 48, "atk": 12, "def": 6, "spd": 18 }
+    "description": "Girino translúcido saltador de poças arcanas. Curioso e sempre molhado.",
+    "baseStats": { "hp": 50, "atk": 10, "def": 10, "spd": 16 }
   },
-  "peixe": {
-    "key": "peixe",
-    "name": "Peixe",
-    "element": "FOFURA",
-    "emoji": "🐟",
-    "baseCost": 400,
+  "trino_pios": {
+    "key": "trino_pios",
+    "name": "Trino-Pios",
+    "element": "BRISA",
+    "emoji": "🐦",
+    "baseCost": 500,
     "tier": 3,
     "rarity": "COMUM",
-    "description": "Glub glub. Vive em seu próprio mundo aquático sem preocupações.",
-    "baseStats": { "hp": 55, "atk": 9, "def": 8, "spd": 10 }
+    "description": "Trio de passarinhos cantores do campo. Assobiavam fofocas arcanas em coro perfeito.",
+    "baseStats": { "hp": 55, "atk": 14, "def": 8, "spd": 19 }
   },
-  "pombo": {
-    "key": "pombo",
-    "name": "Pombo",
-    "element": "CAOS",
-    "emoji": "🐦",
-    "baseCost": 600,
+  "cremezinho": {
+    "key": "cremezinho",
+    "name": "Cremezinho",
+    "element": "BRISA",
+    "emoji": "🐥",
+    "baseCost": 800,
     "tier": 4,
     "rarity": "COMUM",
-    "description": "O mestre do asfalto. Voa perto demais da sua cabeça de propósito.",
-    "baseStats": { "hp": 60, "atk": 11, "def": 10, "spd": 14 }
+    "description": "Passarinho redondo amarelo com topete fofo. Parece uma bolinha de creme dançante.",
+    "baseStats": { "hp": 60, "atk": 12, "def": 12, "spd": 18 }
   },
-  "rato": {
-    "key": "rato",
-    "name": "Rato",
-    "element": "SOMBRA",
-    "emoji": "🐀",
-    "baseCost": 900,
+  "algodozinho": {
+    "key": "algodozinho",
+    "name": "Algodozinho",
+    "element": "SILVESTRE",
+    "emoji": "🐹",
+    "baseCost": 1200,
     "tier": 5,
     "rarity": "COMUM",
-    "description": "Astuto e veloz. Encontra itens esquecidos em cantos escuros.",
-    "baseStats": { "hp": 65, "atk": 14, "def": 9, "spd": 20 }
+    "description": "Hamster anão peludo que recolhe pólen das flores encantadas do bosque.",
+    "baseStats": { "hp": 65, "atk": 13, "def": 14, "spd": 16 }
   },
-  "hamster": {
-    "key": "hamster",
-    "name": "Hamster",
-    "element": "FOFURA",
-    "emoji": "🐹",
-    "baseCost": 1300,
-    "tier": 6,
-    "rarity": "COMUM",
-    "description": "Bochechas cheias de comida. Roda na rodinha até o infinito.",
-    "baseStats": { "hp": 70, "atk": 12, "def": 12, "spd": 16 }
-  },
-  "calopsita": {
-    "key": "calopsita",
-    "name": "Calopsita",
-    "element": "FOFURA",
-    "emoji": "🦜",
+  "migalha": {
+    "key": "migalha",
+    "name": "Migalha",
+    "element": "SILVESTRE",
+    "emoji": "🐭",
     "baseCost": 1800,
+    "tier": 6,
+    "rarity": "INCOMUM",
+    "description": "Ratinho de biblioteca tímido. Adora se esconder atrás de pergaminhos mágicos.",
+    "baseStats": { "hp": 68, "atk": 15, "def": 13, "spd": 21 }
+  },
+  "fitilho": {
+    "key": "fitilho",
+    "name": "Fitilho",
+    "element": "CHARME",
+    "emoji": "🎀",
+    "baseCost": 2500,
     "tier": 7,
     "rarity": "INCOMUM",
-    "description": "Topete estiloso e assobio afinado. Às vezes grita sem motivo.",
-    "baseStats": { "hp": 75, "atk": 15, "def": 11, "spd": 19 }
+    "description": "Ratinho saltador com lenço azul esvoaçante. Sempre desfila com muito estilo.",
+    "baseStats": { "hp": 75, "atk": 18, "def": 14, "spd": 24 }
   },
-  "papagaio": {
-    "key": "papagaio",
-    "name": "Papagaio",
-    "element": "CAOS",
-    "emoji": "🦜",
-    "baseCost": 2500,
+  "bolinho": {
+    "key": "bolinho",
+    "name": "Bolinho",
+    "element": "SILVESTRE",
+    "emoji": "🧁",
+    "baseCost": 3500,
     "tier": 8,
     "rarity": "INCOMUM",
-    "description": "Repete tudo o que você fala no chat e inventa fofocas.",
-    "baseStats": { "hp": 80, "atk": 17, "def": 13, "spd": 17 }
+    "description": "Hamster guloso de bochechas fartas. Guarda qualquer guloseima encontrada pelo caminho.",
+    "baseStats": { "hp": 85, "atk": 16, "def": 20, "spd": 12 }
   },
-  "arara": {
-    "key": "arara",
-    "name": "Arara",
-    "element": "FOFURA",
-    "emoji": "🦚",
-    "baseCost": 3500,
+  "mergulhao": {
+    "key": "mergulhao",
+    "name": "Mergulhão",
+    "element": "ORVALHO",
+    "emoji": "🦆",
+    "baseCost": 5000,
     "tier": 9,
     "rarity": "INCOMUM",
-    "description": "Plumagem vibrante e presença imponente na selva tropical.",
-    "baseStats": { "hp": 88, "atk": 19, "def": 14, "spd": 18 }
+    "description": "Patinho com boia de folha aquática. Nada pelas corredeiras mais perigosas com leveza.",
+    "baseStats": { "hp": 90, "atk": 19, "def": 18, "spd": 18 }
   },
-  "gato": {
-    "key": "gato",
-    "name": "Gato",
-    "element": "SOMBRA",
-    "emoji": "🐈",
-    "baseCost": 5000,
+  "castanhito": {
+    "key": "castanhito",
+    "name": "Castanhito",
+    "element": "SILVESTRE",
+    "emoji": "🐿️",
+    "baseCost": 7500,
     "tier": 10,
-    "rarity": "INCOMUM",
-    "description": "Elegante e misterioso. Olha para você como se você fosse o servo dele.",
-    "baseStats": { "hp": 95, "atk": 22, "def": 16, "spd": 22 }
+    "rarity": "RARO",
+    "description": "Esquilo acrobata atirador de nozes. Possui reflexos absurdos e mira certeira.",
+    "baseStats": { "hp": 95, "atk": 24, "def": 16, "spd": 26 }
   },
-  "cachorro": {
-    "key": "cachorro",
-    "name": "Cachorro",
-    "element": "FOFURA",
-    "emoji": "🐕",
-    "baseCost": 5000,
-    "tier": 11,
-    "rarity": "INCOMUM",
-    "description": "O amigo mais leal da Cringelândia. Abana o rabo e protege o dono.",
-    "baseStats": { "hp": 100, "atk": 20, "def": 18, "spd": 18 }
-  },
-  "vaca": {
-    "key": "vaca",
-    "name": "Vaca",
-    "element": "FOFURA",
-    "emoji": "🐄",
+  "polvina": {
+    "key": "polvina",
+    "name": "Polvina",
+    "element": "ORVALHO",
+    "emoji": "🐙",
     "baseCost": 10000,
+    "tier": 11,
+    "rarity": "RARO",
+    "description": "Polvinha rosa saltadora de recifes. Consegue segurar vários artefatos com seus tentáculos.",
+    "baseStats": { "hp": 110, "atk": 25, "def": 22, "spd": 20 }
+  },
+  "torta_fofa": {
+    "key": "torta_fofa",
+    "name": "Torta-Fofa",
+    "element": "BRISA",
+    "emoji": "🐰",
+    "baseCost": 13000,
     "tier": 12,
     "rarity": "RARO",
-    "description": "Mastiga capim com calma zen. Resistência impressionante.",
-    "baseStats": { "hp": 130, "atk": 18, "def": 25, "spd": 10 }
+    "description": "Coelhinho saltador veloz de colinas. Seus saltos parecem planar pelo ar.",
+    "baseStats": { "hp": 105, "atk": 26, "def": 19, "spd": 29 }
   },
-  "bode": {
-    "key": "bode",
-    "name": "Bode",
-    "element": "CAOS",
-    "emoji": "🐐",
-    "baseCost": 10000,
+  "melindrosa": {
+    "key": "melindrosa",
+    "name": "Melindrosa",
+    "element": "CHARME",
+    "emoji": "🐱",
+    "baseCost": 16000,
     "tier": 13,
     "rarity": "RARO",
-    "description": "Chifres pontudos e olhar enigmático. Come até latas de refrigerante.",
-    "baseStats": { "hp": 115, "atk": 24, "def": 20, "spd": 17 }
+    "description": "Gatinha persa rosa-bebê com lacinho duplo. Exige mimos e cafunés da realeza.",
+    "baseStats": { "hp": 115, "atk": 28, "def": 22, "spd": 24 }
   },
-  "boi": {
-    "key": "boi",
-    "name": "Boi",
-    "element": "CAOS",
-    "emoji": "🐂",
-    "baseCost": 12000,
+  "felpudo": {
+    "key": "felpudo",
+    "name": "Felpudo",
+    "element": "CHARME",
+    "emoji": "🧸",
+    "baseCost": 20000,
     "tier": 14,
     "rarity": "RARO",
-    "description": "Massa muscular bruta. Derruba qualquer obstáculo no caminho.",
-    "baseStats": { "hp": 140, "atk": 26, "def": 24, "spd": 12 }
+    "description": "Ursinho de pelúcia encantado que ganhou vida através de um feitiço travesso de Pyxie.",
+    "baseStats": { "hp": 130, "atk": 25, "def": 28, "spd": 18 }
   },
-  "cavalo": {
-    "key": "cavalo",
-    "name": "Cavalo",
-    "element": "FOFURA",
-    "emoji": "🐎",
-    "baseCost": 13000,
+  "pompom_real": {
+    "key": "pompom_real",
+    "name": "Pompom Real",
+    "element": "CHARME",
+    "emoji": "🐩",
+    "baseCost": 25000,
     "tier": 15,
-    "rarity": "RARO",
-    "description": "Galope veloz e crina ao vento. O companheiro perfeito de viagem.",
-    "baseStats": { "hp": 120, "atk": 23, "def": 19, "spd": 26 }
+    "rarity": "EPICO",
+    "description": "Poodle sofisticada com tosa em nuvens. Sua presença irradia glamour em qualquer arena.",
+    "baseStats": { "hp": 135, "atk": 32, "def": 26, "spd": 28 }
   },
-  "cabra": {
-    "key": "cabra",
-    "name": "Cabra",
-    "element": "CAOS",
-    "emoji": "🐐",
-    "baseCost": 13000,
-    "tier": 16,
-    "rarity": "RARO",
-    "description": "Escala montanhas verticais e pula em qualquer telhado.",
-    "baseStats": { "hp": 110, "atk": 22, "def": 21, "spd": 22 }
-  },
-  "macaco": {
-    "key": "macaco",
-    "name": "Macaco",
-    "element": "CAOS",
-    "emoji": "🐒",
-    "baseCost": 15000,
-    "tier": 17,
-    "rarity": "RARO",
-    "description": "Acrobata nato e travesso. Adora roubar moedas de visitantes.",
-    "baseStats": { "hp": 115, "atk": 25, "def": 18, "spd": 25 }
-  },
-  "raposa": {
-    "key": "raposa",
-    "name": "Raposa",
-    "element": "MISTICO",
-    "emoji": "🦊",
-    "baseCost": 20000,
-    "tier": 18,
-    "rarity": "RARO",
-    "description": "Pelagem avermelhada e olhos inteligentes. Esperteza pura.",
-    "baseStats": { "hp": 125, "atk": 28, "def": 20, "spd": 27 }
-  },
-  "capivara": {
-    "key": "capivara",
-    "name": "Capivara",
-    "element": "FOFURA",
-    "emoji": "🦫",
-    "baseCost": 20000,
-    "tier": 19,
-    "rarity": "RARO",
-    "description": "A rainha da paz de espírito. Nada a abala; ela é amiga de todos.",
-    "baseStats": { "hp": 150, "atk": 20, "def": 28, "spd": 14 }
-  },
-  "fantasma": {
-    "key": "fantasma",
-    "name": "Fantasma",
-    "element": "SOMBRA",
-    "emoji": "👻",
+  "puncodrilo": {
+    "key": "puncodrilo",
+    "name": "Puncodrilo",
+    "element": "TRAVESSURA",
+    "emoji": "🐊",
     "baseCost": 30000,
-    "tier": 20,
+    "tier": 16,
     "rarity": "EPICO",
-    "description": "Atravessa paredes e assusta quem esquece de dar bom dia no servidor.",
-    "baseStats": { "hp": 130, "atk": 32, "def": 26, "spd": 28 }
+    "description": "Jacaré de estimação punk com coleira de tachas. Mordida feroz com atitude rebelde.",
+    "baseStats": { "hp": 155, "atk": 38, "def": 30, "spd": 22 }
   },
-  "kitsune": {
-    "key": "kitsune",
-    "name": "Kitsune",
-    "element": "MISTICO",
-    "emoji": "🦊",
+  "gatissima": {
+    "key": "gatissima",
+    "name": "Gatíssima",
+    "element": "CHARME",
+    "emoji": "👑",
     "baseCost": 35000,
-    "tier": 21,
+    "tier": 17,
     "rarity": "EPICO",
-    "description": "Raposa lendária de múltiplas caudas com chamas espirituais.",
-    "baseStats": { "hp": 145, "atk": 36, "def": 25, "spd": 32 }
+    "description": "Gata persa nobre com pingente de chave mágica. Rege a corte dos bichinhos com elegância suprema.",
+    "baseStats": { "hp": 150, "atk": 37, "def": 28, "spd": 31 }
   },
-  "dragao": {
-    "key": "dragao",
-    "name": "Dragão",
-    "element": "MISTICO",
-    "emoji": "🐉",
-    "baseCost": 35000,
-    "tier": 22,
-    "rarity": "EPICO",
-    "description": "Soberano dos céus e das chamas arcanas. Poder destruidor.",
-    "baseStats": { "hp": 160, "atk": 40, "def": 30, "spd": 25 }
-  },
-  "ghoul": {
-    "key": "ghoul",
-    "name": "Ghoul",
-    "element": "SOMBRA",
-    "emoji": "🧟",
-    "baseCost": 35000,
-    "tier": 23,
-    "rarity": "EPICO",
-    "description": "Criatura das trevas que rasteja à meia-noite sob a supervisão da Kuromi.",
-    "baseStats": { "hp": 155, "atk": 38, "def": 28, "spd": 26 }
-  },
-  "alien": {
-    "key": "alien",
-    "name": "Alien",
-    "element": "CAOS",
-    "emoji": "👽",
-    "baseCost": 35000,
-    "tier": 24,
+  "sonivoro": {
+    "key": "sonivoro",
+    "name": "Sonívoro",
+    "element": "TRAVESSURA",
+    "emoji": "🌌",
+    "baseCost": 50000,
+    "tier": 18,
     "rarity": "LENDARIO",
-    "description": "Veio de outra galáxia só para ver a Cringelândia passar vergonha.",
-    "baseStats": { "hp": 170, "atk": 42, "def": 32, "spd": 30 }
+    "description": "Anta alada roxa devoradora de pesadelos (Pet Alfa). Voa entre as dimensões do sono.",
+    "baseStats": { "hp": 180, "atk": 44, "def": 35, "spd": 33 }
   }
 }
-

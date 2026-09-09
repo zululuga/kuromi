@@ -7,7 +7,8 @@ const {
   ButtonStyle,
 } = require('discord.js');
 const { getUserInventory, getItemDefinition, sellItem, openChest, formatItemEffects } = require('../services/inventory');
-const { useItemOnActivePet, getActivePet, hasClaimedStarterKit } = require('../services/pets');
+const { useItemOnActivePet, getActivePet, hasClaimedStarterKit, claimStarterKit, putEggInIncubator, getIncubator } = require('../services/pets');
+const { PYXIE_COLORS, pyxieFooter } = require('../utils/pyxieVoice');
 const { formatCoins } = require('./economyHelpers');
 const { INVENTORY } = require('./commandNames');
 
@@ -17,19 +18,19 @@ function buildInventoryEmbed(userId, userTag, selectedItemId = null) {
   const activePet = getActivePet(userId);
 
   const embed = new EmbedBuilder()
-    .setColor('#C084FC')
+    .setColor(PYXIE_COLORS.magenta)
     .setTitle(`🎒  ✦  Mochila de ${userTag}`)
     .setDescription(
-      `**Pet Ativo:** ${activePet ? `${activePet.emoji} **${activePet.name}** (Lv ${activePet.level})` : '*Nenhum pet ativo*'}\n\n` +
-      'Selecione um item no menu abaixo para usar no seu pet ou vender.'
+      `**Pet Ativo:** ${activePet ? `${activePet.emoji} **${activePet.name}** (Nv. ${activePet.level})` : '*Nenhum pet ativo*'}\n\n` +
+      'Selecione um item no menu abaixo para usar no seu pet, chocar ou abrir.'
     )
-    .setFooter({ text: 'Cringelândia • Inventário Pessoal • Cuide bem dos seus pertences' })
+    .setFooter({ text: pyxieFooter('Inventário Pessoal • 1-Clique Acessível') })
     .setTimestamp();
 
   if (entries.length === 0) {
     embed.addFields({
       name: 'Mochila Vazia',
-      value: 'Você ainda não possui nenhum item. Visite a `/loja` ou envie seu pet para `/petexplorar`!',
+      value: 'Você ainda não possui nenhum item. Visite a `/loja` ou explore as dungeons com seu pet!',
     });
   } else {
     entries.forEach(([itemId, count]) => {
@@ -41,7 +42,7 @@ function buildInventoryEmbed(userId, userTag, selectedItemId = null) {
         const fxLine = fxText ? `\n> 📊 **Efeito:** ${fxText}` : '';
         embed.addFields({
           name: `${pointer}${item.emoji} ${item.name} (x${count})`,
-          value: `> *${item.description}*${fxLine}\n> Categoria: \`${item.category}\` • Valor de Venda: **${formatCoins(item.sellPrice || 0)}**`,
+          value: `> *${item.description}*${fxLine}\n> Categoria: \`${item.category}\` • Venda: **${formatCoins(item.sellPrice || 0)}**`,
           inline: false,
         });
       }
@@ -56,237 +57,265 @@ function buildInventoryComponents(userId, selectedItemId = null) {
   const entries = Object.entries(inv).filter(([, count]) => count > 0);
 
   if (entries.length === 0) {
-    const emptyButtons = [
+    const emptyRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId(`shop_category_select`)
+        .setCustomId(`hub_tab:shop:${userId}`)
         .setLabel('Visitar Loja')
-        .setEmoji('🏪')
-        .setStyle(ButtonStyle.Success),
+        .setEmoji('🛒')
+        .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setCustomId(`pet_explore_zones:${userId}`)
+        .setCustomId(`hub_tab:dungeon:${userId}`)
         .setLabel('Explorar Dungeons')
         .setEmoji('🧭')
-        .setStyle(ButtonStyle.Primary),
-    ];
+        .setStyle(ButtonStyle.Primary)
+    );
 
     if (!hasClaimedStarterKit(userId)) {
-      emptyButtons.push(
+      emptyRow.addComponents(
         new ButtonBuilder()
-          .setCustomId(`onboard_kit:${userId}`)
+          .setCustomId(`hub_claim_kit:${userId}`)
           .setLabel('Resgatar Kit Inicial')
           .setEmoji('🎁')
-          .setStyle(ButtonStyle.Primary)
+          .setStyle(ButtonStyle.Success)
       );
     }
 
-    return [new ActionRowBuilder().addComponents(emptyButtons)];
+    return [emptyRow];
   }
 
-  const options = entries.slice(0, 25).map(([itemId, count]) => {
+  const selectOptions = entries.slice(0, 25).map(([itemId, count]) => {
     const item = getItemDefinition(itemId);
-    const fxSummary = item ? formatItemEffects(item) : '';
     return {
       label: `${item ? item.name : itemId} (x${count})`,
       value: itemId,
+      description: item ? item.description.slice(0, 50) : `Quantidade: ${count}`,
       emoji: item ? item.emoji : '📦',
-      description: fxSummary ? fxSummary.slice(0, 50) : (item ? item.description.slice(0, 50) : ''),
       default: itemId === selectedItemId,
     };
   });
 
   const selectMenu = new StringSelectMenuBuilder()
-    .setCustomId(`inv_select:${userId}`)
-    .setPlaceholder('🎒 Selecione um item da sua mochila...')
-    .addOptions(options);
+    .setCustomId(`inv_item_select:${userId}`)
+    .setPlaceholder('📦 Selecione um item da sua mochila...')
+    .addOptions(selectOptions);
 
-  const rows = [new ActionRowBuilder().addComponents(selectMenu)];
+  const actionRow = new ActionRowBuilder();
 
   if (selectedItemId) {
-    const selectedItem = getItemDefinition(selectedItemId);
-    const actionButtons = [];
+    const item = getItemDefinition(selectedItemId);
+    const count = inv[selectedItemId] || 0;
 
-    if (selectedItem?.effects?.isChest) {
-      actionButtons.push(
-        new ButtonBuilder()
-          .setCustomId(`inv_chest:${userId}:${selectedItemId}`)
-          .setLabel(`Abrir ${selectedItem.name}`)
-          .setEmoji('🔓')
-          .setStyle(ButtonStyle.Success)
-      );
-    } else {
-      actionButtons.push(
-        new ButtonBuilder()
-          .setCustomId(`inv_use:${userId}:${selectedItemId}`)
-          .setLabel('Usar no Pet')
-          .setEmoji('✨')
-          .setStyle(ButtonStyle.Success)
-      );
+    if (item && count > 0) {
+      if (item.effects && item.effects.isChest) {
+        actionRow.addComponents(
+          new ButtonBuilder()
+            .setCustomId(`inv_open_chest:${selectedItemId}:${userId}`)
+            .setLabel(`Abrir ${item.name}`)
+            .setEmoji('🔓')
+            .setStyle(ButtonStyle.Success)
+        );
+      } else if (item.effects && item.effects.isEgg) {
+        actionRow.addComponents(
+          new ButtonBuilder()
+            .setCustomId(`inv_place_egg:${selectedItemId}:${userId}`)
+            .setLabel(`Colocar na Chocadeira`)
+            .setEmoji('🪺')
+            .setStyle(ButtonStyle.Success)
+        );
+      } else {
+        actionRow.addComponents(
+          new ButtonBuilder()
+            .setCustomId(`inv_use_item:${selectedItemId}:${userId}`)
+            .setLabel(`Usar no Pet Ativo`)
+            .setEmoji('✨')
+            .setStyle(ButtonStyle.Success)
+        );
+      }
+
+      if (item.sellPrice) {
+        actionRow.addComponents(
+          new ButtonBuilder()
+            .setCustomId(`inv_sell_item:${selectedItemId}:${userId}`)
+            .setLabel(`Vender 1x (${formatCoins(item.sellPrice)})`)
+            .setEmoji('🪙')
+            .setStyle(ButtonStyle.Secondary)
+        );
+      }
     }
-
-    if (selectedItem?.sellPrice) {
-      actionButtons.push(
-        new ButtonBuilder()
-          .setCustomId(`inv_sell:${userId}:${selectedItemId}:1`)
-          .setLabel(`Vender 1x (${selectedItem.sellPrice}🪙)`)
-          .setEmoji('🪙')
-          .setStyle(ButtonStyle.Secondary)
-      );
-    }
-
-    rows.push(new ActionRowBuilder().addComponents(actionButtons));
+  } else {
+    actionRow.addComponents(
+      new ButtonBuilder()
+        .setCustomId(`inv_hint:${userId}`)
+        .setLabel('Selecione um item acima')
+        .setEmoji('☝️')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true)
+    );
   }
 
-  return rows;
+  actionRow.addComponents(
+    new ButtonBuilder()
+      .setCustomId(`hub_tab:pet:${userId}`)
+      .setLabel('Ver Meu Pet')
+      .setEmoji('🐾')
+      .setStyle(ButtonStyle.Primary)
+  );
+
+  return [new ActionRowBuilder().addComponents(selectMenu), actionRow];
 }
 
 function isInventoryInteraction(interaction) {
+  if (!interaction.customId) return false;
   return (
-    (interaction.isStringSelectMenu() && interaction.customId.startsWith('inv_select:')) ||
-    (interaction.isButton() &&
-      (interaction.customId.startsWith('inv_use:') ||
-        interaction.customId.startsWith('inv_sell:') ||
-        interaction.customId.startsWith('inv_chest:')))
+    interaction.customId.startsWith('inv_item_select') ||
+    interaction.customId.startsWith('inv_use_item') ||
+    interaction.customId.startsWith('inv_open_chest') ||
+    interaction.customId.startsWith('inv_place_egg') ||
+    interaction.customId.startsWith('inv_sell_item')
   );
 }
 
 async function handleInventoryInteraction(interaction) {
   const parts = interaction.customId.split(':');
-  const ownerId = parts[1];
+  const action = parts[0];
+  const targetUserId = parts[parts.length - 1];
 
-  if (interaction.user.id !== ownerId) {
-    await interaction.reply({
-      content: '❌ Você não pode mexer na mochila de outra pessoa!',
-      ephemeral: true,
+  if (targetUserId && targetUserId !== interaction.user.id) {
+    return interaction.reply({
+      content: '❌ Esta mochila pertence a outro aventureiro. Use `/inventario` para abrir a sua!',
+      flags: 64,
     });
-    return;
   }
 
-  // 1. Seleção de Item
-  if (interaction.isStringSelectMenu() && interaction.customId.startsWith('inv_select:')) {
+  const userId = interaction.user.id;
+  const userTag = interaction.user.displayName || interaction.user.username;
+
+  // 1. Selecionar Item no menu
+  if (action === 'inv_item_select') {
     const selectedItemId = interaction.values[0];
-    const embed = buildInventoryEmbed(ownerId, interaction.user.displayName, selectedItemId);
-    const components = buildInventoryComponents(ownerId, selectedItemId);
-    await interaction.update({ embeds: [embed], components });
-    return;
+    const embed = buildInventoryEmbed(userId, userTag, selectedItemId);
+    const components = buildInventoryComponents(userId, selectedItemId);
+    return interaction.update({ embeds: [embed], components });
   }
 
-  // 2. Usar Item no Pet
-  if (interaction.isButton() && interaction.customId.startsWith('inv_use:')) {
-    const itemId = parts[2];
-    const result = useItemOnActivePet(ownerId, itemId);
+  // 2. Usar Item no pet ativo
+  if (action === 'inv_use_item') {
+    const itemId = parts[1];
+    const result = useItemOnActivePet(userId, itemId);
 
     if (!result.success) {
-      if (result.reason === 'no_pet') {
-        const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId(`onboard_adopt:${ownerId}`)
-            .setLabel('Adotar Mascote')
-            .setEmoji('🐾')
-            .setStyle(ButtonStyle.Success)
-        );
-        await interaction.reply({
-          content: '❌ Você precisa de um pet ativo para usar este item! Adote no abrigo:',
-          components: [row],
-          ephemeral: true,
+      if (result.reason === 'no_active_pet') {
+        return interaction.reply({
+          content: '❌ Você precisa de um pet ativo para usar itens consumíveis!',
+          flags: 64,
         });
-      } else {
-        await interaction.reply({ content: '❌ Você não possui este item ou ele não pode ser usado.', ephemeral: true });
       }
-      return;
+      return interaction.reply({
+        content: `❌ ${result.message || 'Não foi possível usar este item.'}`,
+        flags: 64,
+      });
     }
 
-    let extraMsg = '';
-    if (result.leveledUp) {
-      extraMsg = `\n🎉 **LEVEL UP!** Seu pet atingiu o **Nível ${result.newLevel}**! Seus atributos aumentaram!`;
-    }
+    const embed = buildInventoryEmbed(userId, userTag, null);
+    const components = buildInventoryComponents(userId, null);
+    const fxSummary = result.effectsSummary ? ` (${result.effectsSummary})` : '';
 
-    const effectsText = result.effectsSummary ? `\n📊 **Efeitos:** ${result.effectsSummary}` : '';
-    const statusText = result.statusSummary ? `\n🐾 **Status atual de ${result.pet.name}:** ${result.statusSummary}` : '';
-
-    const embed = buildInventoryEmbed(ownerId, interaction.user.displayName, null);
-    const components = buildInventoryComponents(ownerId, null);
-
-    const followUpRow = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`pet_view:${ownerId}`)
-        .setLabel('Ver Cartão do Pet')
-        .setEmoji('🐾')
-        .setStyle(ButtonStyle.Primary)
-    );
-
-    await interaction.update({ embeds: [embed], components });
-    await interaction.followUp({
-      content: `✨ Você usou **${result.item.emoji} ${result.item.name}** no seu pet **${result.pet?.name || 'Pet'}**!${effectsText}${statusText}${extraMsg}`,
-      components: [followUpRow],
-      ephemeral: true,
+    return interaction.update({
+      content: `✨ Você usou 1x **${result.item ? result.item.name : itemId}** no seu pet!${fxSummary}`,
+      embeds: [embed],
+      components,
     });
-    return;
   }
 
-  // 3. Abrir Baú
-  if (interaction.isButton() && interaction.customId.startsWith('inv_chest:')) {
-    const chestId = parts[2];
-    const result = openChest(ownerId, chestId);
-
-    if (!result.success) {
-      await interaction.reply({ content: '❌ Não foi possível abrir o baú.', ephemeral: true });
-      return;
+  // 3. Colocar ovo na chocadeira
+  if (action === 'inv_place_egg') {
+    const eggId = parts[1];
+    const incubator = getIncubator(userId);
+    const emptySlot = incubator.slots.find((s) => s.empty);
+    if (!emptySlot) {
+      return interaction.reply({
+        content: '❌ Não há ninhos vazios na sua chocadeira! Aguarde um ovo chocar ou expanda seus ninhos.',
+        flags: 64,
+      });
     }
-
-    const dropText = result.droppedItem ? `\n🎁 Item bônus encontrado: **${result.droppedItem.emoji} ${result.droppedItem.name}**!` : '';
-    const embed = buildInventoryEmbed(ownerId, interaction.user.displayName, null);
-    const components = buildInventoryComponents(ownerId, null);
-
-    await interaction.update({ embeds: [embed], components });
-    await interaction.followUp({
-      content: `🔓 Você abriu o **${result.chest.name}** e encontrou **+${formatCoins(result.coinsAwarded)}**!${dropText}`,
-      ephemeral: true,
+    const res = putEggInIncubator(userId, eggId, emptySlot.slotIndex);
+    if (!res.success) {
+      return interaction.reply({ content: `❌ ${res.message}`, flags: 64 });
+    }
+    const embed = buildInventoryEmbed(userId, userTag, null);
+    const components = buildInventoryComponents(userId, null);
+    return interaction.update({
+      content: res.message,
+      embeds: [embed],
+      components,
     });
-    return;
   }
 
-  // 4. Vender Item
-  if (interaction.isButton() && interaction.customId.startsWith('inv_sell:')) {
-    const itemId = parts[2];
-    const amount = Number(parts[3] || 1);
-    const result = sellItem(ownerId, itemId, amount);
+  // 4. Abrir Baú
+  if (action === 'inv_open_chest') {
+    const chestId = parts[1];
+    const openRes = openChest(userId, chestId);
 
-    if (!result.success) {
-      await interaction.reply({ content: '❌ Não foi possível vender este item.', ephemeral: true });
-      return;
+    if (!openRes.success) {
+      return interaction.reply({
+        content: '❌ Não foi possível abrir o baú.',
+        flags: 64,
+      });
     }
 
-    const embed = buildInventoryEmbed(ownerId, interaction.user.displayName, null);
-    const components = buildInventoryComponents(ownerId, null);
+    const embed = buildInventoryEmbed(userId, userTag, null);
+    const components = buildInventoryComponents(userId, null);
+    const itemsWonStr = openRes.itemsWon.length > 0 ? ` + itens: ${openRes.itemsWon.join(', ')}` : '';
 
-    await interaction.update({ embeds: [embed], components });
-    await interaction.followUp({
-      content: `🪙 Você vendeu **${amount}x ${result.item.emoji} ${result.item.name}** por **+${formatCoins(result.earnings)}**! Saldo: **${formatCoins(result.balance)}**.`,
-      ephemeral: true,
+    return interaction.update({
+      content: `🔓 **Baú Aberto!** Você encontrou **+${formatCoins(openRes.coinsWon)}**${itemsWonStr}!`,
+      embeds: [embed],
+      components,
+    });
+  }
+
+  // 5. Vender Item
+  if (action === 'inv_sell_item') {
+    const itemId = parts[1];
+    const sellRes = sellItem(userId, itemId, 1);
+
+    if (!sellRes.success) {
+      return interaction.reply({
+        content: `❌ ${sellRes.message || 'Falha ao vender.'}`,
+        flags: 64,
+      });
+    }
+
+    const embed = buildInventoryEmbed(userId, userTag, null);
+    const components = buildInventoryComponents(userId, null);
+
+    return interaction.update({
+      content: `🪙 Você vendeu 1x **${sellRes.item.name}** por **${formatCoins(sellRes.totalCoins)}**!`,
+      embeds: [embed],
+      components,
     });
   }
 }
 
 module.exports = {
-  name: INVENTORY,
-  aliases: ['mochila', 'bag', 'itens', 'inv'],
   data: new SlashCommandBuilder()
     .setName(INVENTORY)
-    .setDescription('Exibe sua mochila de itens com menu interativo e opções de uso/venda'),
-  async executePrefix({ message }) {
-    await message.reply({
-      embeds: [buildInventoryEmbed(message.author.id, message.author.displayName)],
-      components: buildInventoryComponents(message.author.id),
-    });
-  },
-  async executeSlash({ interaction }) {
-    await interaction.editReply({
-      embeds: [buildInventoryEmbed(interaction.user.id, interaction.user.displayName)],
-      components: buildInventoryComponents(interaction.user.id),
-    });
-  },
+    .setDescription('Visualiza e gerencia a sua mochila de itens e ovos.'),
+  aliases: ['mochila', 'inv', 'bag'],
   isInventoryInteraction,
   handleInventoryInteraction,
+  async execute(interaction) {
+    const userId = interaction.user.id;
+    const userTag = interaction.user.displayName || interaction.user.username;
+    const embed = buildInventoryEmbed(userId, userTag, null);
+    const components = buildInventoryComponents(userId, null);
+    await interaction.reply({ embeds: [embed], components });
+  },
+  async executePrefix(message) {
+    const userId = message.author.id;
+    const userTag = message.author.displayName || message.author.username;
+    const embed = buildInventoryEmbed(userId, userTag, null);
+    const components = buildInventoryComponents(userId, null);
+    await message.reply({ embeds: [embed], components });
+  },
 };
-
-

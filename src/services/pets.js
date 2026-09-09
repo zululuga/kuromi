@@ -4,6 +4,14 @@ const crypto = require('node:crypto');
 const petsCatalog = require('../data/petsData.json');
 const { getItemDefinition, removeItem, addItem, hasItem } = require('./inventory');
 const { getUserAccount, updateUserAccount, spendCoins } = require('./economy');
+const {
+  ensureUserIncubator,
+  getIncubatorStatus,
+  placeEggInSlot,
+  hatchSlotEgg,
+  applyHourglass,
+  expandIncubator,
+} = require('./petIncubator');
 
 const dataDir = path.join(__dirname, '..', '..', 'data');
 const petsFile = path.join(dataDir, 'pets.json');
@@ -81,7 +89,7 @@ function calculateXpToNext(level) {
 }
 
 function calculateStats(baseStats, level = 1) {
-  const base = baseStats || { hp: 50, atk: 10, def: 10, spd: 10 };
+  const base = baseStats || { hp: 55, atk: 12, def: 12, spd: 12 };
   const lvlMultiplier = Math.max(0, level - 1);
   const maxHp = base.hp + lvlMultiplier * 10;
   return {
@@ -100,7 +108,7 @@ function migrateLegacyPet(userId, userRecord) {
   const account = getUserAccount(userId);
   if (account.pet && Array.isArray(userRecord.pets) && userRecord.pets.length === 0) {
     const legacy = account.pet;
-    const species = petsCatalog[legacy.key] || petsCatalog.borboleta;
+    const species = petsCatalog[legacy.key] || petsCatalog.spiralo || Object.values(petsCatalog)[0];
     const petId = `pet_${crypto.randomUUID().slice(0, 8)}`;
     const stats = calculateStats(species.baseStats, 1);
 
@@ -109,7 +117,7 @@ function migrateLegacyPet(userId, userRecord) {
       key: species.key,
       name: legacy.label || species.name,
       species: species.name,
-      element: species.element || 'FOFURA',
+      element: species.element || 'ORVALHO',
       rarity: species.rarity || 'COMUM',
       emoji: species.emoji || '🐾',
       shiny: Boolean(legacy.shiny),
@@ -138,115 +146,140 @@ function migrateLegacyPet(userId, userRecord) {
 }
 
 /**
- * Calcula decaimento natural de fome e energia com base no tempo.
+ * Calcula decaimento natural de fome e regeneração de energia sob demanda via delta-time.
  */
 function updateDynamicPetState(pet) {
   const now = Date.now();
-  // Fome: perde ~5% a cada 2 horas (7200000ms)
+  // Fome: perde ~5% a cada 2 horas
   const hoursSinceFed = Math.max(0, (now - (pet.lastFedAt || now)) / (1000 * 60 * 60));
   const hungerDecay = Math.floor(hoursSinceFed * 2.5);
-  pet.hunger = Math.max(5, Math.min(100, 100 - hungerDecay));
+  const currentHunger = typeof pet.hunger === 'number' ? pet.hunger : 80;
+  pet.hunger = Math.max(5, Math.min(100, currentHunger - hungerDecay));
 
   // Humor: perde um pouco se estiver com muita fome
   if (pet.hunger < 30) {
     pet.happiness = Math.max(10, Math.min(100, (pet.happiness || 50) - 10));
   }
 
-  // Energia: recupera 10% por hora até 100%
-  const hoursSinceExplore = Math.max(0, (now - (pet.lastExploreAt || now)) / (1000 * 60 * 60));
-  const energyRecovered = Math.floor(hoursSinceExplore * 10);
+  // Energia: regenera +1 ⚡ a cada 3 minutos (20 ⚡ por hora)
+  const minsSinceExplore = Math.max(0, (now - (pet.lastExploreAt || now)) / (1000 * 60));
+  const energyRecovered = Math.floor(minsSinceExplore / 3);
   pet.energy = Math.max(0, Math.min(100, (pet.energy || 50) + energyRecovered));
 
   return pet;
 }
 
 function getUserPetRecord(userId) {
-  const all = getFullPetsMap();
-  if (!all[userId]) {
-    all[userId] = {
+  const data = getFullPetsMap();
+  if (!data[userId]) {
+    data[userId] = {
       activePetId: null,
-      maxSlots: DEFAULT_MAX_PETS,
+      maxPets: DEFAULT_MAX_PETS,
       pets: [],
+      claimedStarterKit: false,
     };
   }
-  migrateLegacyPet(userId, all[userId]);
-  return all[userId];
+
+  migrateLegacyPet(userId, data[userId]);
+  ensureUserIncubator(data[userId]);
+  return data[userId];
 }
 
 function getActivePet(userId) {
   const record = getUserPetRecord(userId);
-  if (!record.pets || record.pets.length === 0) return null;
+  if (!record.activePetId || !Array.isArray(record.pets) || record.pets.length === 0) {
+    return null;
+  }
 
-  let active = record.pets.find((p) => p.id === record.activePetId);
-  if (!active) {
-    active = record.pets[0];
-    record.activePetId = active.id;
+  let pet = record.pets.find((p) => p.id === record.activePetId);
+  if (!pet && record.pets.length > 0) {
+    pet = record.pets[0];
+    record.activePetId = pet.id;
     schedulePetsSave();
   }
 
-  return updateDynamicPetState(active);
+  if (pet) {
+    updateDynamicPetState(pet);
+  }
+
+  return pet;
 }
 
 function getUserPets(userId) {
   const record = getUserPetRecord(userId);
-  return record.pets.map((p) => updateDynamicPetState(p));
+  return (record.pets || []).map((p) => updateDynamicPetState(p));
 }
 
-function setActivePet(userId, petIdOrName) {
+function setActivePet(userId, petIdentifier) {
   const record = getUserPetRecord(userId);
-  const search = String(petIdOrName || '').toLowerCase().trim();
-  const target = record.pets.find(
-    (p) => p.id === search || p.name.toLowerCase() === search || p.species.toLowerCase() === search
-  );
-
-  if (!target) return { success: false, reason: 'not_found' };
-  record.activePetId = target.id;
-  schedulePetsSave();
-  return { success: true, pet: target };
-}
-
-function adoptPet(userId, speciesKey, random = Math.random) {
-  const species = petsCatalog[speciesKey];
-  if (!species) return { success: false, reason: 'invalid_species' };
-
-  const record = getUserPetRecord(userId);
-  const maxSlots = record.maxSlots || DEFAULT_MAX_PETS;
-  if (record.pets.length >= maxSlots) {
-    return { success: false, reason: 'slots_full', maxSlots, currentCount: record.pets.length };
+  if (!record.pets || record.pets.length === 0) {
+    return { success: false, reason: 'no_pets' };
   }
 
-  const spendResult = spendCoins(userId, species.baseCost);
-  if (!spendResult.spent) {
+  const normalized = String(petIdentifier).toLowerCase().trim();
+  const pet = record.pets.find(
+    (p) => p.id === petIdentifier || p.key.toLowerCase() === normalized || p.name.toLowerCase() === normalized
+  );
+
+  if (!pet) {
+    return { success: false, reason: 'pet_not_found' };
+  }
+
+  record.activePetId = pet.id;
+  schedulePetsSave();
+  return { success: true, pet };
+}
+
+function adoptPet(userId, speciesKey) {
+  const record = getUserPetRecord(userId);
+  const maxSlots = record.maxPets || DEFAULT_MAX_PETS;
+
+  if (record.pets && record.pets.length >= maxSlots) {
     return {
       success: false,
-      reason: 'insufficient_funds',
-      balance: spendResult.balance,
-      cost: species.baseCost,
-      species,
+      reason: 'max_pets_reached',
+      message: `Você já atingiu o limite de ${maxSlots} pets. Use a Expansão de Canil para liberar mais vagas!`,
     };
   }
 
-  const shiny = random() < 0.05; // 5% de chance de Shiny
-  const corrupt = !shiny && random() < 0.01; // 1% de chance de Corrupt
+  const species = petsCatalog[speciesKey.toLowerCase()];
+  if (!species) {
+    return { success: false, reason: 'invalid_species', message: 'Espécie de pet não encontrada no catálogo.' };
+  }
+
+  const cost = species.baseCost || 150;
+  const spend = spendCoins(userId, cost);
+  if (!spend.spent) {
+    return {
+      success: false,
+      reason: 'insufficient_coins',
+      needed: cost,
+      current: spend.balance,
+      message: `Você precisa de ${cost} moedas para adotar o ${species.name} (Saldo atual: ${spend.balance}).`,
+    };
+  }
+
   const petId = `pet_${crypto.randomUUID().slice(0, 8)}`;
-  const stats = calculateStats(species.baseStats, 1);
+  const isShiny = Math.random() < 0.05; // 5% chance shiny na adoção direta
+  const baseStats = species.baseStats || { hp: 55, atk: 12, def: 12, spd: 12 };
+  const stats = calculateStats(baseStats, 1);
 
   const newPet = {
     id: petId,
     key: species.key,
     name: species.name,
     species: species.name,
-    element: species.element || 'FOFURA',
+    element: species.element || 'ORVALHO',
     rarity: species.rarity || 'COMUM',
     emoji: species.emoji || '🐾',
-    shiny,
-    corrupt,
+    shiny: isShiny,
+    corrupt: false,
     level: 1,
     xp: 0,
     xpToNext: calculateXpToNext(1),
     stats,
-    hunger: 100,
-    happiness: 100,
+    hunger: 80,
+    happiness: 80,
     energy: 100,
     lastFedAt: Date.now(),
     lastCarinhoAt: 0,
@@ -262,59 +295,73 @@ function adoptPet(userId, speciesKey, random = Math.random) {
   if (!record.activePetId) {
     record.activePetId = petId;
   }
+
   schedulePetsSave();
 
   return {
     success: true,
     pet: newPet,
-    shiny,
-    corrupt,
-    balance: spendResult.balance,
+    cost,
+    remainingCoins: spend.newBalance,
   };
 }
 
-function feedPet(userId, foodItemId) {
+function feedPet(userId, itemKey = 'racao_cringe') {
   const activePet = getActivePet(userId);
-  if (!activePet) return { success: false, reason: 'no_pet' };
-
-  const foodItem = getItemDefinition(foodItemId);
-  if (!foodItem || foodItem.category !== 'comida') {
-    return { success: false, reason: 'not_food' };
+  if (!activePet) {
+    return { success: false, reason: 'no_active_pet' };
   }
 
-  if (!removeItem(userId, foodItemId, 1)) {
-    return { success: false, reason: 'no_item', item: foodItem };
+  if (activePet.hunger >= 100) {
+    return {
+      success: false,
+      reason: 'pet_full',
+      message: `${activePet.name} já está com a barriga cheia e não aguenta comer mais nada agora!`,
+    };
   }
 
-  const fx = foodItem.effects || {};
-  const hungerGained = fx.hunger || 20;
-  const happinessGained = fx.happiness || 5;
-  const energyGained = fx.energy || 0;
-  const healGained = fx.heal || 0;
-  const xpGained = fx.xp || 10;
-
-  activePet.hunger = Math.min(100, (activePet.hunger || 0) + hungerGained);
-  activePet.happiness = Math.min(100, (activePet.happiness || 0) + happinessGained);
-  activePet.energy = Math.min(100, (activePet.energy || 0) + energyGained);
-  if (healGained) {
-    activePet.stats.hp = Math.min(activePet.stats.maxHp, (activePet.stats.hp || 0) + healGained);
+  const item = getItemDefinition(itemKey);
+  if (!item || item.category !== 'comida') {
+    return { success: false, reason: 'invalid_food', message: 'Este item não é uma comida válida para pets.' };
   }
+
+  if (!hasItem(userId, itemKey, 1)) {
+    return { success: false, reason: 'no_food_in_inventory', message: `Você não tem **${item.name}** no inventário.` };
+  }
+
+  const removed = removeItem(userId, itemKey, 1);
+  if (!removed) {
+    return { success: false, reason: 'failed_consume' };
+  }
+
+  const fx = item.effects || { hunger: 25, happiness: 10, energy: 5, heal: 0, xp: 5 };
+  activePet.hunger = Math.min(100, (activePet.hunger || 0) + (fx.hunger || 25));
+  activePet.happiness = Math.min(100, (activePet.happiness || 0) + (fx.happiness || 10));
+  activePet.energy = Math.min(100, (activePet.energy || 0) + (fx.energy || 5));
   activePet.lastFedAt = Date.now();
 
-  const xpResult = awardPetXp(userId, activePet.id, xpGained);
+  if (fx.heal && activePet.stats) {
+    activePet.stats.hp = Math.min(activePet.stats.maxHp, (activePet.stats.hp || 0) + fx.heal);
+  }
+
+  let xpResult = { leveledUp: false };
+  if (fx.xp) {
+    xpResult = awardPetXp(userId, activePet.id, fx.xp);
+  }
+
   schedulePetsSave();
 
   const effectsApplied = [];
-  if (hungerGained) effectsApplied.push(`🍖 +${hungerGained}% Fome`);
-  if (happinessGained) effectsApplied.push(`💖 +${happinessGained}% Felicidade`);
-  if (energyGained) effectsApplied.push(`⚡ +${energyGained}% Energia`);
-  if (healGained) effectsApplied.push(`🩹 +${healGained} HP`);
-  if (xpGained) effectsApplied.push(`✨ +${xpGained} XP`);
+  if (fx.hunger) effectsApplied.push(`🍖 +${fx.hunger}% Fome`);
+  if (fx.happiness) effectsApplied.push(`💖 +${fx.happiness}% Felicidade`);
+  if (fx.energy) effectsApplied.push(`⚡ +${fx.energy}% Energia`);
+  if (fx.heal) effectsApplied.push(`🩹 +${fx.heal} HP`);
+  if (fx.xp) effectsApplied.push(`✨ +${fx.xp} XP`);
 
   return {
     success: true,
     pet: activePet,
-    item: foodItem,
+    item,
     effectsSummary: effectsApplied.join(' • '),
     statusSummary: `HP: ${activePet.stats.hp}/${activePet.stats.maxHp} • Fome: ${activePet.hunger}% • Humor: ${activePet.happiness}% • Energia: ${activePet.energy}%`,
     leveledUp: xpResult.leveledUp,
@@ -324,23 +371,32 @@ function feedPet(userId, foodItemId) {
 
 function petCarinho(userId, now = Date.now()) {
   const activePet = getActivePet(userId);
-  if (!activePet) return { success: false, reason: 'no_pet' };
-
-  const lastCarinho = activePet.lastCarinhoAt || 0;
-  const elapsed = now - lastCarinho;
-  if (elapsed < CARINHO_COOLDOWN_MS) {
-    return { success: false, reason: 'cooldown', remainingMs: CARINHO_COOLDOWN_MS - elapsed };
+  if (!activePet) {
+    return { success: false, reason: 'no_active_pet' };
   }
 
-  activePet.happiness = Math.min(100, (activePet.happiness || 50) + 25);
-  activePet.lastCarinhoAt = now;
+  const lastCarinho = activePet.lastCarinhoAt || 0;
+  if (now - lastCarinho < CARINHO_COOLDOWN_MS) {
+    const remainingMs = CARINHO_COOLDOWN_MS - (now - lastCarinho);
+    return {
+      success: false,
+      reason: 'cooldown',
+      remainingMs,
+      remainingMinutes: Math.ceil(remainingMs / (60 * 1000)),
+    };
+  }
 
-  const xpResult = awardPetXp(userId, activePet.id, 15);
+  activePet.lastCarinhoAt = now;
+  activePet.happiness = Math.min(100, (activePet.happiness || 0) + 20);
+  const xpResult = awardPetXp(userId, activePet.id, 20);
+
   schedulePetsSave();
 
   return {
     success: true,
     pet: activePet,
+    xpGained: 20,
+    happinessGained: 20,
     leveledUp: xpResult.leveledUp,
     newLevel: activePet.level,
   };
@@ -348,123 +404,146 @@ function petCarinho(userId, now = Date.now()) {
 
 function petSleep(userId, now = Date.now()) {
   const activePet = getActivePet(userId);
-  if (!activePet) return { success: false, reason: 'no_pet' };
-
-  const lastSleep = activePet.lastSleepAt || 0;
-  const elapsed = now - lastSleep;
-  if (elapsed < SLEEP_COOLDOWN_MS) {
-    return { success: false, reason: 'cooldown', remainingMs: SLEEP_COOLDOWN_MS - elapsed };
+  if (!activePet) {
+    return { success: false, reason: 'no_active_pet' };
   }
 
-  activePet.energy = 100;
+  const lastSleep = activePet.lastSleepAt || 0;
+  if (now - lastSleep < SLEEP_COOLDOWN_MS) {
+    const remainingMs = SLEEP_COOLDOWN_MS - (now - lastSleep);
+    return {
+      success: false,
+      reason: 'cooldown',
+      remainingMs,
+      remainingHours: Math.ceil(remainingMs / (60 * 60 * 1000)),
+    };
+  }
+
   activePet.lastSleepAt = now;
+  activePet.energy = 100;
+  if (activePet.stats) {
+    activePet.stats.hp = activePet.stats.maxHp;
+  }
+
   schedulePetsSave();
 
   return {
     success: true,
     pet: activePet,
+    message: `${activePet.name} tirou uma soneca mágica nas nuvens e recuperou 100% da Energia e HP!`,
   };
 }
 
 function renamePet(userId, newName) {
   const activePet = getActivePet(userId);
-  if (!activePet) return { success: false, reason: 'no_pet' };
+  if (!activePet) {
+    return { success: false, reason: 'no_active_pet' };
+  }
 
-  const cleanName = String(newName || '').trim();
-  if (cleanName.length < 2 || cleanName.length > 25) {
-    return { success: false, reason: 'invalid_length' };
+  const cleanName = String(newName).trim().slice(0, 24);
+  if (!cleanName || cleanName.length < 2) {
+    return { success: false, reason: 'invalid_name', message: 'O nome deve ter entre 2 e 24 caracteres.' };
   }
 
   activePet.name = cleanName;
   schedulePetsSave();
-  return { success: true, pet: activePet };
+
+  return { success: true, pet: activePet, newName: cleanName };
 }
 
 function awardPetXp(userId, petId, xpAmount) {
   const record = getUserPetRecord(userId);
   const pet = record.pets.find((p) => p.id === petId);
-  if (!pet || xpAmount <= 0) return { leveledUp: false };
+  if (!pet) return { leveledUp: false };
 
-  pet.xp = (pet.xp || 0) + xpAmount;
+  pet.xp = (pet.xp || 0) + Number(xpAmount);
   let leveledUp = false;
 
-  while (pet.level < 50 && pet.xp >= pet.xpToNext) {
+  while (pet.xp >= (pet.xpToNext || 100)) {
     pet.xp -= pet.xpToNext;
-    pet.level += 1;
+    pet.level = (pet.level || 1) + 1;
     pet.xpToNext = calculateXpToNext(pet.level);
 
-    const species = petsCatalog[pet.key] || { baseStats: { hp: 50, atk: 10, def: 10, spd: 10 } };
+    const species = petsCatalog[pet.key] || petsCatalog.spiralo || Object.values(petsCatalog)[0];
     pet.stats = calculateStats(species.baseStats, pet.level);
     leveledUp = true;
   }
 
   schedulePetsSave();
-  return { leveledUp, level: pet.level, currentXp: pet.xp, xpToNext: pet.xpToNext };
+  return { leveledUp, newLevel: pet.level, currentXp: pet.xp, xpToNext: pet.xpToNext };
 }
 
-function useItemOnActivePet(userId, itemId) {
+function useItemOnActivePet(userId, itemKey) {
   const activePet = getActivePet(userId);
-  if (!activePet) return { success: false, reason: 'no_pet' };
-
-  const item = getItemDefinition(itemId);
-  if (!item) return { success: false, reason: 'invalid_item' };
-
-  if (item.category === 'comida') {
-    return feedPet(userId, itemId);
+  if (!activePet) {
+    return { success: false, reason: 'no_active_pet' };
   }
 
-  if (item.effects?.isSlotExpansion) {
-    if (!removeItem(userId, itemId, 1)) {
-      return { success: false, reason: 'no_item', item };
-    }
+  const item = getItemDefinition(itemKey);
+  if (!item) {
+    return { success: false, reason: 'invalid_item' };
+  }
+
+  if (item.category === 'comida') {
+    return feedPet(userId, itemKey);
+  }
+
+  if (item.category === 'melhoria' && item.effects && item.effects.isSlotExpansion) {
     const record = getUserPetRecord(userId);
-    record.maxSlots = (record.maxSlots || DEFAULT_MAX_PETS) + (item.effects.slots || 2);
+    if (!hasItem(userId, itemKey, 1)) {
+      return { success: false, reason: 'no_item' };
+    }
+    removeItem(userId, itemKey, 1);
+    record.maxPets = (record.maxPets || DEFAULT_MAX_PETS) + (item.effects.slots || 2);
     schedulePetsSave();
     return {
       success: true,
       applied: 'expansion',
-      item,
-      newMaxSlots: record.maxSlots,
+      message: `🏠 Sua mochila de pets foi expandida para suportar **${record.maxPets} pets** simultâneos!`,
     };
   }
 
-  if (!removeItem(userId, itemId, 1)) {
-    return { success: false, reason: 'no_item', item };
+  if (item.category === 'melhoria' && item.effects && item.effects.isIncubatorExpansion) {
+    const record = getUserPetRecord(userId);
+    return expandIncubator(userId, record, schedulePetsSave);
+  }
+
+  if (!hasItem(userId, itemKey, 1)) {
+    return { success: false, reason: 'no_item' };
+  }
+
+  const removed = removeItem(userId, itemKey, 1);
+  if (!removed) {
+    return { success: false, reason: 'failed_consume' };
   }
 
   const fx = item.effects || {};
-  const healGained = fx.heal || 0;
-  const energyGained = fx.energy || 0;
-  const happinessGained = fx.happiness || 0;
-  const hungerGained = fx.hunger || 0;
-  const xpGained = fx.xp || 0;
-
-  if (healGained) {
-    activePet.stats.hp = Math.min(activePet.stats.maxHp, activePet.stats.hp + healGained);
+  if (fx.heal && activePet.stats) {
+    activePet.stats.hp = Math.min(activePet.stats.maxHp, (activePet.stats.hp || 0) + fx.heal);
   }
-  if (energyGained) {
-    activePet.energy = Math.min(100, (activePet.energy || 0) + energyGained);
+  if (fx.energy) {
+    activePet.energy = Math.min(100, (activePet.energy || 0) + fx.energy);
   }
-  if (happinessGained) {
-    activePet.happiness = Math.min(100, (activePet.happiness || 0) + happinessGained);
+  if (fx.happiness) {
+    activePet.happiness = Math.min(100, (activePet.happiness || 0) + fx.happiness);
   }
-  if (hungerGained) {
-    activePet.hunger = Math.min(100, (activePet.hunger || 0) + hungerGained);
+  if (fx.hunger) {
+    activePet.hunger = Math.min(100, (activePet.hunger || 0) + fx.hunger);
   }
 
   let xpResult = { leveledUp: false };
-  if (xpGained) {
-    xpResult = awardPetXp(userId, activePet.id, xpGained);
+  if (fx.xp) {
+    xpResult = awardPetXp(userId, activePet.id, fx.xp);
   }
 
   schedulePetsSave();
 
   const effectsApplied = [];
-  if (healGained) effectsApplied.push(`🩹 +${healGained} HP`);
-  if (energyGained) effectsApplied.push(`⚡ +${energyGained}% Energia`);
-  if (happinessGained) effectsApplied.push(`💖 +${happinessGained}% Felicidade`);
-  if (hungerGained) effectsApplied.push(`🍖 +${hungerGained}% Fome`);
-  if (xpGained) effectsApplied.push(`✨ +${xpGained} XP`);
+  if (fx.heal) effectsApplied.push(`🩹 +${fx.heal} HP`);
+  if (fx.energy) effectsApplied.push(`⚡ +${fx.energy}% Energia`);
+  if (fx.happiness) effectsApplied.push(`💖 +${fx.happiness}% Felicidade`);
+  if (fx.hunger) effectsApplied.push(`🍖 +${fx.hunger}% Fome`);
+  if (fx.xp) effectsApplied.push(`✨ +${fx.xp} XP`);
 
   return {
     success: true,
@@ -514,11 +593,37 @@ function claimStarterKit(userId) {
     coins: 150,
     newBalance: updatedAccount.coins,
     items: [
-      { name: 'Ração Cringe', count: 2, emoji: '🥣' },
+      { name: 'Ração da Floresta', count: 2, emoji: '🥣' },
       { name: 'Curativo de Coração', count: 1, emoji: '🩹' },
       { name: 'Baú Rústico', count: 1, emoji: '📦' },
     ],
   };
+}
+
+// Métodos de Chocadeira vinculados ao storage de pets
+function getIncubator(userId) {
+  const record = getUserPetRecord(userId);
+  return getIncubatorStatus(record);
+}
+
+function putEggInIncubator(userId, eggItemId, slotIndex) {
+  const record = getUserPetRecord(userId);
+  return placeEggInSlot(userId, record, eggItemId, slotIndex, schedulePetsSave);
+}
+
+function hatchIncubatorEgg(userId, slotIndex) {
+  const record = getUserPetRecord(userId);
+  return hatchSlotEgg(userId, record, slotIndex, schedulePetsSave);
+}
+
+function useHourglassOnIncubator(userId, slotIndex, hourglassItemId) {
+  const record = getUserPetRecord(userId);
+  return applyHourglass(userId, record, slotIndex, hourglassItemId, schedulePetsSave);
+}
+
+function expandUserIncubator(userId) {
+  const record = getUserPetRecord(userId);
+  return expandIncubator(userId, record, schedulePetsSave);
 }
 
 module.exports = {
@@ -540,5 +645,10 @@ module.exports = {
   hasClaimedStarterKit,
   isFirstTimeUser,
   claimStarterKit,
+  getIncubator,
+  putEggInIncubator,
+  hatchIncubatorEgg,
+  useHourglassOnIncubator,
+  expandUserIncubator,
   flushPetsSync,
 };

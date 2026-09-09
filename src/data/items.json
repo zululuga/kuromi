@@ -1,52 +1,52 @@
 {
   "racao_cringe": {
     "id": "racao_cringe",
-    "name": "Ração Cringe",
+    "name": "Ração da Floresta",
     "category": "comida",
     "rarity": "COMUM",
     "emoji": "🥣",
     "buyPrice": 50,
     "sellPrice": 15,
-    "description": "Ração básica balanceada. Não é gourmet, mas mantém seu pet alimentado.",
+    "description": "Ração natural com sementes mágicas. Mantém o pet saciado e saudável.",
     "effects": {
       "hunger": 25,
       "happiness": 5,
-      "energy": 0,
+      "energy": 5,
       "heal": 0,
       "xp": 5
     }
   },
   "biscoito_morcego": {
     "id": "biscoito_morcego",
-    "name": "Biscoito de Morcego",
+    "name": "Biscoito Travesso",
     "category": "comida",
     "rarity": "COMUM",
-    "emoji": "🦇",
+    "emoji": "🍪",
     "buyPrice": 100,
     "sellPrice": 30,
-    "description": "Biscoito crocante em formato de morceguinho. O pet adora a textura.",
+    "description": "Biscoito crocante assado com pó de fada. Os pets adoram o sabor doce e misterioso.",
     "effects": {
       "hunger": 40,
       "happiness": 15,
-      "energy": 5,
+      "energy": 10,
       "heal": 0,
       "xp": 10
     }
   },
   "sushizinho": {
     "id": "sushizinho",
-    "name": "Sushizinho Nobre",
+    "name": "Banquete Encantado",
     "category": "comida",
     "rarity": "INCOMUM",
     "emoji": "🍣",
     "buyPrice": 250,
     "sellPrice": 80,
-    "description": "Peixe fresco de primeira qualidade. Dá água na boca e alegra qualquer bicho.",
+    "description": "Guloseima nobre de alta qualidade. Dá água na boca e revigora qualquer criaturinha.",
     "effects": {
       "hunger": 80,
       "happiness": 35,
-      "energy": 15,
-      "heal": 10,
+      "energy": 25,
+      "heal": 15,
       "xp": 25
     }
   },
@@ -58,12 +58,12 @@
     "emoji": "🩹",
     "buyPrice": 80,
     "sellPrice": 25,
-    "description": "Cura ferimentos leves sofridos em expedições perigosas.",
+    "description": "Cura ferimentos leves sofridos em expedições pelas dungeons.",
     "effects": {
       "hunger": 0,
       "happiness": 10,
       "energy": 10,
-      "heal": 30,
+      "heal": 35,
       "xp": 5
     }
   },
@@ -75,13 +75,30 @@
     "emoji": "🧪",
     "buyPrice": 200,
     "sellPrice": 60,
-    "description": "Bebida mágica e efervescente que restaura completamente a saúde e energia do pet.",
+    "description": "Bebida mágica efervescente que restaura completamente a saúde do pet.",
     "effects": {
       "hunger": 10,
       "happiness": 20,
-      "energy": 100,
+      "energy": 50,
       "heal": 100,
       "xp": 15
+    }
+  },
+  "pocao_energia": {
+    "id": "pocao_energia",
+    "name": "Frasco de Éter",
+    "category": "cura",
+    "rarity": "INCOMUM",
+    "emoji": "⚡",
+    "buyPrice": 150,
+    "sellPrice": 45,
+    "description": "Elixir energético que recupera instantaneamente +50 ⚡ de Energia para expedições.",
+    "effects": {
+      "hunger": 0,
+      "happiness": 15,
+      "energy": 50,
+      "heal": 10,
+      "xp": 10
     }
   },
   "elixir_xp": {
@@ -89,7 +106,7 @@
     "name": "Elixir de Experiência",
     "category": "utilitario",
     "rarity": "RARO",
-    "emoji": "⚡",
+    "emoji": "✨",
     "buyPrice": 500,
     "sellPrice": 150,
     "description": "Líquido brilhante concentrado que concede sabedoria instantânea (+500 XP).",
@@ -109,7 +126,7 @@
     "emoji": "🔮",
     "buyPrice": 2500,
     "sellPrice": 800,
-    "description": "Cristal pulsante com energia arcana. Usado para aprimorar e despertar atributos.",
+    "description": "Cristal pulsante com energia arcana de Pyxie para fortalecer atributos.",
     "effects": {
       "hunger": 0,
       "happiness": 50,
@@ -120,19 +137,141 @@
   },
   "fragmento_shiny": {
     "id": "fragmento_shiny",
-    "name": "Fragmento Brilhante",
+    "name": "Fragmento Cintilante",
     "category": "especial",
     "rarity": "LENDARIO",
-    "emoji": "✨",
+    "emoji": "💎",
     "buyPrice": null,
     "sellPrice": 1000,
-    "description": "Fragmento cósmico extremamente raro encontrado apenas nas dungeons mais profundas.",
+    "description": "Fragmento cósmico extremamente raro encontrado nas profundezas das dungeons.",
     "effects": {
       "hunger": 0,
       "happiness": 100,
       "energy": 0,
       "heal": 0,
       "xp": 1000
+    }
+  },
+  "ovo_orvalho": {
+    "id": "ovo_orvalho",
+    "name": "Ovo de Orvalho",
+    "category": "ovo",
+    "rarity": "RARO",
+    "emoji": "🫧",
+    "buyPrice": null,
+    "sellPrice": 300,
+    "description": "Ovo reluzente banhado em águas místicas. Choca um pet do elemento Orvalho (2h).",
+    "effects": {
+      "isEgg": true,
+      "element": "ORVALHO",
+      "hatchDurationMs": 7200000,
+      "boostShiny": 0.18
+    }
+  },
+  "ovo_brisa": {
+    "id": "ovo_brisa",
+    "name": "Ovo de Brisa",
+    "category": "ovo",
+    "rarity": "RARO",
+    "emoji": "🪽",
+    "buyPrice": null,
+    "sellPrice": 300,
+    "description": "Ovo leve como uma pluma que flutua sutilmente. Choca um pet do elemento Brisa (2h).",
+    "effects": {
+      "isEgg": true,
+      "element": "BRISA",
+      "hatchDurationMs": 7200000,
+      "boostShiny": 0.18
+    }
+  },
+  "ovo_silvestre": {
+    "id": "ovo_silvestre",
+    "name": "Ovo Silvestre",
+    "category": "ovo",
+    "rarity": "RARO",
+    "emoji": "🍃",
+    "buyPrice": null,
+    "sellPrice": 300,
+    "description": "Ovo coberto de pequenas folhas e musgo encantado. Choca um pet do elemento Silvestre (2h).",
+    "effects": {
+      "isEgg": true,
+      "element": "SILVESTRE",
+      "hatchDurationMs": 7200000,
+      "boostShiny": 0.18
+    }
+  },
+  "ovo_charme": {
+    "id": "ovo_charme",
+    "name": "Ovo de Charme",
+    "category": "ovo",
+    "rarity": "EPICO",
+    "emoji": "🎀",
+    "buyPrice": null,
+    "sellPrice": 600,
+    "description": "Ovo decorado com fitas mágicas e brilho irresistível. Choca um pet do elemento Charme (3h).",
+    "effects": {
+      "isEgg": true,
+      "element": "CHARME",
+      "hatchDurationMs": 10800000,
+      "boostShiny": 0.20
+    }
+  },
+  "ovo_travessura": {
+    "id": "ovo_travessura",
+    "name": "Ovo de Travessura",
+    "category": "ovo",
+    "rarity": "EPICO",
+    "emoji": "🖤",
+    "buyPrice": null,
+    "sellPrice": 800,
+    "description": "Ovo escuro que emite risadinhas travessas. Choca um pet do elemento Travessura (4h).",
+    "effects": {
+      "isEgg": true,
+      "element": "TRAVESSURA",
+      "hatchDurationMs": 14400000,
+      "boostShiny": 0.20
+    }
+  },
+  "ninho_encantado": {
+    "id": "ninho_encantado",
+    "name": "Ninho Encantado",
+    "category": "melhoria",
+    "rarity": "EPICO",
+    "emoji": "🪺",
+    "buyPrice": 4000,
+    "sellPrice": 1200,
+    "description": "Expande a Chocadeira de Pyxie permanentemente em +2 slots adicionais (máx 5 slots).",
+    "effects": {
+      "isIncubatorExpansion": true,
+      "extraSlots": 2
+    }
+  },
+  "ampulheta_tempo_2h": {
+    "id": "ampulheta_tempo_2h",
+    "name": "Ampulheta Mágica (2h)",
+    "category": "utilitario",
+    "rarity": "RARO",
+    "emoji": "⏳",
+    "buyPrice": 350,
+    "sellPrice": 100,
+    "description": "Acelera o tempo mágico, adiantando 2 horas de incubação em um ovo na chocadeira.",
+    "effects": {
+      "isHourglass": true,
+      "reduceMs": 7200000
+    }
+  },
+  "ampulheta_tempo_4h": {
+    "id": "ampulheta_tempo_4h",
+    "name": "Ampulheta Mágica (4h)",
+    "category": "utilitario",
+    "rarity": "EPICO",
+    "emoji": "⌛",
+    "buyPrice": 650,
+    "sellPrice": 200,
+    "description": "Acelera o tempo mágico, adiantando 4 horas de incubação em um ovo na chocadeira.",
+    "effects": {
+      "isHourglass": true,
+      "reduceMs": 14400000
     }
   },
   "bau_madeira": {
@@ -143,28 +282,28 @@
     "emoji": "📦",
     "buyPrice": 300,
     "sellPrice": 100,
-    "description": "Baú de madeira trancado. Ao abrir, revela moedas (100 a 600) ou comidas raras.",
+    "description": "Baú de madeira trancado com moedas (100 a 600) ou comidas mágicas.",
     "effects": {
       "isChest": true,
       "minCoins": 100,
       "maxCoins": 600,
-      "possibleItems": ["racao_cringe", "biscoito_morcego", "curativo_fofo"]
+      "possibleItems": ["racao_cringe", "biscoito_morcego", "curativo_fofo", "pocao_energia"]
     }
   },
   "bau_caos": {
     "id": "bau_caos",
-    "name": "Baú do Caos Kuromi",
+    "name": "Baú Travesso de Pyxie",
     "category": "bau",
     "rarity": "EPICO",
-    "emoji": "🖤",
+    "emoji": "💜",
     "buyPrice": 1800,
     "sellPrice": 600,
-    "description": "Baú ornamentado com a insígnia da Kuromi. Contém grandes fortunas e itens épicos.",
+    "description": "Baú ornamentado com guizos e o selo de Pyxie. Contém grandes fortunas e itens raros.",
     "effects": {
       "isChest": true,
       "minCoins": 800,
       "maxCoins": 3500,
-      "possibleItems": ["sushizinho", "pocao_vida", "elixir_xp", "gema_evolucao", "fragmento_shiny"]
+      "possibleItems": ["sushizinho", "pocao_vida", "pocao_energia", "elixir_xp", "gema_evolucao", "ampulheta_tempo_2h", "fragmento_shiny"]
     }
   },
   "casinha_luxo": {
@@ -182,4 +321,3 @@
     }
   }
 }
-

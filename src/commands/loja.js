@@ -7,15 +7,16 @@ const {
   ButtonStyle,
 } = require('discord.js');
 const { getItemsByCategory, getItemDefinition, buyItem, formatItemEffects } = require('../services/inventory');
+const { PYXIE_COLORS, pyxieFooter } = require('../utils/pyxieVoice');
 const { formatCoins } = require('./economyHelpers');
 const { SHOP } = require('./commandNames');
 
 const CATEGORIES = [
-  { label: 'Comidas & Nutrição', value: 'comida', emoji: '🍖', desc: 'Rações e guloseimas para saciar a fome do pet' },
-  { label: 'Cura & Remédios', value: 'cura', emoji: '🩹', desc: 'Curativos e poções revitalizantes' },
-  { label: 'Utilitários & XP', value: 'utilitario', emoji: '⚡', desc: 'Elixires de evolução e aceleradores' },
+  { label: 'Comidas & Nutrição', value: 'comida', emoji: '🍖', desc: 'Rações naturais e guloseimas para saciar a fome do pet' },
+  { label: 'Cura & Estamina', value: 'cura', emoji: '🩹', desc: 'Curativos e poções de estamina para expedições' },
+  { label: 'Utilitários & Ampulhetas', value: 'utilitario', emoji: '⏳', desc: 'Ampulhetas de aceleração de choco e elixires' },
   { label: 'Baús Misteriosos', value: 'bau', emoji: '📦', desc: 'Baús com moedas, comidas e itens raros' },
-  { label: 'Evolução & Melhorias', value: 'evolucao', emoji: '🔮', desc: 'Cristais e expansões de canil' },
+  { label: 'Melhorias & Ninhos', value: 'melhoria', emoji: '🪺', desc: 'Ninhos encantados e expansões de mochila' },
 ];
 
 function buildShopEmbed(category = 'comida') {
@@ -23,26 +24,25 @@ function buildShopEmbed(category = 'comida') {
   const catInfo = CATEGORIES.find((c) => c.value === category) || CATEGORIES[0];
 
   const embed = new EmbedBuilder()
-    .setColor('#E60067')
-    .setTitle(`${catInfo.emoji}  ✦  Lojinha da Kuromi — ${catInfo.label}`)
+    .setColor(PYXIE_COLORS.gold)
+    .setTitle(`${catInfo.emoji}  ✦  Lojinha da Pyxie — ${catInfo.label}`)
     .setDescription(
       `*${catInfo.desc}*\n\n` +
-      'Escolha a categoria no menu abaixo ou compre usando `/comprar <item>`.\n' +
-      'Kuromi não dá fiado nem aceita choro.'
+      'Escolha a categoria no menu abaixo ou compre usando o menu de compra rápida.\n' +
+      'Pyxie não dá fiado nem aceita choro.'
     )
-    .setFooter({ text: 'Cringelândia • Loja Oficial • Preços não negociáveis' })
+    .setFooter({ text: pyxieFooter('Preços Oficiais • 1-Clique Acessível') })
     .setTimestamp();
 
   if (items.length === 0) {
     embed.addFields({ name: 'Vazio', value: 'Nenhum item disponível nesta categoria no momento.' });
   } else {
     items.forEach((item) => {
-      const priceTag = item.buyPrice ? `**${formatCoins(item.buyPrice)}**` : '*Item não vendível*';
+      const priceTag = item.buyPrice ? `**${formatCoins(item.buyPrice)}**` : '*Item raro de dungeon*';
       const fxText = formatItemEffects(item);
       const fxLine = fxText ? `\n> 📊 **Efeito:** ${fxText}` : '';
       embed.addFields({
         name: `${item.emoji} ${item.name} — ${priceTag}`,
-        value: `> ${item.description}\n> *ID para compra:* \`${item.id}\``,
         value: `> ${item.description}${fxLine}\n> *ID para compra:* \`${item.id}\``,
         inline: false,
       });
@@ -52,129 +52,147 @@ function buildShopEmbed(category = 'comida') {
   return embed;
 }
 
-function buildShopComponents(currentCategory = 'comida') {
+function buildShopComponents(currentCategory = 'comida', userId = '') {
   const selectMenu = new StringSelectMenuBuilder()
-    .setCustomId('shop_category_select')
+    .setCustomId(`shop_category_select:${userId}`)
     .setPlaceholder('📂 Escolha uma categoria da loja...')
     .addOptions(
       CATEGORIES.map((cat) => ({
         label: cat.label,
         value: cat.value,
-        emoji: cat.emoji,
         description: cat.desc.slice(0, 50),
+        emoji: cat.emoji,
         default: cat.value === currentCategory,
       }))
     );
 
-  const items = getItemsByCategory(currentCategory).filter((i) => Boolean(i.buyPrice)).slice(0, 5);
-  const buyButtons = items.map((item) =>
+  const items = getItemsByCategory(currentCategory).filter((i) => i.buyPrice);
+  const components = [new ActionRowBuilder().addComponents(selectMenu)];
+
+  if (items.length > 0) {
+    const buyMenu = new StringSelectMenuBuilder()
+      .setCustomId(`shop_buy_select:${userId}`)
+      .setPlaceholder('🪙 Comprar item com 1 clique...')
+      .addOptions(
+        items.map((i) => ({
+          label: `Comprar ${i.name} (${formatCoins(i.buyPrice)})`,
+          description: i.description.slice(0, 50),
+          value: i.id,
+          emoji: i.emoji,
+        }))
+      );
+    components.push(new ActionRowBuilder().addComponents(buyMenu));
+  }
+
+  const buttonsRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId(`shop_buy:${item.id}:1`)
-      .setLabel(`Comprar ${item.name.slice(0, 15)} (${item.buyPrice}🪙)`)
-      .setEmoji(item.emoji)
+      .setCustomId(`hub_tab:inventory:${userId}`)
+      .setLabel('Abrir Mochila')
+      .setEmoji('🎒')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId(`hub_tab:pet:${userId}`)
+      .setLabel('Ver Meu Pet')
+      .setEmoji('🐾')
       .setStyle(ButtonStyle.Secondary)
   );
 
-  const rows = [new ActionRowBuilder().addComponents(selectMenu)];
-  if (buyButtons.length > 0) {
-    // Quebra botões em linhas de até 3 botões
-    rows.push(new ActionRowBuilder().addComponents(buyButtons.slice(0, 3)));
-    if (buyButtons.length > 3) {
-      rows.push(new ActionRowBuilder().addComponents(buyButtons.slice(3, 5)));
-    }
-  }
+  components.push(buttonsRow);
 
-  return rows;
+  return components;
 }
 
 function isShopInteraction(interaction) {
+  if (!interaction.customId) return false;
   return (
-    (interaction.isStringSelectMenu() && interaction.customId === 'shop_category_select') ||
-    (interaction.isButton() && interaction.customId.startsWith('shop_buy:'))
+    interaction.customId.startsWith('shop_category_select') ||
+    interaction.customId.startsWith('shop_buy_select')
   );
 }
 
 async function handleShopInteraction(interaction) {
-  if (interaction.isStringSelectMenu() && interaction.customId === 'shop_category_select') {
-    const selectedCategory = interaction.values[0];
-    const embed = buildShopEmbed(selectedCategory);
-    const components = buildShopComponents(selectedCategory);
-    await interaction.update({ embeds: [embed], components });
-    return;
+  const parts = interaction.customId.split(':');
+  const action = parts[0];
+  const targetUserId = parts[1];
+
+  if (targetUserId && targetUserId !== interaction.user.id) {
+    return interaction.reply({
+      content: '❌ Esta lojinha pertence a outro aventureiro. Use `/loja` para abrir a sua!',
+      flags: 64,
+    });
   }
 
-  if (interaction.isButton() && interaction.customId.startsWith('shop_buy:')) {
-    const [, itemId, amountStr] = interaction.customId.split(':');
-    const amount = Number(amountStr || 1);
-    const result = buyItem(interaction.user.id, itemId, amount);
+  const userId = interaction.user.id;
 
-    if (!result.success) {
-      if (result.reason === 'insufficient_funds') {
-        await interaction.reply({
-          content: `❌ Você precisa de **${formatCoins(result.totalCost)}**, mas seu saldo é de apenas **${formatCoins(result.balance)}**. Vá trabalhar com \`/trabalho\` antes de fazer compras.`,
-          ephemeral: true,
+  if (action === 'shop_category_select') {
+    const selectedCategory = interaction.values[0];
+    const embed = buildShopEmbed(selectedCategory);
+    const components = buildShopComponents(selectedCategory, userId);
+    return interaction.update({ embeds: [embed], components });
+  }
+
+  if (action === 'shop_buy_select') {
+    const itemId = interaction.values[0];
+    const buyResult = buyItem(userId, itemId, 1);
+
+    if (!buyResult.success) {
+      if (buyResult.reason === 'insufficient_coins') {
+        return interaction.reply({
+          content: `❌ Você precisa de **${formatCoins(buyResult.price)}**, mas só tem **${formatCoins(buyResult.currentCoins)}**!`,
+          flags: 64,
         });
-      } else {
-        await interaction.reply({ content: '❌ Não foi possível comprar este item.', ephemeral: true });
       }
-      return;
+      return interaction.reply({
+        content: `❌ ${buyResult.message || 'Falha ao comprar o item.'}`,
+        flags: 64,
+      });
     }
 
-    const actionRow = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`inv_select:${interaction.user.id}`)
-        .setLabel('Abrir Minha Mochila')
-        .setEmoji('🎒')
-        .setStyle(ButtonStyle.Success),
-      new ButtonBuilder()
-        .setCustomId(`pet_view:${interaction.user.id}`)
-        .setLabel('Ver Meu Pet')
-        .setEmoji('🐾')
-        .setStyle(ButtonStyle.Primary)
-    );
+    const itemDef = getItemDefinition(itemId);
+    const embed = buildShopEmbed(itemDef ? itemDef.category : 'comida');
+    const components = buildShopComponents(itemDef ? itemDef.category : 'comida', userId);
 
-    await interaction.reply({
-      content: `✅ Você comprou **${amount}x ${result.item.emoji} ${result.item.name}** por **${formatCoins(result.totalCost)}**! Saldo restante: **${formatCoins(result.balance)}**.\nClique nos botões abaixo para usar seus itens ou ver seu pet:`,
-      components: [actionRow],
-      ephemeral: true,
+    return interaction.update({
+      content: `🎉 **Compra Realizada!** Você comprou 1x ${itemDef ? itemDef.emoji : '📦'} **${itemDef ? itemDef.name : itemId}** por **${formatCoins(buyResult.totalCost)}**! (Saldo restante: **${formatCoins(buyResult.remainingCoins)}**)`,
+      embeds: [embed],
+      components,
     });
   }
 }
 
 module.exports = {
-  name: SHOP,
-  aliases: ['store', 'mercadinho'],
   data: new SlashCommandBuilder()
     .setName(SHOP)
-    .setDescription('Abre o catálogo da Lojinha da Kuromi com botões de compra')
-    .addStringOption((opt) =>
-      opt
+    .setDescription('Abre a Lojinha de Mascotes e Itens de Pyxie com categorias e compras em 1 clique.')
+    .addStringOption((option) =>
+      option
         .setName('categoria')
-        .setDescription('Categoria para abrir diretamente')
+        .setDescription('Categoria da loja para abrir diretamente')
         .setRequired(false)
         .addChoices(
           { name: 'Comidas & Nutrição', value: 'comida' },
-          { name: 'Cura & Remédios', value: 'cura' },
-          { name: 'Utilitários & XP', value: 'utilitario' },
+          { name: 'Cura & Estamina', value: 'cura' },
+          { name: 'Utilitários & Ampulhetas', value: 'utilitario' },
           { name: 'Baús Misteriosos', value: 'bau' },
-          { name: 'Evolução & Melhorias', value: 'evolucao' }
+          { name: 'Melhorias & Ninhos', value: 'melhoria' }
         )
     ),
-  async executePrefix({ message, args }) {
-    const cat = args[0] ? args[0].toLowerCase() : 'comida';
-    await message.reply({
-      embeds: [buildShopEmbed(cat)],
-      components: buildShopComponents(cat),
-    });
-  },
-  async executeSlash({ interaction }) {
-    const cat = interaction.options.getString('categoria') || 'comida';
-    await interaction.editReply({
-      embeds: [buildShopEmbed(cat)],
-      components: buildShopComponents(cat),
-    });
-  },
+  aliases: ['lojinha', 'mercado', 'mercadinho', 'shop'],
   isShopInteraction,
   handleShopInteraction,
+  async execute(interaction) {
+    const userId = interaction.user.id;
+    const directCat = interaction.options.getString('categoria') || 'comida';
+    const embed = buildShopEmbed(directCat);
+    const components = buildShopComponents(directCat, userId);
+    await interaction.reply({ embeds: [embed], components });
+  },
+  async executePrefix(message, args) {
+    const userId = message.author.id;
+    const cat = args[0] ? args[0].toLowerCase() : 'comida';
+    const validCat = CATEGORIES.some((c) => c.value === cat) ? cat : 'comida';
+    const embed = buildShopEmbed(validCat);
+    const components = buildShopComponents(validCat, userId);
+    await message.reply({ embeds: [embed], components });
+  },
 };
-

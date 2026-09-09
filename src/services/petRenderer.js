@@ -5,19 +5,55 @@ const WIDTH = 800;
 const HEIGHT = 500;
 
 const ELEMENT_THEMES = {
+  ORVALHO: {
+    accent: '#00f5d4',
+    glow: 'rgba(0, 245, 212, 0.4)',
+    bgInner: '#0b2638',
+    bgOuter: '#020d14',
+    badgeText: '🫧 ORVALHO',
+  },
+  BRISA: {
+    accent: '#38bdf8',
+    glow: 'rgba(56, 189, 248, 0.4)',
+    bgInner: '#0e1f3b',
+    bgOuter: '#030814',
+    badgeText: '🪽 BRISA',
+  },
+  SILVESTRE: {
+    accent: '#10b981',
+    glow: 'rgba(16, 185, 129, 0.4)',
+    bgInner: '#0a2e1d',
+    bgOuter: '#02120b',
+    badgeText: '🍃 SILVESTRE',
+  },
+  CHARME: {
+    accent: '#f472b6',
+    glow: 'rgba(244, 114, 182, 0.4)',
+    bgInner: '#380d28',
+    bgOuter: '#12020d',
+    badgeText: '🎀 CHARME',
+  },
+  TRAVESSURA: {
+    accent: '#a855f7',
+    glow: 'rgba(168, 85, 247, 0.4)',
+    bgInner: '#240a38',
+    bgOuter: '#0c0214',
+    badgeText: '🖤 TRAVESSURA',
+  },
+  // Fallbacks de compatibilidade
   SOMBRA: {
     accent: '#a855f7',
     glow: 'rgba(168, 85, 247, 0.4)',
-    bgInner: '#220b38',
-    bgOuter: '#0a0314',
-    badgeText: '🌑 SOMBRA',
+    bgInner: '#240a38',
+    bgOuter: '#0c0214',
+    badgeText: '🖤 TRAVESSURA',
   },
   FOFURA: {
     accent: '#f472b6',
     glow: 'rgba(244, 114, 182, 0.4)',
     bgInner: '#380d28',
     bgOuter: '#12020d',
-    badgeText: '💖 FOFURA',
+    badgeText: '🎀 CHARME',
   },
   CAOS: {
     accent: '#f59e0b',
@@ -27,11 +63,11 @@ const ELEMENT_THEMES = {
     badgeText: '⚡ CAOS',
   },
   MISTICO: {
-    accent: '#38bdf8',
-    glow: 'rgba(56, 189, 248, 0.4)',
+    accent: '#00f5d4',
+    glow: 'rgba(0, 245, 212, 0.4)',
     bgInner: '#0b2638',
     bgOuter: '#020d14',
-    badgeText: '🔮 MÍSTICO',
+    badgeText: '🫧 ORVALHO',
   },
 };
 
@@ -228,7 +264,7 @@ function renderPetCard(pet) {
   ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
   ctx.font = '11px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('CRINGELÂNDIA PETS  •  SUPERVISÃO OFICIAL DA KUROMI', WIDTH / 2, 470);
+  ctx.fillText('REINO ENCANTADO DE PYXIE  •  SUPERVISÃO TRAVESSA DE PYXIE', WIDTH / 2, 470);
 
   const buffer = canvas.toBuffer('image/png');
 

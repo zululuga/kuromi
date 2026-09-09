@@ -5,6 +5,7 @@ const {
   ButtonBuilder,
   ButtonStyle,
   StringSelectMenuBuilder,
+  AttachmentBuilder,
 } = require('discord.js');
 const {
   getActivePet,
@@ -14,619 +15,845 @@ const {
   petSleep,
   renamePet,
   feedPet,
+  useItemOnActivePet,
   hasClaimedStarterKit,
   claimStarterKit,
+  getIncubator,
+  putEggInIncubator,
+  hatchIncubatorEgg,
+  useHourglassOnIncubator,
+  expandUserIncubator,
   CARINHO_COOLDOWN_MS,
   SLEEP_COOLDOWN_MS,
 } = require('../services/pets');
+const {
+  getProceduralRun,
+  startProceduralRun,
+  advanceStep,
+  retreatRun,
+  panicFlee,
+  getDungeonZones,
+} = require('../services/proceduralExplorer');
 const { createPetAttachment } = require('../services/petRenderer');
-const { getUserInventory, getItemDefinition, formatItemEffects } = require('../services/inventory');
+const { getUserInventory, getItemDefinition, formatItemEffects, getItemsByCategory, buyItem } = require('../services/inventory');
+const { getUserAccount } = require('../services/economy');
+const { PYXIE_COLORS, pyxieFooter, getRandomPhrase } = require('../utils/pyxieVoice');
 const { formatCoins, formatRemaining } = require('./economyHelpers');
 const { PET } = require('./commandNames');
 
-function buildPetEmbed(pet, userTag) {
-  const elementColors = {
-    SOMBRA: '#a855f7',
-    FOFURA: '#f472b6',
-    CAOS: '#f59e0b',
-    MISTICO: '#38bdf8',
-  };
+// --- Component Builders ---
 
-  const color = elementColors[pet.element] || '#E60067';
-  const shinyTag = pet.shiny ? ' ✨ **Shiny**' : pet.corrupt ? ' 🖤 **Corrompido**' : '';
-
-  return new EmbedBuilder()
-    .setColor(color)
-    .setTitle(`${pet.emoji}  ✦  ${pet.name}${shinyTag}`)
-    .setDescription(
-      `**Tutor:** ${userTag}\n` +
-      `**Espécie:** ${pet.species} • **Elemento:** \`${pet.element}\` • **Nível:** **${pet.level}**\n\n` +
-      `💖 **Vida:** ${pet.stats.hp}/${pet.stats.maxHp}  |  🍖 **Fome:** ${pet.hunger}%  |  😊 **Humor:** ${pet.happiness}%  |  ⚡ **Energia:** ${pet.energy}%\n` +
-      `⭐ **XP:** ${pet.xp}/${pet.xpToNext}  |  🏆 **Duelos:** ${pet.duelosVencidos || 0}V - ${pet.duelosPerdidos || 0}D\n\n` +
-      '> *Clique nos botões abaixo para cuidar, brincar ou enviar seu companheiro para a ação!*'
-    )
-    .setImage('attachment://pet_card.png')
-    .setFooter({ text: 'Cringelândia Pets • Kuromi supervisiona e finge que não acha fofo' })
-    .setTimestamp();
+function buildHubHeaderRow(userId, currentTab = 'pet') {
+  return new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`hub_tab:pet:${userId}`)
+      .setLabel('Meu Pet')
+      .setEmoji('🐾')
+      .setStyle(currentTab === 'pet' ? ButtonStyle.Primary : ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`hub_tab:incubator:${userId}`)
+      .setLabel('Chocadeira')
+      .setEmoji('🥚')
+      .setStyle(currentTab === 'incubator' ? ButtonStyle.Primary : ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`hub_tab:dungeon:${userId}`)
+      .setLabel('Dungeons')
+      .setEmoji('🗺️')
+      .setStyle(currentTab === 'dungeon' ? ButtonStyle.Primary : ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`hub_tab:inventory:${userId}`)
+      .setLabel('Mochila')
+      .setEmoji('🎒')
+      .setStyle(currentTab === 'inventory' ? ButtonStyle.Primary : ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`hub_tab:shop:${userId}`)
+      .setLabel('Lojinha')
+      .setEmoji('🛒')
+      .setStyle(currentTab === 'shop' ? ButtonStyle.Primary : ButtonStyle.Secondary)
+  );
 }
 
-function buildPetActionButtons(userId, pet) {
-  const row1 = new ActionRowBuilder().addComponents(
+// 1. Tab Meu Pet
+function buildPetTab(userId, userTag) {
+  const activePet = getActivePet(userId);
+  const userPets = getUserPets(userId);
+
+  if (!activePet) {
+    return buildOnboardingView(userId, userTag);
+  }
+
+  const shinyTag = activePet.shiny ? ' ✨ **Shiny**' : '';
+  const embed = new EmbedBuilder()
+    .setColor(PYXIE_COLORS.lilac)
+    .setTitle(`${activePet.emoji}  ✦  ${activePet.name}${shinyTag}`)
+    .setDescription(
+      `**Tutor:** ${userTag}\n` +
+      `**Espécie:** ${activePet.species} • **Elemento:** \`${activePet.element}\` • **Nível:** **${activePet.level}**\n\n` +
+      `💖 **Vida:** ${activePet.stats.hp}/${activePet.stats.maxHp}  |  🍖 **Fome:** ${activePet.hunger}%  |  😊 **Humor:** ${activePet.happiness}%  |  ⚡ **Energia:** ${activePet.energy}%\n` +
+      `⭐ **XP:** ${activePet.xp}/${activePet.xpToNext}  |  🏆 **Duelos:** ${activePet.duelosVencidos || 0}V - ${activePet.duelosPerdidos || 0}D\n\n` +
+      `> *"${getRandomPhrase('feed')}"*`
+    )
+    .setImage('attachment://pet_card.png')
+    .setFooter({ text: pyxieFooter('Hub Central • 100% Interativo') })
+    .setTimestamp();
+
+  const components = [buildHubHeaderRow(userId, 'pet')];
+
+  // Se o usuário tiver mais de 1 pet, dropdown para alternar
+  if (userPets.length > 1) {
+    const petOptions = userPets.map((p) => ({
+      label: `${p.name} (Nv. ${p.level} ${p.species})`,
+      description: `HP: ${p.stats.hp}/${p.stats.maxHp} • Energia: ${p.energy}% • ${p.element}`,
+      value: p.id,
+      emoji: p.emoji || '🐾',
+      default: p.id === activePet.id,
+    }));
+
+    components.push(
+      new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId(`hub_select_pet:${userId}`)
+          .setPlaceholder('🔄 Alternar Pet Ativo...')
+          .addOptions(petOptions.slice(0, 25))
+      )
+    );
+  }
+
+  // Ações do Pet
+  const actionsRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId(`pet_feed_menu:${userId}`)
+      .setCustomId(`hub_pet_feed:${userId}`)
       .setLabel('Alimentar')
       .setEmoji('🍖')
       .setStyle(ButtonStyle.Success),
     new ButtonBuilder()
-      .setCustomId(`pet_carinho:${userId}`)
+      .setCustomId(`hub_pet_carinho:${userId}`)
       .setLabel('Carinho')
       .setEmoji('💖')
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
-      .setCustomId(`pet_sleep:${userId}`)
+      .setCustomId(`hub_pet_sleep:${userId}`)
       .setLabel('Dormir')
       .setEmoji('💤')
-      .setStyle(ButtonStyle.Secondary)
-  );
-
-  const row2 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId(`pet_explore_zones:${userId}`)
-      .setLabel('Explorar Dungeons')
-      .setEmoji('🧭')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setCustomId(`pet_bag_list:${userId}`)
-      .setLabel('Meus Pets')
-      .setEmoji('🎒')
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId(`pet_duel_info:${userId}`)
-      .setLabel('Coliseu / Duelo')
-      .setEmoji('⚔️')
-      .setStyle(ButtonStyle.Danger)
-  );
-
-  return [row1, row2];
-}
-
-function buildOnboardingEmbed(userDisplayName) {
-  return new EmbedBuilder()
-    .setColor('#C084FC')
-    .setTitle('🖤 ✦ Boas-vindas ao Mundo dos Mascotes da Cringelândia! ✦ ✨')
-    .setDescription(
-      `Olá, **${userDisplayName}**! Parece que você ainda não tem um mascote para chamar de seu.\n\n` +
-      'Aqui na Cringelândia, você pode adotar criaturas leais, alimentá-las, explorar masmorras cheias de tesouros e até disputar duelos épicos no Coliseu!\n\n' +
-      '**Como começar em 3 passos simples:**\n' +
-      '🎁 **1. Resgate seu Kit Inicial:** Receba **150 Moedas**, comidas e itens de cura grátis!\n' +
-      '🐾 **2. Adote seu Primeiro Pet:** Escolha entre 24 espécies de 4 elementos mágicos.\n' +
-      '🧭 **3. Cuide & Explore:** Alimente, faça carinho e envie em expedições para ganhar recompensas!\n\n' +
-      '> *Kuromi observa com desdém:* “Espero que você tenha mais responsabilidade com esse bichinho do que com a sua vida!”'
-    )
-    .addFields(
-      {
-        name: '🌟 4 Elementos Místicos',
-        value: '> 🌑 **Sombra** (Furtividade e Dano)\n> 💖 **Fofura** (Vida e Alegria)\n> 🔥 **Caos** (Crítico e Energia)\n> 🔮 **Místico** (Defesa e Magia)',
-        inline: false,
-      },
-      {
-        name: '🎁 Conteúdo do Kit de Boas-Vindas',
-        value: '> 🪙 **+150 Moedinhas**\n> 🥣 **2x Ração Cringe**\n> 🩹 **1x Curativo de Coração**\n> 📦 **1x Baú Rústico**',
-        inline: false,
-      }
-    )
-    .setFooter({ text: 'Cringelândia Pets • Clique nos botões abaixo para jogar!' })
-    .setTimestamp();
-}
-
-function buildOnboardingComponents(userId) {
-  const isClaimed = hasClaimedStarterKit(userId);
-
-  const row = new ActionRowBuilder().addComponents(
+      .setCustomId(`hub_tab:shop:${userId}`)
+      .setLabel('Comprar Comida')
+      .setEmoji('🛒')
+      .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId(`onboard_adopt:${userId}`)
-      .setLabel('Adotar Primeiro Mascote')
-      .setEmoji('🐾')
-      .setStyle(ButtonStyle.Success),
-    new ButtonBuilder()
-      .setCustomId(`onboard_kit:${userId}`)
-      .setLabel(isClaimed ? 'Kit Inicial (Já Resgatado)' : 'Resgatar Kit Inicial (Grátis)')
-      .setEmoji('🎁')
-      .setStyle(isClaimed ? ButtonStyle.Secondary : ButtonStyle.Primary)
-      .setDisabled(isClaimed),
-    new ButtonBuilder()
-      .setCustomId(`onboard_guide:${userId}`)
-      .setLabel('Guia Rápido')
-      .setEmoji('📖')
+      .setCustomId(`hub_support_info:${userId}`)
+      .setLabel('Apoiar')
+      .setEmoji('💖')
       .setStyle(ButtonStyle.Secondary)
   );
 
-  return [row];
+  components.push(actionsRow);
+
+  return {
+    embeds: [embed],
+    components,
+    files: [createPetAttachment(activePet)],
+  };
 }
 
-function isPetInteraction(interaction) {
-  return (
-    interaction.isButton() &&
-    (interaction.customId.startsWith('pet_feed_menu:') ||
-      interaction.customId.startsWith('pet_carinho:') ||
-      interaction.customId.startsWith('pet_sleep:') ||
-      interaction.customId.startsWith('pet_explore_zones:') ||
-      interaction.customId.startsWith('pet_bag_list:') ||
-      interaction.customId.startsWith('pet_duel_info:') ||
-      interaction.customId.startsWith('pet_view:') ||
-      interaction.customId.startsWith('pet_activate:') ||
-      interaction.customId.startsWith('onboard_adopt:') ||
-      interaction.customId.startsWith('onboard_kit:') ||
-      interaction.customId.startsWith('onboard_guide:')) ||
-    (interaction.isStringSelectMenu() && interaction.customId.startsWith('pet_feed_select:'))
-  );
-}
+// 2. Tab Chocadeira
+function buildIncubatorTab(userId, userTag) {
+  const incubator = getIncubator(userId);
+  const inventory = getUserInventory(userId);
+  const eggItems = Object.entries(inventory).filter(([id, count]) => {
+    const def = getItemDefinition(id);
+    return def && def.effects && def.effects.isEgg && count > 0;
+  });
 
-async function handlePetInteraction(interaction) {
-  const parts = interaction.customId.split(':');
-  const action = parts[0];
-  const ownerId = parts[1];
+  const embed = new EmbedBuilder()
+    .setColor(PYXIE_COLORS.emerald)
+    .setTitle(`🥚  ✦  Chocadeira Encantada de Pyxie — ${userTag}`)
+    .setDescription(
+      `*Chocadeira mágica com taxa elevada de criaturas **SHINY (15% a 20%)**!*\n` +
+      `Capacidade: **${incubator.activeCount}/${incubator.maxSlots} ninhos ocupados**.\n\n` +
+      incubator.slots
+        .map((s) => {
+          if (s.empty) {
+            return `🪺 **Slot #${s.slotIndex + 1}:** *Ninho Vazio (Coloque um ovo para chocar)*`;
+          }
+          if (s.ready) {
+            return `✨ **Slot #${s.slotIndex + 1}:** ${s.emoji} **${s.eggName}** — 🐣 **PRONTO PARA CHOCAR!**`;
+          }
+          const mins = Math.ceil(s.tempoRestanteMs / 60000);
+          const hrs = Math.floor(mins / 60);
+          const remMins = mins % 60;
+          const timeStr = hrs > 0 ? `${hrs}h ${remMins}m` : `${remMins}m`;
+          return `🪺 **Slot #${s.slotIndex + 1}:** ${s.emoji} **${s.eggName}** — ⏳ Faltam **${timeStr}** (${s.progressPercent}% chocado)`;
+        })
+        .join('\n')
+    )
+    .setFooter({ text: pyxieFooter('Delta-Time Arcana • Zero CPU em Repouso') })
+    .setTimestamp();
 
-  if (interaction.user.id !== ownerId) {
-    await interaction.reply({
-      content: '❌ Este painel de pet pertence a outro jogador!',
-      ephemeral: true,
+  const components = [buildHubHeaderRow(userId, 'incubator')];
+
+  // Dropdown para colocar ovo se houver ovos e slot livre
+  if (eggItems.length > 0 && incubator.freeCount > 0) {
+    const eggOptions = eggItems.map(([id, count]) => {
+      const def = getItemDefinition(id);
+      return {
+        label: `${def.name} (x${count})`,
+        description: `Elemento: ${def.effects.element} • Tempo: ${Math.round(def.effects.hatchDurationMs / 3600000)}h`,
+        value: id,
+        emoji: def.emoji || '🥚',
+      };
     });
-    return;
-  }
 
-  // --- Ações de Onboarding (para quem ainda não tem pet ou está iniciando) ---
-  if (action === 'onboard_adopt') {
-    const { buildAdoptionEmbed, buildAdoptionComponents } = require('./adocao');
-    const embed = buildAdoptionEmbed('TODOS', null);
-    const components = buildAdoptionComponents(ownerId, 'TODOS', null);
-    await interaction.update({ embeds: [embed], components, files: [] });
-    return;
-  }
-
-  if (action === 'onboard_kit') {
-    const result = claimStarterKit(ownerId);
-    if (!result.success) {
-      await interaction.reply({
-        content: '❌ Você já resgatou o seu Kit Inicial de Aventureiro! Use a `/loja` para conseguir mais suprimentos.',
-        ephemeral: true,
-      });
-      return;
-    }
-
-    const embed = new EmbedBuilder()
-      .setColor('#10b981')
-      .setTitle('🎁  ✦  Kit Inicial de Aventureiro Resgatado!  ✦  ✨')
-      .setDescription(
-        `Parabéns, **${interaction.user.displayName}**! A Kuromi liberou seus suprimentos de sobrevivência:\n\n` +
-        `🪙 **+150 Moedinhas** (Saldo atual: **${formatCoins(result.newBalance)}**)\n` +
-        `🥣 **2x Ração Cringe** (para manter a fome do seu pet baixa)\n` +
-        `🩹 **1x Curativo de Coração** (para curar dano em expedições)\n` +
-        `📦 **1x Baú Rústico** (abra na sua mochila para ganhar mais moedas e itens!)\n\n` +
-        '> *Kuromi dá uma piscadela:* “Prontinho! Agora você tem moedas suficientes para adotar qualquer pet comum no abrigo. Escolha com carinho!”'
+    components.push(
+      new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId(`hub_incubator_place_egg:${userId}`)
+          .setPlaceholder('🪺 Escolha um ovo da mochila para chocar...')
+          .addOptions(eggOptions.slice(0, 25))
       )
-      .setFooter({ text: 'Cringelândia Pets • Kuromi supervisiona cada entrega' })
+    );
+  }
+
+  // Botões de ação da chocadeira
+  const readySlots = incubator.slots.filter((s) => !s.empty && s.ready);
+  const actionRow = new ActionRowBuilder();
+
+  if (readySlots.length > 0) {
+    for (const readySlot of readySlots.slice(0, 3)) {
+      actionRow.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`hub_hatch_egg:${readySlot.slotIndex}:${userId}`)
+          .setLabel(`Quebrar Casca (Ninho #${readySlot.slotIndex + 1})`)
+          .setEmoji('🐣')
+          .setStyle(ButtonStyle.Success)
+      );
+    }
+  } else {
+    actionRow.addComponents(
+      new ButtonBuilder()
+        .setCustomId(`hub_tab:dungeon:${userId}`)
+        .setLabel('Buscar Ovos em Dungeons')
+        .setEmoji('🗺️')
+        .setStyle(ButtonStyle.Primary)
+    );
+  }
+
+  if (incubator.maxSlots < 5) {
+    actionRow.addComponents(
+      new ButtonBuilder()
+        .setCustomId(`hub_expand_incubator:${userId}`)
+        .setLabel('Expandir (+2 Ninhos)')
+        .setEmoji('🪺')
+        .setStyle(ButtonStyle.Secondary)
+    );
+  }
+
+  components.push(actionRow);
+
+  return { embeds: [embed], components };
+}
+
+// 3. Tab Dungeons & Exploração Procedural
+function buildDungeonTab(userId, userTag) {
+  const activePet = getActivePet(userId);
+  const run = getProceduralRun(userId);
+
+  if (!activePet) {
+    return buildOnboardingView(userId, userTag);
+  }
+
+  const components = [buildHubHeaderRow(userId, 'dungeon')];
+
+  if (!run) {
+    const zones = getDungeonZones();
+    const embed = new EmbedBuilder()
+      .setColor(PYXIE_COLORS.cyan)
+      .setTitle(`🗺️  ✦  Expedições & Dungeons Procedurais — ${userTag}`)
+      .setDescription(
+        `Prepare **${activePet.name}** (${activePet.emoji} Nv. ${activePet.level}) para explorar labirintos mágicos!\n\n` +
+        `⚡ **Energia Atual:** **${activePet.energy}/100 ⚡** (Custo médio: **8 ⚡/passo**)\n` +
+        `💖 **HP Atual:** **${activePet.stats.hp}/${activePet.stats.maxHp}**\n\n` +
+        `**Zonas Disponíveis:**\n` +
+        zones
+          .map((z) => `${z.emoji} **${z.name}** (Nv. Mín: ${z.minLevel})\n> *${z.desc}*`)
+          .join('\n\n')
+      )
+      .setFooter({ text: pyxieFooter('Consumo de Estamina por Passo • Encontros em RAM') })
       .setTimestamp();
+
+    const zoneOptions = zones.map((z) => ({
+      label: z.name,
+      description: `Nv. Mínimo: ${z.minLevel} • Ovos: ${z.eggs.join(', ')}`,
+      value: z.id,
+      emoji: z.emoji,
+    }));
+
+    components.push(
+      new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId(`hub_dungeon_start_zone:${userId}`)
+          .setPlaceholder('🌲 Escolha a zona de dungeon para explorar...')
+          .addOptions(zoneOptions)
+      )
+    );
 
     const actionRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId(`onboard_adopt:${ownerId}`)
-        .setLabel('Escolher Meu Pet Agora')
-        .setEmoji('🐾')
+        .setCustomId(`hub_dungeon_start_fast:${userId}`)
+        .setLabel('Explorar Bosque dos Guizos')
+        .setEmoji('🧭')
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
-        .setCustomId(`inv_select:${ownerId}`)
-        .setLabel('Abrir Minha Mochila')
-        .setEmoji('🎒')
+        .setCustomId(`hub_use_energy_potion:${userId}`)
+        .setLabel('Usar Frasco de Éter (+50 ⚡)')
+        .setEmoji('⚡')
         .setStyle(ButtonStyle.Secondary)
     );
+    components.push(actionRow);
 
-    await interaction.update({ embeds: [embed], components: [actionRow], files: [] });
-    return;
+    return { embeds: [embed], components };
   }
 
-  if (action === 'onboard_guide') {
-    const embed = new EmbedBuilder()
-      .setColor('#C084FC')
-      .setTitle('📖  ✦  Manual de Cuidados e Aventuras com Pets  ✦  ✨')
-      .setDescription(
-        'Aqui estão todas as mecânicas para você se tornar o tutor mais temido e respeitado da Cringelândia:\n\n' +
-        '🍖 **Fome (0-100%):** Pets com fome alta (< 15%) recusam-se a lutar e explorar. Dê comida regularmente via botão `[Alimentar]` ou `/usar`.\n\n' +
-        '💖 **Humor & Felicidade:** Faça carinho no seu pet a cada 1 hora para deixá-lo contente e conceder bônus de XP.\n\n' +
-        '⚡ **Energia:** Explorar masmorras consome energia. Quando estiver cansado, use o botão `[Dormir]` para restaurar 100% da barra de energia.\n\n' +
-        '🧭 **Dungeons & Drops:** Quanto maior o nível do pet, mais profundas e lucrativas serão as masmorras que ele poderá desbravar!\n\n' +
-        '⚔️ **Coliseu de Duelos:** Desafie outros tutores do servidor valendo apostas de moedas.'
-      )
-      .setFooter({ text: 'Cringelândia Pets • Kuromi aprova quem lê o manual' });
+  // Em expedição ativa (Passo a passo)
+  const embed = new EmbedBuilder()
+    .setColor(PYXIE_COLORS.violet)
+    .setTitle(`🧭  ✦  ${run.zone.emoji} ${run.zone.name} — Passo ${run.step}/${run.maxSteps}`)
+    .setDescription(
+      `**Explorador:** ${activePet.name} (${activePet.emoji} Nv. ${activePet.level})\n` +
+      `⚡ **Energia:** **${activePet.energy} ⚡** | 💖 **HP:** **${activePet.stats.hp}/${activePet.stats.maxHp}** | 🍖 **Fome:** ${activePet.hunger}%\n` +
+      `🏞️ **Terreno Atual:** ${run.currentTerrain.emoji} **${run.currentTerrain.name}** (*${run.currentTerrain.desc}*)\n\n` +
+      `💰 **Moedas Acumuladas:** **+${run.coinsAccumulated}**\n` +
+      `🪺 **Ovos Resgatados:** **${run.eggsFound.length > 0 ? run.eggsFound.map((e) => `\`${e}\``).join(', ') : 'Nenhum ainda'}**\n\n` +
+      `📜 **Diário da Expedição:**\n` +
+      run.logs.map((l) => `> ${l}`).join('\n')
+    )
+    .setFooter({ text: pyxieFooter('Avançar consome 8⚡ base • Resgate salva 100% dos espólios') })
+    .setTimestamp();
 
-    const row = new ActionRowBuilder().addComponents(
+  const runActions = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`hub_dungeon_step:${userId}`)
+      .setLabel('Avançar Passo')
+      .setEmoji('🐾')
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId(`hub_dungeon_retreat:${userId}`)
+      .setLabel('Resgatar Espólios (100%)')
+      .setEmoji('🏃')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId(`hub_dungeon_flee:${userId}`)
+      .setLabel('Fuga de Emergência (50%)')
+      .setEmoji('💨')
+      .setStyle(ButtonStyle.Danger)
+  );
+
+  components.push(runActions);
+
+  return { embeds: [embed], components };
+}
+
+// 4. Tab Mochila / Inventário
+function buildInventoryTab(userId, userTag) {
+  const inventory = getUserInventory(userId);
+  const account = getUserAccount(userId);
+  const activePet = getActivePet(userId);
+  const entries = Object.entries(inventory).filter(([_, count]) => count > 0);
+
+  const embed = new EmbedBuilder()
+    .setColor(PYXIE_COLORS.magenta)
+    .setTitle(`🎒  ✦  Mochila Encantada — ${userTag}`)
+    .setDescription(
+      `💰 **Saldo:** **${formatCoins(account.coins)}**\n` +
+      `🐾 **Pet Ativo:** ${activePet ? `${activePet.emoji} ${activePet.name}` : '*Nenhum*'}\n\n` +
+      (entries.length === 0
+        ? '*Sua mochila está completamente vazia! Visite a Lojinha ou resgate o Kit Inicial.*'
+        : entries
+            .map(([id, count]) => {
+              const def = getItemDefinition(id);
+              if (!def) return `• \`${id}\`: **${count}x**`;
+              return `${def.emoji} **${def.name}** (x${count})\n> *${def.description}*`;
+            })
+            .join('\n\n'))
+    )
+    .setFooter({ text: pyxieFooter('Selecione um item no menu para usá-lo imediatamente') })
+    .setTimestamp();
+
+  const components = [buildHubHeaderRow(userId, 'inventory')];
+
+  if (entries.length > 0) {
+    const itemOptions = entries.slice(0, 25).map(([id, count]) => {
+      const def = getItemDefinition(id);
+      return {
+        label: `${def ? def.name : id} (x${count})`,
+        description: def ? def.description.slice(0, 50) : `Quantidade: ${count}`,
+        value: id,
+        emoji: def ? def.emoji : '📦',
+      };
+    });
+
+    components.push(
+      new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId(`hub_inventory_use_item:${userId}`)
+          .setPlaceholder('✨ Selecione um item da mochila para usar...')
+          .addOptions(itemOptions)
+      )
+    );
+  }
+
+  const actions = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`hub_tab:shop:${userId}`)
+      .setLabel('Ir para Lojinha')
+      .setEmoji('🛒')
+      .setStyle(ButtonStyle.Primary)
+  );
+
+  if (!hasClaimedStarterKit(userId)) {
+    actions.addComponents(
       new ButtonBuilder()
-        .setCustomId(`onboard_adopt:${ownerId}`)
-        .setLabel('Ir para o Centro de Adoção')
-        .setEmoji('🐾')
-        .setStyle(ButtonStyle.Success),
-      new ButtonBuilder()
-        .setCustomId(`onboard_kit:${ownerId}`)
+        .setCustomId(`hub_claim_kit:${userId}`)
         .setLabel('Resgatar Kit Inicial')
         .setEmoji('🎁')
-        .setStyle(hasClaimedStarterKit(ownerId) ? ButtonStyle.Secondary : ButtonStyle.Primary)
-        .setDisabled(hasClaimedStarterKit(ownerId))
+        .setStyle(ButtonStyle.Success)
     );
-
-    await interaction.update({ embeds: [embed], components: [row], files: [] });
-    return;
   }
 
-  const activePet = getActivePet(ownerId);
-  if (!activePet) {
-    const embed = buildOnboardingEmbed(interaction.user.displayName);
-    const components = buildOnboardingComponents(ownerId);
-    await interaction.update({ embeds: [embed], components, files: [] });
-    return;
-  }
+  components.push(actions);
 
-  // --- Ações do Pet Ativo ---
-  if (action === 'pet_view') {
-    const attachment = createPetAttachment(activePet);
-    const embed = buildPetEmbed(activePet, interaction.user.displayName);
-    const components = buildPetActionButtons(ownerId, activePet);
-    await interaction.update({ embeds: [embed], files: [attachment], components });
-    return;
-  }
+  return { embeds: [embed], components };
+}
 
-  // 1. Menu de Alimentação
-  if (action === 'pet_feed_menu') {
-    const inv = getUserInventory(ownerId);
-    const foodEntries = Object.entries(inv).filter(([id, count]) => {
-      const item = getItemDefinition(id);
-      return item && item.category === 'comida' && count > 0;
-    });
+// 5. Tab Lojinha
+function buildShopTab(userId, userTag, category = 'comida') {
+  const items = getItemsByCategory(category);
+  const account = getUserAccount(userId);
 
-    if (foodEntries.length === 0) {
-      await interaction.reply({
-        content: '🥣 Você não tem nenhuma comida na sua mochila! Compre ração ou sushi na `/loja`.',
-        ephemeral: true,
-      });
-      return;
-    }
+  const catNames = {
+    comida: 'Comidas & Nutrição 🍖',
+    cura: 'Cura & Estamina 🩹',
+    utilitario: 'Utilitários & Ampulhetas ⏳',
+    bau: 'Baús Misteriosos 📦',
+    melhoria: 'Melhorias & Ninhos 🪺',
+  };
 
-    const selectMenu = new StringSelectMenuBuilder()
-      .setCustomId(`pet_feed_select:${ownerId}`)
-      .setPlaceholder('🍖 Escolha o que dar de comer para o seu pet...')
-      .addOptions(
-        foodEntries.slice(0, 25).map(([id, count]) => {
-          const item = getItemDefinition(id);
-          const fxSummary = item ? formatItemEffects(item) : '';
-          return {
-            label: `${item.name} (Você tem: ${count})`,
-            value: id,
-            emoji: item.emoji,
-            description: fxSummary ? fxSummary.slice(0, 50) : `Recupera +${item.effects?.hunger || 0}% de fome`,
-          };
+  const embed = new EmbedBuilder()
+    .setColor(PYXIE_COLORS.gold)
+    .setTitle(`🛒  ✦  Lojinha da Pyxie — ${catNames[category] || category}`)
+    .setDescription(
+      `💰 **Seu Saldo:** **${formatCoins(account.coins)}**\n` +
+      `*Itens frescos e trapaças mágicas garantidas.*\n\n` +
+      items
+        .map((item) => {
+          const price = item.buyPrice ? `${formatCoins(item.buyPrice)}` : 'Indisponível';
+          return `${item.emoji} **${item.name}** — 🪙 ${price}\n> *${item.description}*`;
         })
-      );
+        .join('\n\n')
+    )
+    .setFooter({ text: pyxieFooter('Clique nos itens do menu para comprar com 1 clique') })
+    .setTimestamp();
 
-    await interaction.reply({
-      content: '🍴 **Hora do lanche:** Escolha um item abaixo para alimentar seu pet:',
-      components: [new ActionRowBuilder().addComponents(selectMenu)],
-      ephemeral: true,
-    });
-    return;
-  }
+  const components = [buildHubHeaderRow(userId, 'shop')];
 
-  // 1.1. Confirmar Alimentação via SelectMenu
-  if (action === 'pet_feed_select') {
-    const foodId = interaction.values[0];
-    const result = feedPet(ownerId, foodId);
+  // Categorias
+  const catOptions = [
+    { label: 'Comidas & Nutrição', value: 'comida', emoji: '🍖', default: category === 'comida' },
+    { label: 'Cura & Estamina', value: 'cura', emoji: '🩹', default: category === 'cura' },
+    { label: 'Utilitários & Ampulhetas', value: 'utilitario', emoji: '⏳', default: category === 'utilitario' },
+    { label: 'Baús Misteriosos', value: 'bau', emoji: '📦', default: category === 'bau' },
+    { label: 'Melhorias & Ninhos', value: 'melhoria', emoji: '🪺', default: category === 'melhoria' },
+  ];
 
-    if (!result.success) {
-      await interaction.update({ content: '❌ Não foi possível alimentar seu pet.', components: [] });
-      return;
-    }
+  components.push(
+    new ActionRowBuilder().addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId(`hub_shop_category:${userId}`)
+        .setPlaceholder('📂 Mudar Categoria da Loja...')
+        .addOptions(catOptions)
+    )
+  );
 
-    let lvlMsg = '';
-    if (result.leveledUp) {
-      lvlMsg = `\n🎉 **LEVEL UP!** Seu pet subiu para o **Nível ${result.newLevel}**!`;
-    }
+  // Itens para compra direta
+  const buyableItems = items.filter((i) => i.buyPrice);
+  if (buyableItems.length > 0) {
+    const buyOptions = buyableItems.map((item) => ({
+      label: `Comprar ${item.name} (${formatCoins(item.buyPrice)})`,
+      description: item.description.slice(0, 50),
+      value: item.id,
+      emoji: item.emoji,
+    }));
 
-    const effectsText = result.effectsSummary ? `\n📊 **Efeitos:** ${result.effectsSummary}` : '';
-    const statusText = result.statusSummary ? `\n🐾 **Status atual:** ${result.statusSummary}` : '';
-
-    await interaction.update({
-      content: `🍖 Seu pet **${result.pet.name}** comeu **${result.item.name}** com alegria!${effectsText}${statusText}${lvlMsg}`,
-      components: [],
-    });
-    return;
-  }
-
-  // 2. Fazer Carinho
-  if (action === 'pet_carinho') {
-    const result = petCarinho(ownerId);
-    if (!result.success) {
-      await interaction.reply({
-        content: `⏳ Seu pet já recebeu muito carinho recentemente. Dê um espaço para ele e tente de novo em **${formatRemaining(result.remainingMs)}**.`,
-        ephemeral: true,
-      });
-      return;
-    }
-
-    let lvlMsg = '';
-    if (result.leveledUp) {
-      lvlMsg = `\n🎉 **LEVEL UP!** Seu pet subiu para o **Nível ${result.newLevel}**!`;
-    }
-
-    await interaction.reply({
-      content: `💖 Você fez carinho em **${result.pet.name}**! Ele ronronou feliz e ganhou **+15 XP**.\nHumor atual: **${result.pet.happiness}%**.${lvlMsg}`,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  // 3. Colocar para Dormir
-  if (action === 'pet_sleep') {
-    const result = petSleep(ownerId);
-    if (!result.success) {
-      await interaction.reply({
-        content: `⏳ Seu pet está acordado e elétrico! Ele só poderá dormir novamente em **${formatRemaining(result.remainingMs)}**.`,
-        ephemeral: true,
-      });
-      return;
-    }
-
-    await interaction.reply({
-      content: `💤 **${result.pet.name}** tirou uma soneca restauradora e recuperou **100% de Energia**!`,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  // 4. Mostrar Zonas de Exploração
-  if (action === 'pet_explore_zones') {
-    const { getDungeonZones } = require('../services/petDungeons');
-    const zones = getDungeonZones();
-
-    const buttons = zones.map((z) =>
-      new ButtonBuilder()
-        .setCustomId(`dungeon_start:${ownerId}:${z.key}`)
-        .setLabel(`${z.name} (Lv ${z.minLevel}+)`)
-        .setEmoji(z.emoji)
-        .setStyle(activePet.level >= z.minLevel ? ButtonStyle.Success : ButtonStyle.Secondary)
-        .setDisabled(activePet.level < z.minLevel)
+    components.push(
+      new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId(`hub_shop_buy_item:${userId}`)
+          .setPlaceholder('🪙 Escolha um item para comprar...')
+          .addOptions(buyOptions)
+      )
     );
-
-    const rows = [new ActionRowBuilder().addComponents(buttons.slice(0, 2))];
-    if (buttons.length > 2) {
-      rows.push(new ActionRowBuilder().addComponents(buttons.slice(2, 4)));
-    }
-
-    await interaction.reply({
-      content: `🧭 **Escolha uma Dungeon para enviar ${activePet.name}:**\nEnergia atual do pet: **${activePet.energy}%** (Necessário ter fome > 15%).`,
-      components: rows,
-      ephemeral: true,
-    });
-    return;
   }
 
-  // 5. Lista de Pets da Mochila
-  if (action === 'pet_bag_list') {
-    const allPets = getUserPets(ownerId);
-    const embed = new EmbedBuilder()
-      .setColor('#C084FC')
-      .setTitle(`🎒  ✦  Canil de ${interaction.user.displayName}`)
-      .setDescription(
-        `Você possui **${allPets.length} pet(s)** em sua coleção.\n` +
-        'Clique no botão abaixo do pet que você deseja definir como seu **Companheiro Ativo**:'
-      );
+  return { embeds: [embed], components };
+}
 
-    const activateButtons = [];
-    allPets.forEach((p) => {
-      const isActive = p.id === activePet.id;
-      const tag = isActive ? ' ⭐ (ATIVO)' : '';
-      embed.addFields({
-        name: `${p.emoji} ${p.name} — Nível ${p.level}${tag}`,
-        value: `> Espécie: \`${p.species}\` • Elemento: \`${p.element}\` • HP: ${p.stats.hp}/${p.stats.maxHp}`,
-        inline: false,
-      });
+// Onboarding View para novos usuários
+function buildOnboardingView(userId, userDisplayName) {
+  const embed = new EmbedBuilder()
+    .setColor(PYXIE_COLORS.lilac)
+    .setTitle('✨ ✦ Boas-vindas ao Reino de Mascotes de Pyxie! ✦ 🪽')
+    .setDescription(
+      `Ora, ora, **${userDisplayName}**! Parece que você ainda não tem nenhum mascote para chamar de seu.\n\n` +
+      `Pyxie preparou um **Kit Inicial de Aventureiro** gratuito para você dar os primeiros passos no bosque mágico!\n\n` +
+      `🎁 **O que vem no Kit Inicial:**\n` +
+      `• 🪙 **+150 Moedas** para adotar seu 1º pet;\n` +
+      `• 🥣 **2x Rações da Floresta**;\n` +
+      `• 🩹 **1x Curativo de Coração**;\n` +
+      `• 📦 **1x Baú Rústico**.\n\n` +
+      `*Clique no botão verde abaixo para resgatar o kit e começar!*`
+    )
+    .setFooter({ text: pyxieFooter('Reino Encantado de Pyxie • 1-Clique Acessível') })
+    .setTimestamp();
 
-      if (!isActive) {
-        activateButtons.push(
-          new ButtonBuilder()
-            .setCustomId(`pet_activate:${ownerId}:${p.id}`)
-            .setLabel(`Ativar ${p.name.slice(0, 15)}`)
-            .setEmoji(p.emoji)
-            .setStyle(ButtonStyle.Primary)
-        );
-      }
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`hub_claim_kit:${userId}`)
+      .setLabel('Resgatar Kit Inicial')
+      .setEmoji('🎁')
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId(`hub_open_adoption:${userId}`)
+      .setLabel('Centro de Adoção')
+      .setEmoji('🐾')
+      .setStyle(ButtonStyle.Primary)
+  );
+
+  return { embeds: [embed], components: [row] };
+}
+
+// --- Handler de Interações do Hub ---
+
+function isHubInteraction(interaction) {
+  if (!interaction.customId) return false;
+  return (
+    interaction.customId.startsWith('hub_tab:') ||
+    interaction.customId.startsWith('hub_select_pet:') ||
+    interaction.customId.startsWith('hub_pet_feed:') ||
+    interaction.customId.startsWith('hub_pet_carinho:') ||
+    interaction.customId.startsWith('hub_pet_sleep:') ||
+    interaction.customId.startsWith('hub_support_info:') ||
+    interaction.customId.startsWith('hub_incubator_place_egg:') ||
+    interaction.customId.startsWith('hub_hatch_egg:') ||
+    interaction.customId.startsWith('hub_expand_incubator:') ||
+    interaction.customId.startsWith('hub_dungeon_start_zone:') ||
+    interaction.customId.startsWith('hub_dungeon_start_fast:') ||
+    interaction.customId.startsWith('hub_dungeon_step:') ||
+    interaction.customId.startsWith('hub_dungeon_retreat:') ||
+    interaction.customId.startsWith('hub_dungeon_flee:') ||
+    interaction.customId.startsWith('hub_use_energy_potion:') ||
+    interaction.customId.startsWith('hub_inventory_use_item:') ||
+    interaction.customId.startsWith('hub_claim_kit:') ||
+    interaction.customId.startsWith('hub_shop_category:') ||
+    interaction.customId.startsWith('hub_shop_buy_item:') ||
+    interaction.customId.startsWith('hub_open_adoption:') ||
+    // Compatibilidade com IDs legados
+    interaction.customId.startsWith('pet_') ||
+    interaction.customId.startsWith('onboard_')
+  );
+}
+
+async function handleHubInteraction(interaction) {
+  const customId = interaction.customId;
+  const parts = customId.split(':');
+  const action = parts[0];
+  const targetUserId = parts[parts.length - 1];
+
+  if (targetUserId && targetUserId !== interaction.user.id) {
+    return interaction.reply({
+      content: '❌ Este painel pertence a outro aventureiro. Use `/pet` para abrir o seu próprio!',
+      flags: 64, // Ephemeral
     });
-
-    const rows = [];
-    if (activateButtons.length > 0) {
-      rows.push(new ActionRowBuilder().addComponents(activateButtons.slice(0, 4)));
-    }
-
-    await interaction.reply({ embeds: [embed], components: rows, ephemeral: true });
-    return;
   }
 
-  // 5.1. Ativar Pet Selecionado
-  if (action === 'pet_activate') {
-    const petId = parts[2];
-    const result = setActivePet(ownerId, petId);
+  const userId = interaction.user.id;
+  const userTag = interaction.user.displayName || interaction.user.username;
+
+  // 1. Alternar Abas
+  if (action === 'hub_tab') {
+    const tabName = parts[1] || 'pet';
+    if (tabName === 'pet') {
+      const view = buildPetTab(userId, userTag);
+      return interaction.update(view);
+    }
+    if (tabName === 'incubator') {
+      const view = buildIncubatorTab(userId, userTag);
+      return interaction.update(view);
+    }
+    if (tabName === 'dungeon') {
+      const view = buildDungeonTab(userId, userTag);
+      return interaction.update(view);
+    }
+    if (tabName === 'inventory') {
+      const view = buildInventoryTab(userId, userTag);
+      return interaction.update(view);
+    }
+    if (tabName === 'shop') {
+      const view = buildShopTab(userId, userTag, 'comida');
+      return interaction.update(view);
+    }
+  }
+
+  // 2. Resgate de Kit Inicial
+  if (action === 'hub_claim_kit' || action === 'onboard_kit') {
+    const result = claimStarterKit(userId);
     if (!result.success) {
-      await interaction.reply({ content: '❌ Não foi possível ativar este pet.', ephemeral: true });
-      return;
+      return interaction.reply({
+        content: '❌ Você já resgatou o seu Kit Inicial de Aventureiro anteriormente!',
+        flags: 64,
+      });
     }
-
-    await interaction.reply({
-      content: `⭐ **${result.pet.emoji} ${result.pet.name}** agora é o seu companheiro ativo! Use \`/pet\` para ver o cartão dele.`,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  // 6. Informações de Duelo
-  if (action === 'pet_duel_info') {
-    await interaction.reply({
-      content: `⚔️ Para desafiar alguém para um duelo de pets na arena, use:\n> \`/petduelo @usuario [aposta]\`\n\nSeu pet atual: **${activePet.name}** (Lv ${activePet.level}, ATK: ${activePet.stats.atk}, DEF: ${activePet.stats.def}, SPD: ${activePet.stats.spd}).`,
-      ephemeral: true,
+    const view = buildInventoryTab(userId, userTag);
+    return interaction.update({
+      content: '🎁 **Kit Inicial Resgatado com Sucesso!** (+150 Moedas, 2x Ração da Floresta, 1x Curativo, 1x Baú)',
+      ...view,
     });
   }
+
+  // 3. Ações do Pet (Alimentar, Carinho, Dormir)
+  if (action === 'hub_pet_feed' || action === 'pet_feed_menu') {
+    const feedRes = feedPet(userId, 'racao_cringe');
+    if (!feedRes.success) {
+      if (feedRes.reason === 'no_food_in_inventory') {
+        return interaction.reply({
+          content: '🛒 Você não tem **Ração** na mochila! Compre na aba **Lojinha**.',
+          flags: 64,
+        });
+      }
+      return interaction.reply({
+        content: feedRes.message || 'Seu pet não pode comer agora.',
+        flags: 64,
+      });
+    }
+    const view = buildPetTab(userId, userTag);
+    return interaction.update(view);
+  }
+
+  if (action === 'hub_pet_carinho' || action === 'pet_carinho') {
+    const carinhoRes = petCarinho(userId);
+    if (!carinhoRes.success) {
+      return interaction.reply({
+        content: `⏳ Seu pet já recebeu muito carinho! Aguarde **${carinhoRes.remainingMinutes}m** para fazer carinho novamente.`,
+        flags: 64,
+      });
+    }
+    const view = buildPetTab(userId, userTag);
+    return interaction.update(view);
+  }
+
+  if (action === 'hub_pet_sleep' || action === 'pet_sleep') {
+    const sleepRes = petSleep(userId);
+    if (!sleepRes.success) {
+      return interaction.reply({
+        content: `💤 Seu pet ainda está descansado! Poderá dormir novamente em **${sleepRes.remainingHours}h**.`,
+        flags: 64,
+      });
+    }
+    const view = buildPetTab(userId, userTag);
+    return interaction.update(view);
+  }
+
+  // 4. Seleção de Pet Ativo
+  if (action === 'hub_select_pet') {
+    const selectedPetId = interaction.values[0];
+    setActivePet(userId, selectedPetId);
+    const view = buildPetTab(userId, userTag);
+    return interaction.update(view);
+  }
+
+  // 5. Chocadeira: Colocar ovo
+  if (action === 'hub_incubator_place_egg') {
+    const eggItemId = interaction.values[0];
+    const incubator = getIncubator(userId);
+    const emptySlot = incubator.slots.find((s) => s.empty);
+    if (!emptySlot) {
+      return interaction.reply({
+        content: '❌ Não há ninhos vazios na sua chocadeira!',
+        flags: 64,
+      });
+    }
+    const res = putEggInIncubator(userId, eggItemId, emptySlot.slotIndex);
+    if (!res.success) {
+      return interaction.reply({ content: `❌ ${res.message}`, flags: 64 });
+    }
+    const view = buildIncubatorTab(userId, userTag);
+    return interaction.update(view);
+  }
+
+  // 6. Chocadeira: Chocar ovo pronto
+  if (action === 'hub_hatch_egg') {
+    const slotIdx = Number(parts[1]);
+    const res = hatchIncubatorEgg(userId, slotIdx);
+    if (!res.success) {
+      return interaction.reply({ content: `❌ ${res.message}`, flags: 64 });
+    }
+    const view = buildIncubatorTab(userId, userTag);
+    return interaction.update({
+      content: res.message,
+      ...view,
+    });
+  }
+
+  // 7. Chocadeira: Expandir ninhos
+  if (action === 'hub_expand_incubator') {
+    const res = expandUserIncubator(userId);
+    if (!res.success) {
+      return interaction.reply({
+        content: `❌ ${res.message} Compre o item **Ninho Encantado** na Lojinha!`,
+        flags: 64,
+      });
+    }
+    const view = buildIncubatorTab(userId, userTag);
+    return interaction.update(view);
+  }
+
+  // 8. Dungeons: Iniciar expedição
+  if (action === 'hub_dungeon_start_zone' || action === 'hub_dungeon_start_fast') {
+    const zoneId = action === 'hub_dungeon_start_zone' ? interaction.values[0] : 'bosque';
+    const activePet = getActivePet(userId);
+    const startRes = startProceduralRun(userId, zoneId, activePet);
+    if (!startRes.success) {
+      return interaction.reply({ content: `❌ ${startRes.message}`, flags: 64 });
+    }
+    const view = buildDungeonTab(userId, userTag);
+    return interaction.update(view);
+  }
+
+  // 9. Dungeons: Avançar Passo
+  if (action === 'hub_dungeon_step') {
+    const activePet = getActivePet(userId);
+    const stepRes = advanceStep(userId, activePet);
+    if (!stepRes.success) {
+      return interaction.reply({ content: `❌ ${stepRes.message}`, flags: 64 });
+    }
+    const view = buildDungeonTab(userId, userTag);
+    return interaction.update(view);
+  }
+
+  // 10. Dungeons: Resgatar Espólios
+  if (action === 'hub_dungeon_retreat') {
+    const activePet = getActivePet(userId);
+    const retreatRes = retreatRun(userId, activePet);
+    if (!retreatRes.success) {
+      return interaction.reply({ content: `❌ ${retreatRes.message}`, flags: 64 });
+    }
+    const view = buildDungeonTab(userId, userTag);
+    return interaction.update({
+      content: retreatRes.message,
+      ...view,
+    });
+  }
+
+  // 11. Dungeons: Fuga
+  if (action === 'hub_dungeon_flee') {
+    const activePet = getActivePet(userId);
+    const fleeRes = panicFlee(userId, activePet);
+    const view = buildDungeonTab(userId, userTag);
+    return interaction.update({
+      content: fleeRes.message,
+      ...view,
+    });
+  }
+
+  // 12. Usar Poção de Energia
+  if (action === 'hub_use_energy_potion') {
+    const useRes = useItemOnActivePet(userId, 'pocao_energia');
+    if (!useRes.success) {
+      return interaction.reply({
+        content: '❌ Você não tem **Frasco de Éter** na mochila! Compre na Lojinha.',
+        flags: 64,
+      });
+    }
+    const view = buildDungeonTab(userId, userTag);
+    return interaction.update(view);
+  }
+
+  // 13. Mochila: Usar Item Selecionado
+  if (action === 'hub_inventory_use_item') {
+    const itemId = interaction.values[0];
+    const useRes = useItemOnActivePet(userId, itemId);
+    if (!useRes.success) {
+      return interaction.reply({
+        content: useRes.message || 'Falha ao usar o item.',
+        flags: 64,
+      });
+    }
+    const view = buildInventoryTab(userId, userTag);
+    return interaction.update(view);
+  }
+
+  // 14. Lojinha: Mudar Categoria
+  if (action === 'hub_shop_category') {
+    const selectedCat = interaction.values[0];
+    const view = buildShopTab(userId, userTag, selectedCat);
+    return interaction.update(view);
+  }
+
+  // 15. Lojinha: Comprar Item
+  if (action === 'hub_shop_buy_item') {
+    const itemId = interaction.values[0];
+    const buyRes = buyItem(userId, itemId, 1);
+    if (!buyRes.success) {
+      return interaction.reply({
+        content: `❌ ${buyRes.message}`,
+        flags: 64,
+      });
+    }
+    const itemDef = getItemDefinition(itemId);
+    const view = buildShopTab(userId, userTag, itemDef ? itemDef.category : 'comida');
+    return interaction.update(view);
+  }
+
+  // 16. Apoio / Doação Modal / Info
+  if (action === 'hub_support_info') {
+    return interaction.reply({
+      content:
+        '💖 **Apoie o Desenvolvimento de Pyxie!**\n\n' +
+        'Pyxie é um projeto 100% livre de mecânicas abusivas e *pay-to-win*.\n' +
+        'Você pode apoiar doando qualquer valor via LivePix ou Pix direto para manter a hospedagem no ar!\n\n' +
+        '🌟 **Benefícios de Apoiador:**\n' +
+        '• Ícone exclusivo de Apoiador no perfil;\n' +
+        '• Molduras estéticas especiais no Cartão Canvas;\n' +
+        '• Linhas de diálogo únicas e ácidas com a Pyxie.\n\n' +
+        '*(Para configurar ou enviar apoio, fale com a moderação do servidor!)*',
+      flags: 64,
+    });
+  }
+
+  // Fallback genérico
+  const defaultView = buildPetTab(userId, userTag);
+  return interaction.update(defaultView);
 }
 
 module.exports = {
-  name: PET,
-  aliases: ['petcard', 'meupet', 'bichinho'],
   data: new SlashCommandBuilder()
     .setName(PET)
-    .setDescription('Exibe o painel e o cartão ilustrado do seu pet ativo')
-    .addSubcommand((sub) =>
-      sub
-        .setName('status')
-        .setDescription('Exibe o cartão de status e botões de ação do seu pet ativo')
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName('mochila')
-        .setDescription('Lista todos os pets da sua coleção')
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName('ativar')
-        .setDescription('Define qual pet da sua mochila será o ativo')
-        .addStringOption((opt) => opt.setName('nome_ou_id').setDescription('Nome ou espécie do pet').setRequired(true))
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName('renomear')
-        .setDescription('Altera o apelido do seu pet ativo')
-        .addStringOption((opt) => opt.setName('novo_nome').setDescription('Novo apelido para o pet (2 a 25 caracteres)').setRequired(true))
-    ),
-  async executePrefix({ message, args }) {
-    const sub = args[0] ? args[0].toLowerCase() : 'status';
-
-    if (sub === 'mochila' || sub === 'pets') {
-      const allPets = getUserPets(message.author.id);
-      if (allPets.length === 0) {
-        const embed = buildOnboardingEmbed(message.author.displayName);
-        const components = buildOnboardingComponents(message.author.id);
-        await message.reply({ embeds: [embed], components });
-        return;
-      }
-      const embed = new EmbedBuilder()
-        .setColor('#C084FC')
-        .setTitle(`🎒 Canil de ${message.author.displayName}`)
-        .setDescription('Lista de todos os seus pets:');
-      allPets.forEach((p) => {
-        embed.addFields({
-          name: `${p.emoji} ${p.name} (Lv ${p.level})`,
-          value: `Espécie: ${p.species} • Elemento: ${p.element} • HP: ${p.stats.hp}/${p.stats.maxHp}`,
-        });
-      });
-      await message.reply({ embeds: [embed] });
-      return;
-    }
-
-    if (sub === 'renomear' && args[1]) {
-      const newName = args.slice(1).join(' ');
-      const res = renamePet(message.author.id, newName);
-      if (!res.success) {
-        await message.reply('❌ Nome inválido! Escolha um nome entre 2 e 25 caracteres.');
-        return;
-      }
-      await message.reply(`✅ Seu pet agora se chama **${res.pet.name}**!`);
-      return;
-    }
-
-    if (sub === 'ativar' && args[1]) {
-      const target = args.slice(1).join(' ');
-      const res = setActivePet(message.author.id, target);
-      if (!res.success) {
-        await message.reply('❌ Pet não encontrado na sua mochila.');
-        return;
-      }
-      await message.reply(`⭐ **${res.pet.name}** agora é o seu pet ativo!`);
-      return;
-    }
-
-    const activePet = getActivePet(message.author.id);
-    if (!activePet) {
-      const embed = buildOnboardingEmbed(message.author.displayName);
-      const components = buildOnboardingComponents(message.author.id);
-      await message.reply({ embeds: [embed], components });
-      return;
-    }
-
-    const attachment = createPetAttachment(activePet);
-    const embed = buildPetEmbed(activePet, message.author.displayName);
-    const components = buildPetActionButtons(message.author.id, activePet);
-
-    await message.reply({ embeds: [embed], files: [attachment], components });
+    .setDescription('Abre o Hub Central de Mascotes de Pyxie (100% interativo via botões).'),
+  aliases: ['pets', 'bicho', 'mascote', 'p'],
+  buildPetEmbed: (pet, userTag) => buildPetTab(userTag, userTag).embeds[0],
+  buildHubView: buildPetTab,
+  isPetInteraction: isHubInteraction,
+  handlePetInteraction: handleHubInteraction,
+  async execute(interaction) {
+    const userId = interaction.user.id;
+    const userTag = interaction.user.displayName || interaction.user.username;
+    const view = buildPetTab(userId, userTag);
+    await interaction.reply(view);
   },
-  async executeSlash({ interaction }) {
-    const sub = interaction.options.getSubcommand(false) || 'status';
-
-    if (sub === 'renomear') {
-      const newName = interaction.options.getString('novo_nome');
-      const res = renamePet(interaction.user.id, newName);
-      if (!res.success) {
-        await interaction.editReply({ content: '❌ Nome inválido! Escolha um nome entre 2 e 25 caracteres.' });
-        return;
-      }
-      await interaction.editReply({ content: `✅ Seu pet agora se chama **${res.pet.name}**!` });
-      return;
-    }
-
-    if (sub === 'ativar') {
-      const target = interaction.options.getString('nome_ou_id');
-      const res = setActivePet(interaction.user.id, target);
-      if (!res.success) {
-        await interaction.editReply({ content: '❌ Pet não encontrado na sua coleção.' });
-        return;
-      }
-      await interaction.editReply({ content: `⭐ **${res.pet.name}** agora é o seu pet ativo!` });
-      return;
-    }
-
-    if (sub === 'mochila') {
-      const allPets = getUserPets(interaction.user.id);
-      if (allPets.length === 0) {
-        const embed = buildOnboardingEmbed(interaction.user.displayName);
-        const components = buildOnboardingComponents(interaction.user.id);
-        await interaction.editReply({ embeds: [embed], components });
-        return;
-      }
-      const embed = new EmbedBuilder()
-        .setColor('#C084FC')
-        .setTitle(`🎒 Canil de ${interaction.user.displayName}`)
-        .setDescription('Lista de todos os seus pets:');
-      allPets.forEach((p) => {
-        embed.addFields({
-          name: `${p.emoji} ${p.name} (Lv ${p.level})`,
-          value: `Espécie: ${p.species} • Elemento: ${p.element} • HP: ${p.stats.hp}/${p.stats.maxHp}`,
-        });
-      });
-      await interaction.editReply({ embeds: [embed] });
-      return;
-    }
-
-    const activePet = getActivePet(interaction.user.id);
-    if (!activePet) {
-      const embed = buildOnboardingEmbed(interaction.user.displayName);
-      const components = buildOnboardingComponents(interaction.user.id);
-      await interaction.editReply({ embeds: [embed], components });
-      return;
-    }
-
-    const attachment = createPetAttachment(activePet);
-    const embed = buildPetEmbed(activePet, interaction.user.displayName);
-    const components = buildPetActionButtons(interaction.user.id, activePet);
-
-    await interaction.editReply({ embeds: [embed], files: [attachment], components });
+  async executePrefix(message) {
+    const userId = message.author.id;
+    const userTag = message.author.displayName || message.author.username;
+    const view = buildPetTab(userId, userTag);
+    await message.reply(view);
   },
-  isPetInteraction,
-  handlePetInteraction,
-  buildOnboardingEmbed,
-  buildOnboardingComponents,
 };
-
-

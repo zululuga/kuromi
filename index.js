@@ -56,7 +56,7 @@ function getRandomWelcomeHeart() {
 // Protege o bot contra duas instâncias rodando ao mesmo tempo.
 const lockAcquired = acquireBotLock();
 if (!lockAcquired) {
-  console.error('Outra instância da Kuromi já está em execução. Ela não divide o palco. Encerrando este processo...');
+  console.error('Outra instância de Pyxie já está em execução. Ela não divide o palco. Encerrando este processo...');
   process.exit(1);
 }
 
@@ -102,18 +102,18 @@ async function sendStartupAnnouncement() {
   }
 
   const startupEmbed = new EmbedBuilder()
-    .setColor('#E60067')
-    .setTitle(`${KUROMI_STARTUP_EMOJI}  ✦  Kuromi entrou em cena`)
-    .setDescription('Estou online, monitorando o servidor e pronta para ajudar. Não faça essa cara; eu também senti sua falta.')
+    .setColor('#5E2B8C')
+    .setTitle(`${KUROMI_STARTUP_EMOJI}  ✦  Pyxie entrou em cena`)
+    .setDescription('Estou online, monitorando o reino encantado e pronta para aprontar travessuras. Não faça essa cara; eu sei que você sentiu minha falta.')
     .addFields(
       { name: '🔗 Painel de Controle', value: 'Acesse: http://localhost:3000', inline: false },
       { name: '📍 Servidor', value: channel.guild?.name || 'Desconhecido', inline: true },
       { name: '✅ Status', value: 'Online e funcional', inline: true },
-      { name: '📚 Próximos passos', value: 'Use `/ajuda` para ver os comandos disponíveis ou acesse o painel para configurar o bot. Leia direito.', inline: false }
+      { name: '📚 Próximos passos', value: 'Use `/pet` ou `/ajuda` para ver os mascotes e comandos disponíveis. Leia direito.', inline: false }
     )
     .setImage(STATUS_IMAGE_URL)
     .setTimestamp()
-    .setFooter({ text: 'Cringelândia • Kuromi supervisiona • Não transforme isso em bagunça' });
+    .setFooter({ text: 'Reino Encantado • Pyxie supervisiona • Não transforme isso em bagunça' });
 
   await channel.send({
     embeds: [startupEmbed],

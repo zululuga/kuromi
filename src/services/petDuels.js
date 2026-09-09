@@ -3,6 +3,12 @@ const { getActivePet, awardPetXp } = require('./pets');
 const { spendCoins, updateUserAccount, getUserAccount } = require('./economy');
 
 const ELEMENT_ADVANTAGES = {
+  ORVALHO: 'SILVESTRE',
+  SILVESTRE: 'BRISA',
+  BRISA: 'CHARME',
+  CHARME: 'TRAVESSURA',
+  TRAVESSURA: 'ORVALHO',
+  // Fallbacks de compatibilidade
   SOMBRA: 'FOFURA',
   FOFURA: 'CAOS',
   CAOS: 'MISTICO',
@@ -31,6 +37,9 @@ function createDuelChallenge(challengerId, targetId, bet = 0) {
 
   if (petA.hunger < 15) return { success: false, reason: 'challenger_hungry', pet: petA };
   if (petB.hunger < 15) return { success: false, reason: 'target_hungry', pet: petB };
+
+  if ((petA.energy || 0) < 15) return { success: false, reason: 'challenger_exhausted', pet: petA };
+  if ((petB.energy || 0) < 15) return { success: false, reason: 'target_exhausted', pet: petB };
 
   const betAmount = Math.max(0, Math.floor(Number(bet) || 0));
   if (betAmount > 0) {
