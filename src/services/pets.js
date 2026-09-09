@@ -478,6 +478,49 @@ function useItemOnActivePet(userId, itemId) {
   };
 }
 
+function getPetsByElement(element) {
+  return Object.values(petsCatalog).filter((p) => !element || p.element === element);
+}
+
+function hasClaimedStarterKit(userId) {
+  const record = getUserPetRecord(userId);
+  return Boolean(record.claimedStarterKit);
+}
+
+function isFirstTimeUser(userId) {
+  const record = getUserPetRecord(userId);
+  return (!record.pets || record.pets.length === 0) && !record.claimedStarterKit;
+}
+
+function claimStarterKit(userId) {
+  const record = getUserPetRecord(userId);
+  if (record.claimedStarterKit) {
+    return { success: false, reason: 'already_claimed' };
+  }
+
+  record.claimedStarterKit = true;
+  schedulePetsSave();
+
+  const updatedAccount = updateUserAccount(userId, (acc) => {
+    acc.coins = (Number(acc.coins) || 0) + 150;
+  });
+
+  addItem(userId, 'racao_cringe', 2);
+  addItem(userId, 'curativo_fofo', 1);
+  addItem(userId, 'bau_madeira', 1);
+
+  return {
+    success: true,
+    coins: 150,
+    newBalance: updatedAccount.coins,
+    items: [
+      { name: 'Ração Cringe', count: 2, emoji: '🥣' },
+      { name: 'Curativo de Coração', count: 1, emoji: '🩹' },
+      { name: 'Baú Rústico', count: 1, emoji: '📦' },
+    ],
+  };
+}
+
 module.exports = {
   PETS_CATALOG: petsCatalog,
   CARINHO_COOLDOWN_MS,
@@ -493,5 +536,9 @@ module.exports = {
   renamePet,
   awardPetXp,
   useItemOnActivePet,
+  getPetsByElement,
+  hasClaimedStarterKit,
+  isFirstTimeUser,
+  claimStarterKit,
   flushPetsSync,
 };

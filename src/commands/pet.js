@@ -14,12 +14,14 @@ const {
   petSleep,
   renamePet,
   feedPet,
+  hasClaimedStarterKit,
+  claimStarterKit,
   CARINHO_COOLDOWN_MS,
   SLEEP_COOLDOWN_MS,
 } = require('../services/pets');
 const { createPetAttachment } = require('../services/petRenderer');
 const { getUserInventory, getItemDefinition, formatItemEffects } = require('../services/inventory');
-const { formatRemaining } = require('./economyHelpers');
+const { formatCoins, formatRemaining } = require('./economyHelpers');
 const { PET } = require('./commandNames');
 
 function buildPetEmbed(pet, userTag) {
@@ -88,6 +90,60 @@ function buildPetActionButtons(userId, pet) {
   return [row1, row2];
 }
 
+function buildOnboardingEmbed(userDisplayName) {
+  return new EmbedBuilder()
+    .setColor('#C084FC')
+    .setTitle('🖤 ✦ Boas-vindas ao Mundo dos Mascotes da Cringelândia! ✦ ✨')
+    .setDescription(
+      `Olá, **${userDisplayName}**! Parece que você ainda não tem um mascote para chamar de seu.\n\n` +
+      'Aqui na Cringelândia, você pode adotar criaturas leais, alimentá-las, explorar masmorras cheias de tesouros e até disputar duelos épicos no Coliseu!\n\n' +
+      '**Como começar em 3 passos simples:**\n' +
+      '🎁 **1. Resgate seu Kit Inicial:** Receba **150 Moedas**, comidas e itens de cura grátis!\n' +
+      '🐾 **2. Adote seu Primeiro Pet:** Escolha entre 24 espécies de 4 elementos mágicos.\n' +
+      '🧭 **3. Cuide & Explore:** Alimente, faça carinho e envie em expedições para ganhar recompensas!\n\n' +
+      '> *Kuromi observa com desdém:* “Espero que você tenha mais responsabilidade com esse bichinho do que com a sua vida!”'
+    )
+    .addFields(
+      {
+        name: '🌟 4 Elementos Místicos',
+        value: '> 🌑 **Sombra** (Furtividade e Dano)\n> 💖 **Fofura** (Vida e Alegria)\n> 🔥 **Caos** (Crítico e Energia)\n> 🔮 **Místico** (Defesa e Magia)',
+        inline: false,
+      },
+      {
+        name: '🎁 Conteúdo do Kit de Boas-Vindas',
+        value: '> 🪙 **+150 Moedinhas**\n> 🥣 **2x Ração Cringe**\n> 🩹 **1x Curativo de Coração**\n> 📦 **1x Baú Rústico**',
+        inline: false,
+      }
+    )
+    .setFooter({ text: 'Cringelândia Pets • Clique nos botões abaixo para jogar!' })
+    .setTimestamp();
+}
+
+function buildOnboardingComponents(userId) {
+  const isClaimed = hasClaimedStarterKit(userId);
+
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`onboard_adopt:${userId}`)
+      .setLabel('Adotar Primeiro Mascote')
+      .setEmoji('🐾')
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId(`onboard_kit:${userId}`)
+      .setLabel(isClaimed ? 'Kit Inicial (Já Resgatado)' : 'Resgatar Kit Inicial (Grátis)')
+      .setEmoji('🎁')
+      .setStyle(isClaimed ? ButtonStyle.Secondary : ButtonStyle.Primary)
+      .setDisabled(isClaimed),
+    new ButtonBuilder()
+      .setCustomId(`onboard_guide:${userId}`)
+      .setLabel('Guia Rápido')
+      .setEmoji('📖')
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  return [row];
+}
+
 function isPetInteraction(interaction) {
   return (
     interaction.isButton() &&
@@ -97,7 +153,11 @@ function isPetInteraction(interaction) {
       interaction.customId.startsWith('pet_explore_zones:') ||
       interaction.customId.startsWith('pet_bag_list:') ||
       interaction.customId.startsWith('pet_duel_info:') ||
-      interaction.customId.startsWith('pet_activate:')) ||
+      interaction.customId.startsWith('pet_view:') ||
+      interaction.customId.startsWith('pet_activate:') ||
+      interaction.customId.startsWith('onboard_adopt:') ||
+      interaction.customId.startsWith('onboard_kit:') ||
+      interaction.customId.startsWith('onboard_guide:')) ||
     (interaction.isStringSelectMenu() && interaction.customId.startsWith('pet_feed_select:'))
   );
 }
@@ -115,12 +175,102 @@ async function handlePetInteraction(interaction) {
     return;
   }
 
+  // --- Ações de Onboarding (para quem ainda não tem pet ou está iniciando) ---
+  if (action === 'onboard_adopt') {
+    const { buildAdoptionEmbed, buildAdoptionComponents } = require('./adocao');
+    const embed = buildAdoptionEmbed('TODOS', null);
+    const components = buildAdoptionComponents(ownerId, 'TODOS', null);
+    await interaction.update({ embeds: [embed], components, files: [] });
+    return;
+  }
+
+  if (action === 'onboard_kit') {
+    const result = claimStarterKit(ownerId);
+    if (!result.success) {
+      await interaction.reply({
+        content: '❌ Você já resgatou o seu Kit Inicial de Aventureiro! Use a `/loja` para conseguir mais suprimentos.',
+        ephemeral: true,
+      });
+      return;
+    }
+
+    const embed = new EmbedBuilder()
+      .setColor('#10b981')
+      .setTitle('🎁  ✦  Kit Inicial de Aventureiro Resgatado!  ✦  ✨')
+      .setDescription(
+        `Parabéns, **${interaction.user.displayName}**! A Kuromi liberou seus suprimentos de sobrevivência:\n\n` +
+        `🪙 **+150 Moedinhas** (Saldo atual: **${formatCoins(result.newBalance)}**)\n` +
+        `🥣 **2x Ração Cringe** (para manter a fome do seu pet baixa)\n` +
+        `🩹 **1x Curativo de Coração** (para curar dano em expedições)\n` +
+        `📦 **1x Baú Rústico** (abra na sua mochila para ganhar mais moedas e itens!)\n\n` +
+        '> *Kuromi dá uma piscadela:* “Prontinho! Agora você tem moedas suficientes para adotar qualquer pet comum no abrigo. Escolha com carinho!”'
+      )
+      .setFooter({ text: 'Cringelândia Pets • Kuromi supervisiona cada entrega' })
+      .setTimestamp();
+
+    const actionRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`onboard_adopt:${ownerId}`)
+        .setLabel('Escolher Meu Pet Agora')
+        .setEmoji('🐾')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId(`inv_select:${ownerId}`)
+        .setLabel('Abrir Minha Mochila')
+        .setEmoji('🎒')
+        .setStyle(ButtonStyle.Secondary)
+    );
+
+    await interaction.update({ embeds: [embed], components: [actionRow], files: [] });
+    return;
+  }
+
+  if (action === 'onboard_guide') {
+    const embed = new EmbedBuilder()
+      .setColor('#C084FC')
+      .setTitle('📖  ✦  Manual de Cuidados e Aventuras com Pets  ✦  ✨')
+      .setDescription(
+        'Aqui estão todas as mecânicas para você se tornar o tutor mais temido e respeitado da Cringelândia:\n\n' +
+        '🍖 **Fome (0-100%):** Pets com fome alta (< 15%) recusam-se a lutar e explorar. Dê comida regularmente via botão `[Alimentar]` ou `/usar`.\n\n' +
+        '💖 **Humor & Felicidade:** Faça carinho no seu pet a cada 1 hora para deixá-lo contente e conceder bônus de XP.\n\n' +
+        '⚡ **Energia:** Explorar masmorras consome energia. Quando estiver cansado, use o botão `[Dormir]` para restaurar 100% da barra de energia.\n\n' +
+        '🧭 **Dungeons & Drops:** Quanto maior o nível do pet, mais profundas e lucrativas serão as masmorras que ele poderá desbravar!\n\n' +
+        '⚔️ **Coliseu de Duelos:** Desafie outros tutores do servidor valendo apostas de moedas.'
+      )
+      .setFooter({ text: 'Cringelândia Pets • Kuromi aprova quem lê o manual' });
+
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`onboard_adopt:${ownerId}`)
+        .setLabel('Ir para o Centro de Adoção')
+        .setEmoji('🐾')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId(`onboard_kit:${ownerId}`)
+        .setLabel('Resgatar Kit Inicial')
+        .setEmoji('🎁')
+        .setStyle(hasClaimedStarterKit(ownerId) ? ButtonStyle.Secondary : ButtonStyle.Primary)
+        .setDisabled(hasClaimedStarterKit(ownerId))
+    );
+
+    await interaction.update({ embeds: [embed], components: [row], files: [] });
+    return;
+  }
+
   const activePet = getActivePet(ownerId);
   if (!activePet) {
-    await interaction.reply({
-      content: '❌ Você ainda não tem nenhum pet! Use `/adocao` para escolher seu companheiro.',
-      ephemeral: true,
-    });
+    const embed = buildOnboardingEmbed(interaction.user.displayName);
+    const components = buildOnboardingComponents(ownerId);
+    await interaction.update({ embeds: [embed], components, files: [] });
+    return;
+  }
+
+  // --- Ações do Pet Ativo ---
+  if (action === 'pet_view') {
+    const attachment = createPetAttachment(activePet);
+    const embed = buildPetEmbed(activePet, interaction.user.displayName);
+    const components = buildPetActionButtons(ownerId, activePet);
+    await interaction.update({ embeds: [embed], files: [attachment], components });
     return;
   }
 
@@ -357,7 +507,9 @@ module.exports = {
     if (sub === 'mochila' || sub === 'pets') {
       const allPets = getUserPets(message.author.id);
       if (allPets.length === 0) {
-        await message.reply('❌ Você ainda não tem nenhum pet! Use `ku!adocao` para adotar.');
+        const embed = buildOnboardingEmbed(message.author.displayName);
+        const components = buildOnboardingComponents(message.author.id);
+        await message.reply({ embeds: [embed], components });
         return;
       }
       const embed = new EmbedBuilder()
@@ -398,7 +550,9 @@ module.exports = {
 
     const activePet = getActivePet(message.author.id);
     if (!activePet) {
-      await message.reply('❌ Você ainda não possui um pet! Use `ku!adocao` para adotar um.');
+      const embed = buildOnboardingEmbed(message.author.displayName);
+      const components = buildOnboardingComponents(message.author.id);
+      await message.reply({ embeds: [embed], components });
       return;
     }
 
@@ -436,7 +590,9 @@ module.exports = {
     if (sub === 'mochila') {
       const allPets = getUserPets(interaction.user.id);
       if (allPets.length === 0) {
-        await interaction.editReply({ content: '❌ Você ainda não tem nenhum pet! Use `/adocao` para adotar.' });
+        const embed = buildOnboardingEmbed(interaction.user.displayName);
+        const components = buildOnboardingComponents(interaction.user.id);
+        await interaction.editReply({ embeds: [embed], components });
         return;
       }
       const embed = new EmbedBuilder()
@@ -455,7 +611,9 @@ module.exports = {
 
     const activePet = getActivePet(interaction.user.id);
     if (!activePet) {
-      await interaction.editReply({ content: '❌ Você ainda não tem nenhum pet! Use `/adocao` para adotar um.' });
+      const embed = buildOnboardingEmbed(interaction.user.displayName);
+      const components = buildOnboardingComponents(interaction.user.id);
+      await interaction.editReply({ embeds: [embed], components });
       return;
     }
 
@@ -467,5 +625,8 @@ module.exports = {
   },
   isPetInteraction,
   handlePetInteraction,
+  buildOnboardingEmbed,
+  buildOnboardingComponents,
 };
+
 

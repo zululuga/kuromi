@@ -7,7 +7,7 @@ const {
   ButtonStyle,
 } = require('discord.js');
 const { getUserInventory, getItemDefinition, sellItem, openChest, formatItemEffects } = require('../services/inventory');
-const { useItemOnActivePet, getActivePet } = require('../services/pets');
+const { useItemOnActivePet, getActivePet, hasClaimedStarterKit } = require('../services/pets');
 const { formatCoins } = require('./economyHelpers');
 const { INVENTORY } = require('./commandNames');
 
@@ -56,7 +56,30 @@ function buildInventoryComponents(userId, selectedItemId = null) {
   const entries = Object.entries(inv).filter(([, count]) => count > 0);
 
   if (entries.length === 0) {
-    return [];
+    const emptyButtons = [
+      new ButtonBuilder()
+        .setCustomId(`shop_category_select`)
+        .setLabel('Visitar Loja')
+        .setEmoji('🏪')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId(`pet_explore_zones:${userId}`)
+        .setLabel('Explorar Dungeons')
+        .setEmoji('🧭')
+        .setStyle(ButtonStyle.Primary),
+    ];
+
+    if (!hasClaimedStarterKit(userId)) {
+      emptyButtons.push(
+        new ButtonBuilder()
+          .setCustomId(`onboard_kit:${userId}`)
+          .setLabel('Resgatar Kit Inicial')
+          .setEmoji('🎁')
+          .setStyle(ButtonStyle.Primary)
+      );
+    }
+
+    return [new ActionRowBuilder().addComponents(emptyButtons)];
   }
 
   const options = entries.slice(0, 25).map(([itemId, count]) => {
@@ -94,19 +117,21 @@ function buildInventoryComponents(userId, selectedItemId = null) {
       actionButtons.push(
         new ButtonBuilder()
           .setCustomId(`inv_use:${userId}:${selectedItemId}`)
-          .setLabel(`Usar no Pet`)
+          .setLabel('Usar no Pet')
           .setEmoji('✨')
           .setStyle(ButtonStyle.Success)
       );
     }
 
-    actionButtons.push(
-      new ButtonBuilder()
-        .setCustomId(`inv_sell:${userId}:${selectedItemId}:1`)
-        .setLabel(`Vender 1x (${selectedItem?.sellPrice || 0}🪙)`)
-        .setEmoji('🪙')
-        .setStyle(ButtonStyle.Secondary)
-    );
+    if (selectedItem?.sellPrice) {
+      actionButtons.push(
+        new ButtonBuilder()
+          .setCustomId(`inv_sell:${userId}:${selectedItemId}:1`)
+          .setLabel(`Vender 1x (${selectedItem.sellPrice}🪙)`)
+          .setEmoji('🪙')
+          .setStyle(ButtonStyle.Secondary)
+      );
+    }
 
     rows.push(new ActionRowBuilder().addComponents(actionButtons));
   }
@@ -152,7 +177,18 @@ async function handleInventoryInteraction(interaction) {
 
     if (!result.success) {
       if (result.reason === 'no_pet') {
-        await interaction.reply({ content: '❌ Você precisa de um pet ativo para usar este item! Adote com `/adocao`.', ephemeral: true });
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`onboard_adopt:${ownerId}`)
+            .setLabel('Adotar Mascote')
+            .setEmoji('🐾')
+            .setStyle(ButtonStyle.Success)
+        );
+        await interaction.reply({
+          content: '❌ Você precisa de um pet ativo para usar este item! Adote no abrigo:',
+          components: [row],
+          ephemeral: true,
+        });
       } else {
         await interaction.reply({ content: '❌ Você não possui este item ou ele não pode ser usado.', ephemeral: true });
       }
@@ -170,9 +206,18 @@ async function handleInventoryInteraction(interaction) {
     const embed = buildInventoryEmbed(ownerId, interaction.user.displayName, null);
     const components = buildInventoryComponents(ownerId, null);
 
+    const followUpRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`pet_view:${ownerId}`)
+        .setLabel('Ver Cartão do Pet')
+        .setEmoji('🐾')
+        .setStyle(ButtonStyle.Primary)
+    );
+
     await interaction.update({ embeds: [embed], components });
     await interaction.followUp({
       content: `✨ Você usou **${result.item.emoji} ${result.item.name}** no seu pet **${result.pet?.name || 'Pet'}**!${effectsText}${statusText}${extraMsg}`,
+      components: [followUpRow],
       ephemeral: true,
     });
     return;
@@ -243,4 +288,5 @@ module.exports = {
   isInventoryInteraction,
   handleInventoryInteraction,
 };
+
 

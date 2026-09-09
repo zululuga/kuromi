@@ -42,6 +42,7 @@ function buildShopEmbed(category = 'comida') {
       const fxLine = fxText ? `\n> 📊 **Efeito:** ${fxText}` : '';
       embed.addFields({
         name: `${item.emoji} ${item.name} — ${priceTag}`,
+        value: `> ${item.description}\n> *ID para compra:* \`${item.id}\``,
         value: `> ${item.description}${fxLine}\n> *ID para compra:* \`${item.id}\``,
         inline: false,
       });
@@ -119,8 +120,22 @@ async function handleShopInteraction(interaction) {
       return;
     }
 
+    const actionRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`inv_select:${interaction.user.id}`)
+        .setLabel('Abrir Minha Mochila')
+        .setEmoji('🎒')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId(`pet_view:${interaction.user.id}`)
+        .setLabel('Ver Meu Pet')
+        .setEmoji('🐾')
+        .setStyle(ButtonStyle.Primary)
+    );
+
     await interaction.reply({
-      content: `✅ Você comprou **${amount}x ${result.item.emoji} ${result.item.name}** por **${formatCoins(result.totalCost)}**! Saldo restante: **${formatCoins(result.balance)}**.\nUse \`/inventario\` para visualizar seus itens.`,
+      content: `✅ Você comprou **${amount}x ${result.item.emoji} ${result.item.name}** por **${formatCoins(result.totalCost)}**! Saldo restante: **${formatCoins(result.balance)}**.\nClique nos botões abaixo para usar seus itens ou ver seu pet:`,
+      components: [actionRow],
       ephemeral: true,
     });
   }

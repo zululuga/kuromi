@@ -13,6 +13,10 @@ const {
   renamePet,
   awardPetXp,
   useItemOnActivePet,
+  claimStarterKit,
+  hasClaimedStarterKit,
+  isFirstTimeUser,
+  getPetsByElement,
   flushPetsSync,
 } = require('../src/services/pets');
 const { exploreDungeon, getDungeonZones } = require('../src/services/petDungeons');
@@ -34,6 +38,24 @@ const USER_B = 'test_user_pet_b';
 
 async function runPetTests() {
   try {
+    // 0. Onboarding e Kit Inicial
+    const NEW_USER = 'test_user_newbie';
+    assert.equal(isFirstTimeUser(NEW_USER), true, 'Novo usuário deve ser identificado como first time user.');
+    assert.equal(hasClaimedStarterKit(NEW_USER), false, 'Novo usuário não deve ter resgatado o kit ainda.');
+    
+    const starterKitRes = claimStarterKit(NEW_USER);
+    assert.equal(starterKitRes.success, true, 'Kit inicial deve ser resgatado com sucesso.');
+    assert.equal(hasClaimedStarterKit(NEW_USER), true, 'Usuário deve estar marcado como tendo resgatado o kit.');
+    
+    // Tentativa duplicada de resgatar kit
+    const duplicateKit = claimStarterKit(NEW_USER);
+    assert.equal(duplicateKit.success, false, 'Não deve permitir resgatar o kit duas vezes.');
+
+    // Filtro por elemento
+    const shadowPets = getPetsByElement('SOMBRA');
+    assert.ok(shadowPets.length > 0, 'Deve retornar pets do elemento Sombra.');
+    assert.ok(shadowPets.some((p) => p.key === 'morcego' || p.key === 'rato'));
+
     // Dá moedas para os dois usuários
     updateUserAccount(USER_A, (acc) => { acc.coins = 50000; });
     updateUserAccount(USER_B, (acc) => { acc.coins = 50000; });

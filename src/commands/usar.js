@@ -32,6 +32,7 @@ function buildReply(result) {
     return `🏠 Você usou **${result.item.name}**! Seu limite de pets na mochila agora é de **${result.newMaxSlots} slots**!`;
   }
 
+  return `✨ Você utilizou **${result.item.emoji} ${result.item.name}** no seu pet **${result.pet?.name}**!${levelMsg}\nUse \`/pet\` para conferir o status atualizado.`;
   const effectsText = result.effectsSummary ? `\n📊 **Efeitos:** ${result.effectsSummary}` : '';
   const statusText = result.statusSummary ? `\n🐾 **Status atual de ${result.pet.name}:** ${result.statusSummary}` : '';
 

@@ -4,22 +4,79 @@ const { getActivePet } = require('../services/pets');
 const { formatCoins, formatRemaining } = require('./economyHelpers');
 const { PET_EXPLORE } = require('./commandNames');
 
-function buildExplorationReply(result) {
+function buildExplorationReply(userId, result) {
   if (!result.success) {
     if (result.reason === 'no_pet') {
-      return { content: '❌ Você precisa de um pet ativo para explorar! Adote um usando `/adocao`.' };
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`onboard_adopt:${userId}`)
+          .setLabel('Adotar Primeiro Pet')
+          .setEmoji('🐾')
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId(`onboard_kit:${userId}`)
+          .setLabel('Resgatar Kit Inicial')
+          .setEmoji('🎁')
+          .setStyle(ButtonStyle.Primary)
+      );
+      return {
+        content: '❌ Você precisa de um pet ativo para explorar! Adote um abaixo sem precisar digitar nada:',
+        components: [row],
+      };
     }
     if (result.reason === 'low_level') {
-      return { content: `❌ A dungeon **${result.zone.name}** exige **Nível ${result.requiredLevel}+**, mas seu pet está no **Nível ${result.petLevel}**.` };
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`pet_explore_zones:${userId}`)
+          .setLabel('Ver Outras Dungeons')
+          .setEmoji('🧭')
+          .setStyle(ButtonStyle.Primary)
+      );
+      return {
+        content: `❌ A dungeon **${result.zone.name}** exige **Nível ${result.requiredLevel}+**, mas seu pet está no **Nível ${result.petLevel}**.`,
+        components: [row],
+      };
     }
     if (result.reason === 'too_hungry') {
-      return { content: `❌ Seu pet está com muita fome (${result.hunger}%) e se recusa a explorar! Alimente-o usando \`/pet\` ou \`/usar\`.` };
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`pet_feed_menu:${userId}`)
+          .setLabel('Alimentar Pet Agora')
+          .setEmoji('🍖')
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId(`inv_select:${userId}`)
+          .setLabel('Abrir Mochila')
+          .setEmoji('🎒')
+          .setStyle(ButtonStyle.Secondary)
+      );
+      return {
+        content: `❌ Seu pet está com muita fome (**${result.hunger}%**) e se recusa a explorar! Alimente-o usando o botão abaixo:`,
+        components: [row],
+      };
     }
     if (result.reason === 'no_energy') {
-      return { content: `❌ Energia insuficiente (${result.energy}% / ${result.requiredEnergy}% necessário). Coloque seu pet para dormir usando \`/pet\` ou dê uma poção.` };
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`pet_sleep:${userId}`)
+          .setLabel('Colocar Pet para Dormir')
+          .setEmoji('💤')
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId(`inv_select:${userId}`)
+          .setLabel('Usar Poção na Mochila')
+          .setEmoji('🧪')
+          .setStyle(ButtonStyle.Secondary)
+      );
+      return {
+        content: `❌ Energia insuficiente (**${result.energy}%** / **${result.requiredEnergy}%** necessário). Coloque seu pet para dormir ou use uma poção:`,
+        components: [row],
+      };
     }
     if (result.reason === 'cooldown') {
-      return { content: `⏳ A dungeon **${result.zone.name}** está em cooldown! Tente novamente em **${formatRemaining(result.remainingMs)}**.` };
+      return {
+        content: `⏳ A dungeon **${result.zone.name}** está em cooldown! Tente novamente em **${formatRemaining(result.remainingMs)}**.`,
+      };
     }
     return { content: '❌ Não foi possível explorar esta dungeon no momento.' };
   }
@@ -35,7 +92,7 @@ function buildExplorationReply(result) {
   let itemsText = '';
   if (result.droppedItems && result.droppedItems.length > 0) {
     const list = result.droppedItems.map((i) => `> ${i.emoji} **${i.name}** (\`${i.category}\`)`).join('\n');
-    itemsText = `\n\n🎁 **Itens Encontrados na Dungeon:**\n${list}\n*(Guardados na sua mochila \`/inventario\`)*`;
+    itemsText = `\n\n🎁 **Itens Encontrados na Dungeon:**\n${list}\n*(Guardados na sua mochila)*`;
   }
 
   let levelMsg = '';
@@ -57,7 +114,31 @@ function buildExplorationReply(result) {
     .setFooter({ text: 'Cringelândia Dungeons • Kuromi supervisiona cada tesouro resgatado' })
     .setTimestamp();
 
-  return { embeds: [embed] };
+  const actionRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`dungeon_start:${userId}:${result.zone.key}`)
+      .setLabel('Explorar Novamente')
+      .setEmoji('🧭')
+      .setStyle(ButtonStyle.Success)
+      .setDisabled(result.pet.energy < result.zone.energyCost || result.pet.hunger <= 15),
+    new ButtonBuilder()
+      .setCustomId(`pet_feed_menu:${userId}`)
+      .setLabel('Alimentar')
+      .setEmoji('🍖')
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`inv_select:${userId}`)
+      .setLabel('Abrir Mochila')
+      .setEmoji('🎒')
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`pet_view:${userId}`)
+      .setLabel('Ver Cartão')
+      .setEmoji('🐾')
+      .setStyle(ButtonStyle.Primary)
+  );
+
+  return { embeds: [embed], components: [actionRow] };
 }
 
 function isDungeonInteraction(interaction) {
@@ -75,12 +156,12 @@ async function handleDungeonInteraction(interaction) {
   }
 
   const result = exploreDungeon(ownerId, zoneKey);
-  const replyData = buildExplorationReply(result);
+  const replyData = buildExplorationReply(ownerId, result);
 
   if (replyData.embeds) {
-    await interaction.update({ embeds: replyData.embeds, components: [] });
+    await interaction.update({ embeds: replyData.embeds, components: replyData.components || [] });
   } else {
-    await interaction.reply({ content: replyData.content, ephemeral: true });
+    await interaction.reply({ content: replyData.content, components: replyData.components || [], ephemeral: true });
   }
 }
 
@@ -105,13 +186,13 @@ module.exports = {
   async executePrefix({ message, args }) {
     const zoneKey = args[0] ? args[0].toLowerCase() : 'jardim';
     const result = exploreDungeon(message.author.id, zoneKey);
-    const replyData = buildExplorationReply(result);
+    const replyData = buildExplorationReply(message.author.id, result);
     await message.reply(replyData);
   },
   async executeSlash({ interaction }) {
     const zoneKey = interaction.options.getString('zona') || 'jardim';
     const result = exploreDungeon(interaction.user.id, zoneKey);
-    const replyData = buildExplorationReply(result);
+    const replyData = buildExplorationReply(interaction.user.id, result);
     await interaction.editReply(replyData);
   },
   isDungeonInteraction,

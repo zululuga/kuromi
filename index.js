@@ -19,6 +19,7 @@ const helpCommand = require('./src/commands/help');
 const shopCommand = require('./src/commands/loja');
 const inventoryCommand = require('./src/commands/inventario');
 const petCommand = require('./src/commands/pet');
+const adoptionCommand = require('./src/commands/adocao');
 const dungeonCommand = require('./src/commands/petexplorar');
 const duelCommand = require('./src/commands/petduelo');
 const { registerAutomation, updateAutomation } = require('./src/services/automationSchedule');
@@ -466,6 +467,13 @@ client.on('interactionCreate', async (interaction) => {
     incrementCommand();
     recordUniqueUser(interaction.user.id);
     await petCommand.handlePetInteraction(interaction);
+    return;
+  }
+
+  if (adoptionCommand.isAdoptionInteraction(interaction)) {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await adoptionCommand.handleAdoptionInteraction(interaction);
     return;
   }
 
