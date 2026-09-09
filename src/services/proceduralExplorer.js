@@ -121,8 +121,8 @@ function advanceStep(userId, activePet, awardXpFn) {
   // Sorteia o terreno do passo
   const terrain = TERRAINS[Math.floor(Math.random() * TERRAINS.length)];
   run.currentTerrain = terrain;
-  const baseCost = 8;
-  const totalCost = Math.max(3, baseCost + terrain.costModifier);
+  const baseCost = 10;
+  const totalCost = Math.max(6, baseCost + terrain.costModifier);
 
   // Valida energia
   if (activePet.energy < totalCost) {
@@ -130,13 +130,14 @@ function advanceStep(userId, activePet, awardXpFn) {
       success: false,
       reason: 'exhausted',
       cost: totalCost,
-      message: `⚡ **Exaustão!** ${activePet.name} não tem energia suficiente para atravessar o **${terrain.name}** (Precisa de ${totalCost}⚡, possui ${activePet.energy}⚡). Resgate seus espólios ou tome uma poção!`,
+      message: `⚡ **Exaustão!** ${activePet.name} não tem energia suficiente para atravessar o **${terrain.name}** (Precisa de ${totalCost}⚡, possui ${activePet.energy}⚡). Resgate seus espólios ou tome uma poção de éter!`,
     };
   }
 
   // Consome energia e fome
   activePet.energy = Math.max(0, activePet.energy - totalCost);
-  activePet.hunger = Math.max(0, activePet.hunger - 2);
+  activePet.lastEnergyUpdateAt = Date.now();
+  activePet.hunger = Math.max(0, activePet.hunger - 3);
   run.step += 1;
   run.lastActivityAt = Date.now();
 
@@ -144,13 +145,13 @@ function advanceStep(userId, activePet, awardXpFn) {
   const roll = Math.random();
   let eventResult = {};
 
-  if (roll < 0.50) {
-    // 50% Encontro Selvagem (Combate Rápido em RAM)
+  if (roll < 0.62) {
+    // 62% Batalha Selvagem (Combate Rápido em RAM)
     const enemyAtk = Math.max(5, Math.floor(activePet.stats.atk * 0.8 + Math.random() * 5));
     const damageTaken = Math.max(2, Math.floor(enemyAtk - activePet.stats.def * 0.3));
     activePet.stats.hp = Math.max(1, activePet.stats.hp - damageTaken);
 
-    const coinsWon = Math.floor(30 + Math.random() * 50 + activePet.level * 10);
+    const coinsWon = Math.floor(35 + Math.random() * 55 + activePet.level * 10);
     const xpWon = Math.floor(15 + Math.random() * 20);
 
     run.coinsAccumulated += coinsWon;
@@ -162,8 +163,8 @@ function advanceStep(userId, activePet, awardXpFn) {
       title: 'Monstro das Sombras!',
       description: `${activePet.name} venceu uma criatura selvagem e recolheu **+${coinsWon} moedas** e **+${xpWon} XP** (Sofreu -${damageTaken} HP).`,
     };
-  } else if (roll < 0.70) {
-    // 20% Baú de Tesouro Encontrado!
+  } else if (roll < 0.80) {
+    // 18% Baú de Tesouro Encontrado!
     const isRareChest = Math.random() < 0.25;
     const chestId = isRareChest ? 'bau_caos' : 'bau_madeira';
     const chestName = isRareChest ? 'Baú Travesso de Pyxie 💜' : 'Baú Rústico 📦';
@@ -177,19 +178,7 @@ function advanceStep(userId, activePet, awardXpFn) {
       title: 'Baú Misterioso Encontrado!',
       description: `${activePet.name} encontrou um **${chestName}** trancado entre as raízes! Guardado nos espólios.`,
     };
-  } else if (roll < 0.85) {
-    // 15% Fonte Restauradora
-    const recoveredEnergy = 15;
-    activePet.energy = Math.min(100, activePet.energy + recoveredEnergy);
-    run.xpAccumulated += 10;
-
-    eventResult = {
-      type: 'FOUNTAIN',
-      emoji: '⛲',
-      title: 'Fonte Cristalina de Pyxie',
-      description: `Uma água pura e revigorante restaurou **+${recoveredEnergy} ⚡ de Energia** para ${activePet.name}!`,
-    };
-  } else if (roll < 0.93) {
+  } else if (roll < 0.88) {
     // 8% Ninho Selvagem com Ovo Raro
     const possibleEggs = run.zone.eggs;
     const eggId = possibleEggs[Math.floor(Math.random() * possibleEggs.length)];
@@ -208,7 +197,7 @@ function advanceStep(userId, activePet, awardXpFn) {
       title: 'Ninho Secreto Descoberto!',
       description: `Com muita sorte, ${activePet.name} encontrou um **${eggName}** raro! Guardado nos espólios.`,
     };
-  } else {
+  } else if (roll < 0.95) {
     // 7% Armadilha / Emboscada
     const trapDmg = Math.floor(8 + Math.random() * 8);
     activePet.stats.hp = Math.max(1, activePet.stats.hp - trapDmg);
@@ -218,6 +207,18 @@ function advanceStep(userId, activePet, awardXpFn) {
       emoji: '🪤',
       title: 'Armadilha Antiga!',
       description: `${activePet.name} pisou em falso e acionou espinhos mágicos (-${trapDmg} HP).`,
+    };
+  } else {
+    // 5% Fonte Restauradora (Rara)
+    const recoveredEnergy = 6;
+    activePet.energy = Math.min(100, activePet.energy + recoveredEnergy);
+    run.xpAccumulated += 10;
+
+    eventResult = {
+      type: 'FOUNTAIN',
+      emoji: '⛲',
+      title: 'Fonte Cristalina de Pyxie',
+      description: `Uma brisa de orvalho revigorou ligeiramente ${activePet.name} (+${recoveredEnergy} ⚡ de Energia).`,
     };
   }
 

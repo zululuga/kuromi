@@ -150,21 +150,31 @@ function migrateLegacyPet(userId, userRecord) {
  */
 function updateDynamicPetState(pet) {
   const now = Date.now();
-  // Fome: perde ~5% a cada 2 horas
-  const hoursSinceFed = Math.max(0, (now - (pet.lastFedAt || now)) / (1000 * 60 * 60));
-  const hungerDecay = Math.floor(hoursSinceFed * 2.5);
-  const currentHunger = typeof pet.hunger === 'number' ? pet.hunger : 80;
-  pet.hunger = Math.max(5, Math.min(100, currentHunger - hungerDecay));
 
-  // Humor: perde um pouco se estiver com muita fome
+  // 1. Fome: decai ~2.5% por hora (5% a cada 2 horas)
+  if (!pet.lastFedAt) pet.lastFedAt = now;
+  const hoursSinceFed = Math.max(0, (now - pet.lastFedAt) / (1000 * 60 * 60));
+  if (hoursSinceFed >= 1) {
+    const hungerDecay = Math.floor(hoursSinceFed * 2.5);
+    pet.hunger = Math.max(5, Math.min(100, (typeof pet.hunger === 'number' ? pet.hunger : 80) - hungerDecay));
+    pet.lastFedAt = now - ((now - pet.lastFedAt) % (1000 * 60 * 60));
+  }
+
+  // 2. Humor: perde um pouco se estiver com fome crítica (< 30)
   if (pet.hunger < 30) {
     pet.happiness = Math.max(10, Math.min(100, (pet.happiness || 50) - 10));
   }
 
-  // Energia: regenera +1 ⚡ a cada 3 minutos (20 ⚡ por hora)
-  const minsSinceExplore = Math.max(0, (now - (pet.lastExploreAt || now)) / (1000 * 60));
-  const energyRecovered = Math.floor(minsSinceExplore / 3);
-  pet.energy = Math.max(0, Math.min(100, (pet.energy || 50) + energyRecovered));
+  // 3. Energia: regenera +1 ⚡ a cada 3 minutos reais (20 ⚡ por hora)
+  if (!pet.lastEnergyUpdateAt) {
+    pet.lastEnergyUpdateAt = now;
+  }
+  const minsSinceEnergyUpdate = Math.max(0, (now - pet.lastEnergyUpdateAt) / (1000 * 60));
+  if (minsSinceEnergyUpdate >= 3) {
+    const energyRecovered = Math.floor(minsSinceEnergyUpdate / 3);
+    pet.energy = Math.max(0, Math.min(100, (typeof pet.energy === 'number' ? pet.energy : 100) + energyRecovered));
+    pet.lastEnergyUpdateAt = now - ((now - pet.lastEnergyUpdateAt) % (1000 * 60 * 3));
+  }
 
   return pet;
 }
@@ -650,5 +660,6 @@ module.exports = {
   hatchIncubatorEgg,
   useHourglassOnIncubator,
   expandUserIncubator,
+  schedulePetsSave,
   flushPetsSync,
 };

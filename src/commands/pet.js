@@ -24,6 +24,7 @@ const {
   awardPetXp,
   useHourglassOnIncubator,
   expandUserIncubator,
+  schedulePetsSave,
   CARINHO_COOLDOWN_MS,
   SLEEP_COOLDOWN_MS,
 } = require('../services/pets');
@@ -722,6 +723,7 @@ async function handleHubInteraction(interaction) {
   if (action === 'hub_dungeon_step') {
     const activePet = getActivePet(userId);
     const stepRes = advanceStep(userId, activePet, awardPetXp);
+    schedulePetsSave();
     if (!stepRes.success) {
       return interaction.reply({ content: `❌ ${stepRes.message}`, flags: 64 });
     }
@@ -739,6 +741,7 @@ async function handleHubInteraction(interaction) {
   if (action === 'hub_dungeon_retreat') {
     const activePet = getActivePet(userId);
     const retreatRes = retreatRun(userId, activePet, awardPetXp);
+    schedulePetsSave();
     if (!retreatRes.success) {
       return interaction.reply({ content: `❌ ${retreatRes.message}`, flags: 64 });
     }
