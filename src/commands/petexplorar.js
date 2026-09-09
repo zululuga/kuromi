@@ -1,9 +1,11 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { getActivePet } = require('../services/pets');
+const { startProceduralRun } = require('../services/proceduralExplorer');
 const { PET_EXPLORE } = require('./commandNames');
 const petHubCommand = require('./pet');
 
 module.exports = {
+  name: PET_EXPLORE,
   data: new SlashCommandBuilder()
     .setName(PET_EXPLORE)
     .setDescription('Inicia expedições em dungeons procedurais com consumo de estamina por passo.')
@@ -20,28 +22,19 @@ module.exports = {
         )
     ),
   aliases: ['dungeon', 'explorar', 'expedicao', 'aventura'],
-  async execute(interaction) {
+  async executeSlash({ interaction }) {
     const userId = interaction.user.id;
-    const userTag = interaction.user.displayName || interaction.user.username;
-    const directZone = interaction.options.getString('zona');
+    const directZone = interaction.options?.getString('zona');
 
     if (directZone) {
       const activePet = getActivePet(userId);
-      const { startProceduralRun } = require('../services/proceduralExplorer');
       startProceduralRun(userId, directZone, activePet);
     }
 
-    // Abre diretamente na aba de Dungeons do Hub
-    const { buildHubView } = petHubCommand;
-    // O Hub trata de renderizar a aba de dungeon quando chamada via evento ou comando
-    const view = require('./pet').isPetInteraction
-      ? petHubCommand.buildHubView(userId, userTag)
-      : null;
-
-    // Redireciona para o Hub
-    return petHubCommand.execute(interaction);
+    // Abre na aba de Dungeon do Hub
+    return petHubCommand.executeSlash({ interaction });
   },
-  async executePrefix(message, args) {
-    return petHubCommand.executePrefix(message);
+  async executePrefix({ message, args }) {
+    return petHubCommand.executePrefix({ message });
   },
 };

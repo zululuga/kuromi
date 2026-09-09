@@ -298,20 +298,21 @@ async function handleInventoryInteraction(interaction) {
 }
 
 module.exports = {
+  name: INVENTORY,
   data: new SlashCommandBuilder()
     .setName(INVENTORY)
     .setDescription('Visualiza e gerencia a sua mochila de itens e ovos.'),
   aliases: ['mochila', 'inv', 'bag'],
   isInventoryInteraction,
   handleInventoryInteraction,
-  async execute(interaction) {
+  async executeSlash({ interaction }) {
     const userId = interaction.user.id;
     const userTag = interaction.user.displayName || interaction.user.username;
     const embed = buildInventoryEmbed(userId, userTag, null);
     const components = buildInventoryComponents(userId, null);
-    await interaction.reply({ embeds: [embed], components });
+    await interaction.editReply({ embeds: [embed], components });
   },
-  async executePrefix(message) {
+  async executePrefix({ message }) {
     const userId = message.author.id;
     const userTag = message.author.displayName || message.author.username;
     const embed = buildInventoryEmbed(userId, userTag, null);

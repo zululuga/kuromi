@@ -836,6 +836,7 @@ async function handleHubInteraction(interaction) {
 }
 
 module.exports = {
+  name: PET,
   data: new SlashCommandBuilder()
     .setName(PET)
     .setDescription('Abre o Hub Central de Mascotes de Pyxie (100% interativo via botões).'),
@@ -844,13 +845,13 @@ module.exports = {
   buildHubView: buildPetTab,
   isPetInteraction: isHubInteraction,
   handlePetInteraction: handleHubInteraction,
-  async execute(interaction) {
+  async executeSlash({ interaction }) {
     const userId = interaction.user.id;
     const userTag = interaction.user.displayName || interaction.user.username;
     const view = buildPetTab(userId, userTag);
-    await interaction.reply(view);
+    await interaction.editReply(view);
   },
-  async executePrefix(message) {
+  async executePrefix({ message }) {
     const userId = message.author.id;
     const userTag = message.author.displayName || message.author.username;
     const view = buildPetTab(userId, userTag);

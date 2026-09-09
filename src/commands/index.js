@@ -31,10 +31,13 @@ const commands = [
 ];
 
 const commandsByName = new Map(
-  commands.flatMap((command) => [
-    [command.name, command],
-    ...(command.aliases || []).map((alias) => [alias, command]),
-  ])
+  commands.flatMap((command) => {
+    const mainName = command.name || command.data?.name;
+    const entries = [];
+    if (mainName) entries.push([mainName, command]);
+    (command.aliases || []).forEach((alias) => entries.push([alias, command]));
+    return entries;
+  })
 );
 
 module.exports = {

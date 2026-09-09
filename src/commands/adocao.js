@@ -281,6 +281,7 @@ async function handleAdoptionInteraction(interaction) {
 }
 
 module.exports = {
+  name: ADOPTION,
   data: new SlashCommandBuilder()
     .setName(ADOPTION)
     .setDescription('Abre o Centro de Adoção de Mascotes com filtros por elemento e 1-clique.')
@@ -294,14 +295,14 @@ module.exports = {
   aliases: ['adotar', 'adote', 'petshop', 'canil'],
   isAdoptionInteraction,
   handleAdoptionInteraction,
-  async execute(interaction) {
+  async executeSlash({ interaction }) {
     const userId = interaction.user.id;
     const directPet = interaction.options.getString('pet');
 
     if (directPet) {
       const result = adoptPet(userId, directPet);
       if (!result.success) {
-        return interaction.reply({ content: `❌ ${result.message || 'Falha ao adotar.'}`, flags: 64 });
+        return interaction.editReply({ content: `❌ ${result.message || 'Falha ao adotar.'}` });
       }
       const adopted = result.pet;
       const shinyText = adopted.shiny ? ' ✨ **SHINY!**' : '';
@@ -310,14 +311,14 @@ module.exports = {
         .setTitle(`🎉  ✦  Mascote Adotado com Sucesso!${shinyText}`)
         .setDescription(`Você adotou **${adopted.name}** ${adopted.emoji} por ${formatCoins(result.cost)}!`)
         .setImage('attachment://pet_card.png');
-      return interaction.reply({ embeds: [embed], files: [createPetAttachment(adopted)] });
+      return interaction.editReply({ embeds: [embed], files: [createPetAttachment(adopted)] });
     }
 
     const embed = buildAdoptionEmbed('TODOS', null);
     const components = buildAdoptionComponents(userId, 'TODOS', null);
-    await interaction.reply({ embeds: [embed], components });
+    await interaction.editReply({ embeds: [embed], components });
   },
-  async executePrefix(message, args) {
+  async executePrefix({ message, args }) {
     const userId = message.author.id;
     const embed = buildAdoptionEmbed('TODOS', null);
     const components = buildAdoptionComponents(userId, 'TODOS', null);

@@ -161,6 +161,7 @@ async function handleShopInteraction(interaction) {
 }
 
 module.exports = {
+  name: SHOP,
   data: new SlashCommandBuilder()
     .setName(SHOP)
     .setDescription('Abre a Lojinha de Mascotes e Itens de Pyxie com categorias e compras em 1 clique.')
@@ -180,16 +181,16 @@ module.exports = {
   aliases: ['lojinha', 'mercado', 'mercadinho', 'shop'],
   isShopInteraction,
   handleShopInteraction,
-  async execute(interaction) {
+  async executeSlash({ interaction }) {
     const userId = interaction.user.id;
-    const directCat = interaction.options.getString('categoria') || 'comida';
+    const directCat = interaction.options?.getString('categoria') || 'comida';
     const embed = buildShopEmbed(directCat);
     const components = buildShopComponents(directCat, userId);
-    await interaction.reply({ embeds: [embed], components });
+    await interaction.editReply({ embeds: [embed], components });
   },
-  async executePrefix(message, args) {
+  async executePrefix({ message, args }) {
     const userId = message.author.id;
-    const cat = args[0] ? args[0].toLowerCase() : 'comida';
+    const cat = args && args[0] ? args[0].toLowerCase() : 'comida';
     const validCat = CATEGORIES.some((c) => c.value === cat) ? cat : 'comida';
     const embed = buildShopEmbed(validCat);
     const components = buildShopComponents(validCat, userId);

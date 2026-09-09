@@ -32,11 +32,10 @@ function buildReply(result) {
     return `🏠 Você usou **${result.item.name}**! Seu limite de pets na mochila agora é de **${result.newMaxSlots} slots**!`;
   }
 
-  return `✨ Você utilizou **${result.item.emoji} ${result.item.name}** no seu pet **${result.pet?.name}**!${levelMsg}\nUse \`/pet\` para conferir o status atualizado.`;
   const effectsText = result.effectsSummary ? `\n📊 **Efeitos:** ${result.effectsSummary}` : '';
-  const statusText = result.statusSummary ? `\n🐾 **Status atual de ${result.pet.name}:** ${result.statusSummary}` : '';
+  const statusText = result.statusSummary ? `\n🐾 **Status atual de ${result.pet?.name}:** ${result.statusSummary}` : '';
 
-  return `✨ Você utilizou **${result.item.emoji} ${result.item.name}** no seu pet **${result.pet?.name}**!${effectsText}${statusText}${levelMsg}\nUse \`/pet\` para conferir o cartão atualizado.`;
+  return `✨ Você utilizou **${result.item ? result.item.emoji : '📦'} ${result.item ? result.item.name : 'item'}** no seu pet **${result.pet?.name}**!${effectsText}${statusText}${levelMsg}\nUse \`/pet\` para conferir o cartão atualizado.`;
 }
 
 module.exports = {
