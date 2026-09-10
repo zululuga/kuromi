@@ -32,15 +32,18 @@ function buildPokedexEmbed(selectedKey = 'cinna') {
     .setColor(colorMap[starter.element] || PYXIE_COLORS.lilac)
     .setTitle(`📖  ✦  Pokédex PixelMonsters — Escolha seu Inicial!`)
     .setDescription(
-      `Escolha o seu companheiro inicial para começar sua jornada no Reino de Pyxie!\n\n` +
-      `✨ **PROBABILIDADE SHINY:** Há **5% de chance** do seu inicial nascer **SHINY RARO**!\n` +
-      `🔒 **REGRA DE ADOÇÃO:** Você só pode escolher **1 inicial**. Após a escolha, novos PixelMonsters só poderão ser obtidos encontrando ovos em **Dungeons** e chocando na **Chocadeira**!\n\n` +
-      `**Monstro Selecionado:** ${starter.emoji} **${starter.name}** (\`${starter.element}\`)\n` +
+      `Escolha o seu companheiro para iniciar sua jornada no Reino de Pyxie!\n\n` +
+      `✨ **PROBABILIDADE SHINY**\n` +
+      `Há **5% de chance** do seu inicial nascer em sua forma **Shiny Rara**!\n\n` +
+      `🔒 **REGRA DE ADOÇÃO**\n` +
+      `Você só pode escolher **1 inicial**. Após a escolha, novos PixelMonsters só poderão ser obtidos encontrando ovos em **Dungeons** e chocando na **Chocadeira**!\n\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+      `🐾 **Monstro Selecionado:** ${starter.emoji} **${starter.name}** (\`${starter.element}\`)\n` +
       `> *"${starter.description}"*\n\n` +
-      `💖 HP: **${starter.baseStats.hp}** | ⚔️ ATK: **${starter.baseStats.atk}** | 🛡️ DEF: **${starter.baseStats.def}** | 💨 SPD: **${starter.baseStats.spd}**`
+      `💖 HP: **${starter.baseStats.hp}**  •  ⚔️ ATK: **${starter.baseStats.atk}**  •  🛡️ DEF: **${starter.baseStats.def}**  •  💨 SPD: **${starter.baseStats.spd}**`
     )
     .setImage('attachment://pokedex_entry.png')
-    .setFooter({ text: pyxieFooter('Pokédex PixelMonsters • 5% Taxa de Shiny Inicial') })
+    .setFooter({ text: pyxieFooter('Pokédex PixelMonsters • Escolha seu companheiro inicial') })
     .setTimestamp();
 
   return embed;

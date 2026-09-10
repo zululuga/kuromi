@@ -107,6 +107,27 @@ function drawPixelatedSprite(ctx, img, targetX, targetY, targetSize) {
   ctx.restore();
 }
 
+function wrapCanvasText(ctx, text, maxWidth) {
+  const words = text.split(/\s+/);
+  const lines = [];
+  let currentLine = '';
+
+  for (const word of words) {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    const metrics = ctx.measureText(testLine);
+    if (metrics.width > maxWidth && currentLine) {
+      lines.push(currentLine);
+      currentLine = word;
+    } else {
+      currentLine = testLine;
+    }
+  }
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+  return lines;
+}
+
 function drawProgressBar(ctx, x, y, width, height, current, max, fillStart, fillEnd, label) {
   ctx.save();
   ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
@@ -177,15 +198,15 @@ function renderPetCard(pet) {
   ctx.lineWidth = 1;
   ctx.strokeRect(22, 22, WIDTH - 44, HEIGHT - 44);
 
-  // Cantoneiras Pixeladas ✦
+  // Cantoneiras Pixeladas
   ctx.fillStyle = theme.accent;
   ctx.font = 'bold 16px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('✦', 22, 22);
-  ctx.fillText('✦', WIDTH - 22, 22);
-  ctx.fillText('✦', 22, HEIGHT - 22);
-  ctx.fillText('✦', WIDTH - 22, HEIGHT - 22);
+  ctx.fillText('+', 22, 22);
+  ctx.fillText('+', WIDTH - 22, 22);
+  ctx.fillText('+', 22, HEIGHT - 22);
+  ctx.fillText('+', WIDTH - 22, HEIGHT - 22);
 
   // 3. Avatar Central do PixelMonster
   const avatarCx = 160;
@@ -215,7 +236,6 @@ function renderPetCard(pet) {
   if (sprite) {
     drawPixelatedSprite(ctx, sprite, avatarCx, avatarCy, 136);
   } else {
-    // Fallback emoji se o sprite não for encontrado
     ctx.font = '64px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -227,12 +247,12 @@ function renderPetCard(pet) {
     ctx.fillStyle = '#facc15';
     ctx.font = 'bold 13px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('✨ SHINY (5%)', avatarCx, avatarCy + avatarR + 24);
+    ctx.fillText('SHINY', avatarCx, avatarCy + avatarR + 24);
   } else if (pet.corrupt) {
     ctx.fillStyle = '#f43f5e';
     ctx.font = 'bold 13px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('🖤 CORROMPIDO', avatarCx, avatarCy + avatarR + 24);
+    ctx.fillText('CORROMPIDO', avatarCx, avatarCy + avatarR + 24);
   }
 
   // 4. Header: Nome e Título
@@ -247,7 +267,7 @@ function renderPetCard(pet) {
   // Badges (Level e Elemento)
   ctx.fillStyle = theme.accent;
   ctx.font = 'bold 14px sans-serif';
-  ctx.fillText(`Nível ${pet.level}  •  ${pet.species || pet.name}  •  ${theme.badgeText}`, 310, 98);
+  ctx.fillText(`Nível ${pet.level}  •  ${pet.species || pet.name}  •  Elemento: ${pet.element}`, 310, 98);
 
   // 5. Barras de Progresso
   const barX = 310;
@@ -257,11 +277,11 @@ function renderPetCard(pet) {
   const currentHp = pet.stats?.hp !== undefined ? pet.stats.hp : 55;
   const maxHp = pet.stats?.maxHp !== undefined ? pet.stats.maxHp : 55;
 
-  drawProgressBar(ctx, barX, 130, barW, barH, currentHp, maxHp, '#10b981', '#34d399', '💖 Vida (HP)');
-  drawProgressBar(ctx, barX, 162, barW, barH, pet.hunger || 0, 100, '#f97316', '#fb923c', '🍖 Fome');
-  drawProgressBar(ctx, barX, 194, barW, barH, pet.happiness || 0, 100, '#ec4899', '#f472b6', '😊 Humor');
-  drawProgressBar(ctx, barX, 226, barW, barH, pet.energy || 0, 100, '#eab308', '#facc15', '⚡ Energia');
-  drawProgressBar(ctx, barX, 258, barW, barH, pet.xp || 0, pet.xpToNext || 100, '#06b6d4', '#38bdf8', '⭐ Experiência (XP)');
+  drawProgressBar(ctx, barX, 130, barW, barH, currentHp, maxHp, '#10b981', '#34d399', 'Vida (HP)');
+  drawProgressBar(ctx, barX, 162, barW, barH, pet.hunger || 0, 100, '#f97316', '#fb923c', 'Fome');
+  drawProgressBar(ctx, barX, 194, barW, barH, pet.happiness || 0, 100, '#ec4899', '#f472b6', 'Humor');
+  drawProgressBar(ctx, barX, 226, barW, barH, pet.energy || 0, 100, '#eab308', '#facc15', 'Energia');
+  drawProgressBar(ctx, barX, 258, barW, barH, pet.xp || 0, pet.xpToNext || 100, '#06b6d4', '#38bdf8', 'Experiência (XP)');
 
   // 6. Painel de Atributos de Batalha (Grid Inferior)
   const gridY = 320;
@@ -273,10 +293,10 @@ function renderPetCard(pet) {
   const spd = pet.stats?.spd !== undefined ? pet.stats.spd : 12;
 
   const statBoxes = [
-    { label: 'ATAQUE', val: atk, icon: '⚔️', x: 310 },
-    { label: 'DEFESA', val: def, icon: '🛡️', x: 425 },
-    { label: 'VELOCIDADE', val: spd, icon: '💨', x: 540 },
-    { label: 'VITÓRIAS', val: `${pet.duelosVencidos || 0}/${(pet.duelosVencidos || 0) + (pet.duelosPerdidos || 0)}`, icon: '🏆', x: 655 },
+    { label: 'ATAQUE', val: atk, x: 310 },
+    { label: 'DEFESA', val: def, x: 425 },
+    { label: 'VELOCIDADE', val: spd, x: 540 },
+    { label: 'VITÓRIAS', val: `${pet.duelosVencidos || 0}/${(pet.duelosVencidos || 0) + (pet.duelosPerdidos || 0)}`, x: 655 },
   ];
 
   for (const box of statBoxes) {
@@ -288,9 +308,9 @@ function renderPetCard(pet) {
     ctx.stroke();
 
     ctx.fillStyle = theme.accent;
-    ctx.font = 'bold 10px sans-serif';
+    ctx.font = 'bold 11px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`${box.icon} ${box.label}`, box.x + boxW / 2, gridY + 20);
+    ctx.fillText(box.label, box.x + boxW / 2, gridY + 22);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 18px sans-serif';
@@ -301,7 +321,7 @@ function renderPetCard(pet) {
   ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
   ctx.font = '11px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('🎮 PIXELMONSTERS • REINO TRAVESSO DE PYXIE', WIDTH / 2, 470);
+  ctx.fillText('PIXELMONSTERS • REINO TRAVESSO DE PYXIE', WIDTH / 2, 470);
 
   const buffer = canvas.toBuffer('image/png');
 
@@ -373,24 +393,24 @@ function renderPokedexCard(monsterDef, isShiny = false) {
 
   ctx.fillStyle = theme.accent;
   ctx.font = 'bold 15px sans-serif';
-  ctx.fillText(`PixelMonster Inicial  •  ${theme.badgeText}  •  ✨ 5% Chance Shiny`, 310, 110);
+  ctx.fillText(`PixelMonster Inicial  •  Elemento: ${monsterDef.element}`, 310, 110);
 
-  // Descrição Pokédex
+  // Descrição Pokédex com quebra de linha inteligente
   ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
   ctx.font = 'italic 15px sans-serif';
-  const desc = monsterDef.description || '';
-  const lines = [desc.slice(0, 55), desc.slice(55, 110), desc.slice(110)].filter(Boolean);
-  lines.forEach((line, idx) => {
-    ctx.fillText(`"${line}"`, 310, 155 + idx * 22);
+  const descText = `"${monsterDef.description || ''}"`;
+  const descLines = wrapCanvasText(ctx, descText, 440);
+  descLines.forEach((line, idx) => {
+    ctx.fillText(line, 310, 148 + idx * 22);
   });
 
   // Atributos Base
   const statY = 245;
   const stats = [
-    { label: '💖 Vida Base', val: monsterDef.baseStats?.hp || 55, bar: '#10b981' },
-    { label: '⚔️ Ataque', val: monsterDef.baseStats?.atk || 12, bar: '#f97316' },
-    { label: '🛡️ Defesa', val: monsterDef.baseStats?.def || 12, bar: '#38bdf8' },
-    { label: '💨 Velocidade', val: monsterDef.baseStats?.spd || 12, bar: '#ec4899' },
+    { label: 'Vida Base (HP)', val: monsterDef.baseStats?.hp || 55, bar: '#10b981' },
+    { label: 'Ataque (ATK)', val: monsterDef.baseStats?.atk || 12, bar: '#f97316' },
+    { label: 'Defesa (DEF)', val: monsterDef.baseStats?.def || 12, bar: '#38bdf8' },
+    { label: 'Velocidade (SPD)', val: monsterDef.baseStats?.spd || 12, bar: '#ec4899' },
   ];
 
   stats.forEach((st, idx) => {
@@ -402,7 +422,7 @@ function renderPokedexCard(monsterDef, isShiny = false) {
   ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
   ctx.font = '12px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('📖 POKÉDEX PIXELMONSTERS • ESCOLHA SEU COMPANHEIRO INICIAL', WIDTH / 2, 470);
+  ctx.fillText('POKÉDEX PIXELMONSTERS • ESCOLHA SEU COMPANHEIRO INICIAL', WIDTH / 2, 470);
 
   return canvas.toBuffer('image/png');
 }
