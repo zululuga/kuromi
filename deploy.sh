@@ -33,6 +33,7 @@ cp -a "$BACKUP/data" data
 [ -f "$BACKUP/prefix.json" ] && cp -a "$BACKUP/prefix.json" prefix.json
 
 npm ci --omit=dev
+node src/registerSlashCommands.js || echo "Aviso: falha ao registrar slash commands"
 pm2 restart pyxie --update-env || pm2 startOrReload ecosystem.config.js --update-env
 pm2 save
 pm2 status
