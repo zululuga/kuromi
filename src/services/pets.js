@@ -147,6 +147,8 @@ function getUserPetRecord(userId) {
     };
   }
 
+  ensureUserIncubator(data[userId]);
+  return data[userId];
   const record = data[userId];
   if (!record.dex) {
     record.dex = {};

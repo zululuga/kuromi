@@ -31,12 +31,16 @@ const {
 const {
   getProceduralRun,
   startProceduralRun,
+  movePlayer,
   advanceStep,
   retreatRun,
   panicFlee,
   getDungeonZones,
 } = require('../services/proceduralExplorer');
-const { createPetAttachment } = require('../services/petRenderer');
+const {
+  createPetAttachment,
+  createExpeditionMapAttachment,
+} = require('../services/petRenderer');
 const {
   getUserInventory,
   getItemDefinition,
@@ -50,40 +54,38 @@ const { PYXIE_COLORS } = require('../utils/pyxieVoice');
 const { formatCoins, formatRemaining } = require('./economyHelpers');
 const { PYMONS, PIXELMONSTERS, PET } = require('./commandNames');
 
-// --- Component Builders ---
+// --- Component Builders (Interface Estilo Tamagotchi) ---
 
-function buildHubHeaderRow(userId, currentTab = 'pet') {
+/**
+ * Constrói a barra principal de navegação com 4 botões essenciais.
+ */
+function buildHubHeaderRow(userId, currentTab = 'pet', subMode = null) {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId(`hub_tab:pet:${userId}`)
-      .setLabel('Meu Pymon')
+      .setCustomId(`hub_sub:care:${userId}`)
+      .setLabel('Cuidar')
       .setEmoji('🐾')
-      .setStyle(currentTab === 'pet' ? ButtonStyle.Primary : ButtonStyle.Secondary),
-    new ButtonBuilder()
-      .setCustomId(`hub_tab:incubator:${userId}`)
-      .setLabel('Chocadeira')
-      .setEmoji('🥚')
-      .setStyle(currentTab === 'incubator' ? ButtonStyle.Primary : ButtonStyle.Secondary),
+      .setStyle(subMode === 'care' ? ButtonStyle.Primary : (currentTab === 'pet' ? ButtonStyle.Primary : ButtonStyle.Secondary)),
     new ButtonBuilder()
       .setCustomId(`hub_tab:dungeon:${userId}`)
-      .setLabel('Dungeons')
+      .setLabel('Aventura')
       .setEmoji('🗺️')
       .setStyle(currentTab === 'dungeon' ? ButtonStyle.Primary : ButtonStyle.Secondary),
-    new ButtonBuilder()
-      .setCustomId(`hub_tab:dex:${userId}`)
-      .setLabel('Dex')
-      .setEmoji('📖')
-      .setStyle(currentTab === 'dex' ? ButtonStyle.Primary : ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`hub_tab:inventory:${userId}`)
       .setLabel('Mochila')
       .setEmoji('🎒')
-      .setStyle(currentTab === 'inventory' ? ButtonStyle.Primary : ButtonStyle.Secondary)
+      .setStyle(currentTab === 'inventory' ? ButtonStyle.Primary : ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`hub_sub:more:${userId}`)
+      .setLabel('Mais')
+      .setEmoji('📱')
+      .setStyle(subMode === 'more' || ['dex', 'incubator', 'shop'].includes(currentTab) ? ButtonStyle.Primary : ButtonStyle.Secondary)
   );
 }
 
-// 1. Tab Meu Pymon
-function buildPetTab(userId, userTag) {
+// 1. Tab Meu Pymon (Painel Principal Tamagotchi)
+function buildPetTab(userId, userTag, subMode = null) {
   const activePet = getActivePet(userId);
   const userPets = getUserPets(userId);
 
@@ -104,56 +106,113 @@ function buildPetTab(userId, userTag) {
       `🏆 **Duelos:** **${activePet.duelosVencidos || 0}V - ${activePet.duelosPerdidos || 0}D**`
     )
     .setImage('attachment://pet_card.png')
-    .setFooter({ text: 'Pymons • Painel de Controle' })
+    .setFooter({ text: 'Pymons • Painel Tamagotchi' })
     .setTimestamp();
 
-  const components = [buildHubHeaderRow(userId, 'pet')];
+  const components = [buildHubHeaderRow(userId, 'pet', subMode)];
 
-  // Se o usuário tiver mais de 1 pet, dropdown para alternar
-  if (userPets.length > 1) {
-    const petOptions = userPets.map((p) => ({
-      label: `${p.name} (Nv. ${p.level} ${p.species})`,
-      description: `HP: ${p.stats.hp}/${p.stats.maxHp} • Energia: ${p.energy}% • ${p.element}`,
-      value: p.id,
-      emoji: p.emoji || '🐾',
-      default: p.id === activePet.id,
-    }));
-
-    components.push(
-      new ActionRowBuilder().addComponents(
-        new StringSelectMenuBuilder()
-          .setCustomId(`hub_select_pet:${userId}`)
-          .setPlaceholder('🔄 Alternar Pet Ativo...')
-          .addOptions(petOptions.slice(0, 25))
-      )
+  if (subMode === 'care') {
+    // Submenu Cuidar
+    const careRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`hub_pet_feed:${userId}`)
+        .setLabel('Alimentar')
+        .setEmoji('🍖')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId(`hub_pet_carinho:${userId}`)
+        .setLabel('Carinho')
+        .setEmoji('💖')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId(`hub_pet_sleep:${userId}`)
+        .setLabel('Dormir')
+        .setEmoji('💤')
+        .setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId(`hub_pet_heal:${userId}`)
+        .setLabel('Curativo')
+        .setEmoji('🩹')
+        .setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId(`hub_tab:pet:${userId}`)
+        .setLabel('Fechar')
+        .setEmoji('◀')
+        .setStyle(ButtonStyle.Secondary)
     );
+    components.push(careRow);
+
+  } else if (subMode === 'more') {
+    // Submenu Mais Utilitários
+    const moreRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`hub_tab:dex:${userId}`)
+        .setLabel('Dex')
+        .setEmoji('📖')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId(`hub_tab:incubator:${userId}`)
+        .setLabel('Chocadeira')
+        .setEmoji('🥚')
+        .setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId(`hub_tab:shop:${userId}`)
+        .setLabel('Lojinha')
+        .setEmoji('🛒')
+        .setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId(`hub_tab:pet:${userId}`)
+        .setLabel('Fechar')
+        .setEmoji('◀')
+        .setStyle(ButtonStyle.Secondary)
+    );
+    components.push(moreRow);
+
+  } else {
+    // Menu padrão rápido
+    if (userPets.length > 1) {
+      const petOptions = userPets.map((p) => ({
+        label: `${p.name} (Nv. ${p.level} ${p.species})`,
+        description: `HP: ${p.stats.hp}/${p.stats.maxHp} • Energia: ${p.energy}% • ${p.element}`,
+        value: p.id,
+        emoji: p.emoji || '🐾',
+        default: p.id === activePet.id,
+      }));
+
+      components.push(
+        new ActionRowBuilder().addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`hub_select_pet:${userId}`)
+            .setPlaceholder('🔄 Alternar Pet Ativo...')
+            .addOptions(petOptions.slice(0, 25))
+        )
+      );
+    }
+
+    const quickActionsRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`hub_pet_feed:${userId}`)
+        .setLabel('Alimentar')
+        .setEmoji('🍖')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId(`hub_pet_carinho:${userId}`)
+        .setLabel('Carinho')
+        .setEmoji('💖')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId(`hub_pet_sleep:${userId}`)
+        .setLabel('Dormir')
+        .setEmoji('💤')
+        .setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId(`hub_support_info:${userId}`)
+        .setLabel('Apoiar')
+        .setEmoji('✨')
+        .setStyle(ButtonStyle.Secondary)
+    );
+    components.push(quickActionsRow);
   }
-
-  // Ações do Pet
-  const actionsRow = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId(`hub_pet_feed:${userId}`)
-      .setLabel('Alimentar')
-      .setEmoji('🍖')
-      .setStyle(ButtonStyle.Success),
-    new ButtonBuilder()
-      .setCustomId(`hub_pet_carinho:${userId}`)
-      .setLabel('Carinho')
-      .setEmoji('💖')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setCustomId(`hub_pet_sleep:${userId}`)
-      .setLabel('Dormir')
-      .setEmoji('💤')
-      .setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder()
-      .setCustomId(`hub_support_info:${userId}`)
-      .setLabel('Apoiar')
-      .setEmoji('✨')
-      .setStyle(ButtonStyle.Secondary)
-  );
-
-  components.push(actionsRow);
 
   return {
     embeds: [embed],
@@ -229,7 +288,7 @@ function buildIncubatorTab(userId, userTag) {
       actionRow.addComponents(
         new ButtonBuilder()
           .setCustomId(`hub_hatch_egg:${readySlot.slotIndex}:${userId}`)
-          .setLabel(`Quebrar Casca (Ninho #${readySlot.slotIndex + 1})`)
+          .setLabel(`Quebrar Casca (#${readySlot.slotIndex + 1})`)
           .setEmoji('🐣')
           .setStyle(ButtonStyle.Success)
       );
@@ -253,7 +312,7 @@ function buildIncubatorTab(userId, userTag) {
   return { embeds: [embed], components, files: [] };
 }
 
-// 3. Tab Dungeons & Exploração Procedural
+// 3. Tab Dungeons & Exploração Procedural em Grade 2D
 function buildDungeonTab(userId, userTag) {
   const activePet = getActivePet(userId);
   const run = getProceduralRun(userId);
@@ -262,30 +321,28 @@ function buildDungeonTab(userId, userTag) {
     return buildOnboardingView(userId, userTag);
   }
 
-  const components = [buildHubHeaderRow(userId, 'dungeon')];
-
   if (!run) {
     const zones = getDungeonZones();
     const embed = new EmbedBuilder()
       .setColor(PYXIE_COLORS.cyan)
-      .setTitle(`🗺️  ✦  Expedições & Dungeons Procedurais — ${userTag}`)
+      .setTitle(`🗺️  ✦  Masmorras & Dungeons Procedurais 2D — ${userTag}`)
       .setDescription(
-        `Prepare **${activePet.name}** (${activePet.emoji} Nv. ${activePet.level}) para explorar labirintos mágicos!\n\n` +
-        `⚡ **Energia Atual:** **${activePet.energy}/100 ⚡** (Custo: **10 ⚡/passo**)\n` +
-        `💖 **HP Atual:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  |  🍖 **Fome:** **${activePet.hunger}%**\n\n` +
-        `**Zonas Disponíveis:**\n` +
-        `💖 **HP Atual:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  •  🍖 **Fome:** **${activePet.hunger}%**\n\n` +
+        `Prepare **${activePet.name}** (${activePet.emoji} Nv. ${activePet.level}) para explorar labirintos misteriosos em grade 2D com névoa de guerra!\n\n` +
+        `⚡ **Energia:** **${activePet.energy}/100 ⚡** (Custo: **~10 ⚡/movimento**)\n` +
+        `💖 **HP:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  •  🍖 **Fome:** **${activePet.hunger}%**\n\n` +
         `**Zonas Disponíveis:**\n\n` +
         zones
           .map((z) => `${z.emoji} **${z.name}** (Nv. Mín: ${z.minLevel})\n> *${z.desc}*`)
           .join('\n\n')
       )
-      .setFooter({ text: 'Dungeons • Passos consom estamina • Fome 0% ou 0 HP impedem exploração' })
+      .setFooter({ text: 'Dungeons • Movimente-se em grade • Fome 0% ou 0 HP impedem exploração' })
       .setTimestamp();
 
+    const components = [buildHubHeaderRow(userId, 'dungeon')];
+
     const zoneOptions = zones.map((z) => ({
-      label: z.name,
-      description: `Nv. Mínimo: ${z.minLevel} • Ovos: ${z.eggs.join(', ')}`,
+      label: `${z.name} (Grade ${z.gridW}x${z.gridH})`,
+      description: `Nv. Mín: ${z.minLevel} • Ovos: ${z.eggs.join(', ')}`,
       value: z.id,
       emoji: z.emoji,
     }));
@@ -319,43 +376,67 @@ function buildDungeonTab(userId, userTag) {
   const isExhausted = activePet.energy < 8 || run.isExhausted;
   const embed = new EmbedBuilder()
     .setColor(isExhausted ? PYXIE_COLORS.crimson : PYXIE_COLORS.violet)
-    .setTitle(`🧭  ✦  ${run.zone.emoji} ${run.zone.name} — Passo ${run.step}/${run.maxSteps}`)
+    .setTitle(`🧭  ✦  ${run.zone.emoji} ${run.zone.name} — Mapa 2D`)
     .setDescription(
-      `**Explorador:** ${activePet.name} (${activePet.emoji} Nv. ${activePet.level})\n` +
-      `⚡ **Energia:** **${activePet.energy} ⚡** | 💖 **HP:** **${activePet.stats.hp}/${activePet.stats.maxHp}** | 🍖 **Fome:** ${activePet.hunger}%\n` +
-      `🏞️ **Terreno Atual:** ${run.currentTerrain.emoji} **${run.currentTerrain.name}** (*${run.currentTerrain.desc}*)\n\n` +
+      `**Explorador:** **${activePet.name}** (${activePet.emoji} Nv. ${activePet.level})\n` +
+      `📍 **Posição:** Quadrante **(${run.playerPos.x + 1}, ${run.playerPos.y + 1})**  •  🏞️ **Terreno:** ${run.currentTerrain?.emoji || '🌿'} **${run.currentTerrain?.name || 'Trilha'}**\n` +
       `💖 **HP:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  •  ⚡ **Energia:** **${activePet.energy} ⚡**  •  🍖 **Fome:** **${activePet.hunger}%**\n\n` +
-      `🏞️ **Terreno:** ${run.currentTerrain.emoji} **${run.currentTerrain.name}**\n> *${run.currentTerrain.desc}*\n\n` +
-      `💰 **Moedas Acumuladas:** **+${run.coinsAccumulated}**\n` +
-      `🪺 **Ovos Resgatados:** **${run.eggsFound.length > 0 ? run.eggsFound.map((e) => `\`${e}\``).join(', ') : 'Nenhum ainda'}**\n\n` +
-      `🪺 **Ovos Resgatados:** ${run.eggsFound.length > 0 ? run.eggsFound.map((e) => `\`${e}\``).join(', ') : '*Nenhum ainda*'}\n\n` +
-      `📜 **Diário da Expedição:**\n` +
+      `💰 **Moedas:** **+${run.coinsAccumulated}**  •  📦 **Baús:** **${(run.chestsFound || []).length}**  •  🥚 **Ovos:** **${(run.eggsFound || []).length}**\n\n` +
+      `📜 **Diário de Bordo:**\n` +
       run.logs.map((l) => `> ${l}`).join('\n')
     )
-    .setFooter({ text: 'Expedição • Resgate voluntário salva 100% dos espólios' })
+    .setImage('attachment://dungeon_map.png')
+    .setFooter({ text: 'Dungeon 2D • Use o D-Pad para navegar • Resgate voluntário salva 100% dos espólios' })
     .setTimestamp();
 
-  const runActions = new ActionRowBuilder().addComponents(
+  // Controles Direcionais D-Pad
+  const dpadRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId(`hub_dungeon_step:${userId}`)
-      .setLabel('Avançar Passo')
-      .setEmoji('🐾')
-      .setStyle(ButtonStyle.Success),
+      .setCustomId(`hub_dungeon_move:UP:${userId}`)
+      .setLabel('Norte')
+      .setEmoji('⬆️')
+      .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
-      .setCustomId(`hub_dungeon_retreat:${userId}`)
-      .setLabel(isExhausted ? 'Resgatar Espólios (Exausto)' : 'Resgatar Espólios (100%)')
-      .setEmoji('🏃')
-      .setStyle(isExhausted ? ButtonStyle.Secondary : ButtonStyle.Primary),
+      .setCustomId(`hub_dungeon_move:DOWN:${userId}`)
+      .setLabel('Sul')
+      .setEmoji('⬇️')
+      .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
-      .setCustomId(`hub_dungeon_flee:${userId}`)
-      .setLabel('Fuga de Pânico (40%)')
-      .setEmoji('💨')
-      .setStyle(ButtonStyle.Danger)
+      .setCustomId(`hub_dungeon_move:LEFT:${userId}`)
+      .setLabel('Oeste')
+      .setEmoji('⬅️')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId(`hub_dungeon_move:RIGHT:${userId}`)
+      .setLabel('Leste')
+      .setEmoji('➡️')
+      .setStyle(ButtonStyle.Primary)
   );
 
-  components.push(runActions);
+  // Ações de Saída / Fuga / Painel
+  const exitActionsRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`hub_dungeon_retreat:${userId}`)
+      .setLabel(isExhausted ? 'Resgatar (Exausto)' : (run.atExit ? 'Sair pelo Portal 🚩 (100%)' : 'Resgatar Espólios (100%)'))
+      .setEmoji(run.atExit ? '🚩' : '🏃')
+      .setStyle(run.atExit ? ButtonStyle.Success : (isExhausted ? ButtonStyle.Secondary : ButtonStyle.Primary)),
+    new ButtonBuilder()
+      .setCustomId(`hub_dungeon_flee:${userId}`)
+      .setLabel('Fuga de Pânico')
+      .setEmoji('💨')
+      .setStyle(ButtonStyle.Danger),
+    new ButtonBuilder()
+      .setCustomId(`hub_tab:pet:${userId}`)
+      .setLabel('Meu Pymon')
+      .setEmoji('🐾')
+      .setStyle(ButtonStyle.Secondary)
+  );
 
-  return { embeds: [embed], components, files: [] };
+  return {
+    embeds: [embed],
+    components: [dpadRow, exitActionsRow],
+    files: [createExpeditionMapAttachment(run, activePet)],
+  };
 }
 
 // 4. Tab Mochila / Inventário
@@ -407,17 +488,26 @@ function buildInventoryTab(userId, userTag) {
     );
   }
 
+  const actionButtons = new ActionRowBuilder();
   if (!hasClaimedStarterKit(userId)) {
-    components.push(
-      new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`hub_claim_kit:${userId}`)
-          .setLabel('Resgatar Kit Inicial')
-          .setEmoji('🎁')
-          .setStyle(ButtonStyle.Success)
-      )
+    actionButtons.addComponents(
+      new ButtonBuilder()
+        .setCustomId(`hub_claim_kit:${userId}`)
+        .setLabel('Resgatar Kit Inicial')
+        .setEmoji('🎁')
+        .setStyle(ButtonStyle.Success)
     );
   }
+
+  actionButtons.addComponents(
+    new ButtonBuilder()
+      .setCustomId(`hub_tab:shop:${userId}`)
+      .setLabel('Ir para Lojinha')
+      .setEmoji('🛒')
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  components.push(actionButtons);
 
   return { embeds: [embed], components, files: [] };
 }
@@ -447,23 +537,23 @@ function buildShopTab(userId, categoryOrTag = 'comida', maybeCategory = null) {
       `*Itens frescos e trapaças mágicas garantidas.*\n\n` +
       items
         .map((item) => {
-          const price = item.buyPrice ? `${formatCoins(item.buyPrice)}` : 'Indisponível';
-          return `${item.emoji} **${item.name}** — 🪙 ${price}\n> *${item.description}*`;
+          const buyText = item.buyPrice ? `• 🪙 **${formatCoins(item.buyPrice)}**` : '*(Indisponível)*';
+          return `${item.emoji} **${item.name}** ${buyText}\n> *${item.description}*`;
         })
         .join('\n\n')
     )
-    .setFooter({ text: 'Lojinha • Selecione um item no menu para comprar' })
+    .setFooter({ text: 'Lojinha • Selecione uma categoria ou compre pelo menu abaixo' })
     .setTimestamp();
 
   const components = [buildHubHeaderRow(userId, 'shop')];
 
-  // Categorias
+  // Dropdown de Categorias
   const catOptions = [
     { label: 'Comidas & Nutrição', value: 'comida', emoji: '🍖', default: category === 'comida' },
     { label: 'Cura & Estamina', value: 'cura', emoji: '🩹', default: category === 'cura' },
     { label: 'Utilitários & Aceleração', value: 'utilitario', emoji: '⏳', default: category === 'utilitario' },
     { label: 'Baús Misteriosos', value: 'bau', emoji: '📦', default: category === 'bau' },
-    { label: 'Melhorias & Ninhos', value: 'melhoria', emoji: '🏡', default: category === 'melhoria' },
+    { label: 'Melhorias de Ninhos', value: 'melhoria', emoji: '🏡', default: category === 'melhoria' },
   ];
 
   components.push(
@@ -541,16 +631,19 @@ function isHubInteraction(interaction) {
   if (!interaction.customId) return false;
   return (
     interaction.customId.startsWith('hub_tab:') ||
+    interaction.customId.startsWith('hub_sub:') ||
     interaction.customId.startsWith('hub_select_pet:') ||
     interaction.customId.startsWith('hub_pet_feed:') ||
     interaction.customId.startsWith('hub_pet_carinho:') ||
     interaction.customId.startsWith('hub_pet_sleep:') ||
+    interaction.customId.startsWith('hub_pet_heal:') ||
     interaction.customId.startsWith('hub_support_info:') ||
     interaction.customId.startsWith('hub_incubator_place_egg:') ||
     interaction.customId.startsWith('hub_hatch_egg:') ||
     interaction.customId.startsWith('hub_expand_incubator:') ||
     interaction.customId.startsWith('hub_dungeon_start_zone:') ||
     interaction.customId.startsWith('hub_dungeon_start_fast:') ||
+    interaction.customId.startsWith('hub_dungeon_move:') ||
     interaction.customId.startsWith('hub_dungeon_step:') ||
     interaction.customId.startsWith('hub_dungeon_retreat:') ||
     interaction.customId.startsWith('hub_dungeon_flee:') ||
@@ -585,7 +678,14 @@ async function handleHubInteraction(interaction) {
   const userId = interaction.user.id;
   const userTag = interaction.user.displayName || interaction.user.username;
 
-  // 1. Alternar Abas
+  // 1. Submenus Tamagotchi (Cuidar / Mais)
+  if (action === 'hub_sub') {
+    const subMode = parts[1] || 'care';
+    const view = buildPetTab(userId, userTag, subMode);
+    return interaction.update(view);
+  }
+
+  // 2. Alternar Abas Principais
   if (action === 'hub_tab') {
     const tabName = parts[1] || 'pet';
     if (tabName === 'pet') {
@@ -621,7 +721,7 @@ async function handleHubInteraction(interaction) {
     return handleDexInteraction(interaction);
   }
 
-  // 2. Resgate de Kit Inicial
+  // 3. Resgate de Kit Inicial
   if (action === 'hub_claim_kit' || action === 'onboard_kit') {
     const result = claimStarterKit(userId);
     if (!result.success) {
@@ -637,7 +737,7 @@ async function handleHubInteraction(interaction) {
     });
   }
 
-  // 3. Ações do Pet (Alimentar, Carinho, Dormir)
+  // 4. Ações de Cuidado do Pet (Alimentar, Carinho, Dormir, Curativo)
   if (action === 'hub_pet_feed' || action === 'pet_feed_menu') {
     const feedRes = feedPet(userId, 'racao_cringe');
     if (!feedRes.success) {
@@ -652,7 +752,7 @@ async function handleHubInteraction(interaction) {
         flags: 64,
       });
     }
-    const view = buildPetTab(userId, userTag);
+    const view = buildPetTab(userId, userTag, 'care');
     return interaction.update(view);
   }
 
@@ -664,7 +764,7 @@ async function handleHubInteraction(interaction) {
         flags: 64,
       });
     }
-    const view = buildPetTab(userId, userTag);
+    const view = buildPetTab(userId, userTag, 'care');
     return interaction.update(view);
   }
 
@@ -676,11 +776,31 @@ async function handleHubInteraction(interaction) {
         flags: 64,
       });
     }
-    const view = buildPetTab(userId, userTag);
+    const view = buildPetTab(userId, userTag, 'care');
     return interaction.update(view);
   }
 
-  // 4. Seleção de Pet Ativo
+  if (action === 'hub_pet_heal') {
+    const activePet = getActivePet(userId);
+    if (!activePet) return;
+    if (activePet.stats.hp >= activePet.stats.maxHp) {
+      return interaction.reply({ content: '💖 Seu pet já está com a vida cheia (100% HP)!', flags: 64 });
+    }
+    const inv = getUserInventory(userId);
+    const healItem = (inv.curativo_fofo > 0) ? 'curativo_fofo' : ((inv.pocao_vida > 0) ? 'pocao_vida' : null);
+    if (!healItem) {
+      return interaction.reply({ content: '🛒 Você não possui **Curativos** ou **Poções** na mochila! Compre na Lojinha.', flags: 64 });
+    }
+    const healRes = useItemOnActivePet(userId, healItem);
+    schedulePetsSave();
+    const view = buildPetTab(userId, userTag, 'care');
+    return interaction.update({
+      content: healRes.message,
+      ...view,
+    });
+  }
+
+  // 5. Seleção de Pet Ativo
   if (action === 'hub_select_pet') {
     const selectedPetId = interaction.values[0];
     setActivePet(userId, selectedPetId);
@@ -688,7 +808,7 @@ async function handleHubInteraction(interaction) {
     return interaction.update(view);
   }
 
-  // 5. Chocadeira: Colocar ovo
+  // 6. Chocadeira: Colocar ovo
   if (action === 'hub_incubator_place_egg') {
     const eggItemId = interaction.values[0];
     const incubator = getIncubator(userId);
@@ -707,7 +827,7 @@ async function handleHubInteraction(interaction) {
     return interaction.update(view);
   }
 
-  // 6. Chocadeira: Chocar ovo pronto
+  // 7. Chocadeira: Chocar ovo pronto
   if (action === 'hub_hatch_egg') {
     const slotIdx = Number(parts[1]);
     const res = hatchIncubatorEgg(userId, slotIdx);
@@ -721,7 +841,7 @@ async function handleHubInteraction(interaction) {
     });
   }
 
-  // 7. Chocadeira: Expandir ninhos
+  // 8. Chocadeira: Expandir ninhos
   if (action === 'hub_expand_incubator') {
     const res = expandUserIncubator(userId);
     if (!res.success) {
@@ -734,7 +854,7 @@ async function handleHubInteraction(interaction) {
     return interaction.update(view);
   }
 
-  // 8. Dungeons: Iniciar expedição
+  // 9. Dungeons: Iniciar expedição
   if (action === 'hub_dungeon_start_zone' || action === 'hub_dungeon_start_fast') {
     const zoneId = action === 'hub_dungeon_start_zone' ? interaction.values[0] : 'bosque';
     const activePet = getActivePet(userId);
@@ -746,25 +866,29 @@ async function handleHubInteraction(interaction) {
     return interaction.update(view);
   }
 
-  // 9. Dungeons: Avançar Passo
-  if (action === 'hub_dungeon_step') {
+  // 10. Dungeons: Movimentação D-Pad 2D (UP, DOWN, LEFT, RIGHT)
+  if (action === 'hub_dungeon_move' || action === 'hub_dungeon_step') {
+    const direction = parts[1] || 'RIGHT';
     const activePet = getActivePet(userId);
-    const stepRes = advanceStep(userId, activePet, awardPetXp);
+    const moveRes = movePlayer(userId, direction, activePet, awardPetXp);
     schedulePetsSave();
-    if (!stepRes.success) {
-      return interaction.reply({ content: `❌ ${stepRes.message}`, flags: 64 });
+
+    if (!moveRes.success) {
+      return interaction.reply({ content: `❌ ${moveRes.message}`, flags: 64 });
     }
+
     const view = buildDungeonTab(userId, userTag);
-    if (stepRes.autoCompleted) {
+    if (moveRes.fainted) {
       return interaction.update({
-        content: stepRes.completionResult?.message || '🎉 **Expedição Concluída com Sucesso!**',
+        content: moveRes.completionResult?.message || '💀 **O Pymon desmaiou em combate!**',
         ...view,
       });
     }
+
     return interaction.update(view);
   }
 
-  // 10. Dungeons: Resgatar Espólios
+  // 11. Dungeons: Resgatar Espólios
   if (action === 'hub_dungeon_retreat') {
     const activePet = getActivePet(userId);
     const retreatRes = retreatRun(userId, activePet, awardPetXp);
@@ -779,10 +903,14 @@ async function handleHubInteraction(interaction) {
     });
   }
 
-  // 11. Dungeons: Fuga
+  // 12. Dungeons: Fuga
   if (action === 'hub_dungeon_flee') {
     const activePet = getActivePet(userId);
     const fleeRes = panicFlee(userId, activePet);
+    schedulePetsSave();
+    if (!fleeRes.success) {
+      return interaction.reply({ content: `❌ ${fleeRes.message}`, flags: 64 });
+    }
     const view = buildDungeonTab(userId, userTag);
     return interaction.update({
       content: fleeRes.message,
@@ -790,155 +918,164 @@ async function handleHubInteraction(interaction) {
     });
   }
 
-  // 12. Usar Poção de Energia
+  // 13. Dungeons: Poção de Energia
   if (action === 'hub_use_energy_potion') {
-    const useRes = useItemOnActivePet(userId, 'pocao_energia');
-    if (!useRes.success) {
-      return interaction.reply({
-        content: '❌ Você não tem **Frasco de Éter** na mochila! Compre na Lojinha.',
-        flags: 64,
-      });
+    const res = useItemOnActivePet(userId, 'frasco_eter');
+    schedulePetsSave();
+    if (!res.success) {
+      return interaction.reply({ content: `❌ ${res.message}`, flags: 64 });
     }
     const view = buildDungeonTab(userId, userTag);
     return interaction.update(view);
   }
 
-  // 13. Mochila: Usar / Abrir / Chocar Item Selecionado
+  // 14. Mochila: Usar item
   if (action === 'hub_inventory_use_item') {
     const itemId = interaction.values[0];
-    const itemDef = getItemDefinition(itemId);
+    const def = getItemDefinition(itemId);
 
-    if (itemDef?.effects?.isChest) {
+    if (def && def.effects && def.effects.isChest) {
       const openRes = openChest(userId, itemId);
       if (!openRes.success) {
-        return interaction.reply({ content: '❌ Não foi possível abrir o baú.', flags: 64 });
-      }
-      const itemsWonStr = (openRes.itemsWon && openRes.itemsWon.length > 0) ? ` e encontrou **1x ${openRes.itemsWon.join(', ')}**` : '';
-      const view = buildInventoryTab(userId, userTag);
-      return interaction.update({
-        content: `🔓 **Baú Aberto com Sucesso!** Você resgatou **+${formatCoins(openRes.coinsWon)}**${itemsWonStr}!`,
-        ...view,
-      });
-    }
-
-    if (itemDef?.effects?.isEgg) {
-      const incubator = getIncubator(userId);
-      const emptySlot = incubator.slots.find((s) => s.empty);
-      if (!emptySlot) {
-        return interaction.reply({
-          content: '❌ Todos os ninhos da sua Chocadeira estão ocupados! Vá na aba **Chocadeira** para chocar ovos prontos ou expandir.',
-          flags: 64,
-        });
-      }
-      const placeRes = putEggInIncubator(userId, itemId, emptySlot.slotIndex);
-      if (!placeRes.success) {
-        return interaction.reply({ content: `❌ ${placeRes.message}`, flags: 64 });
+        return interaction.reply({ content: `❌ ${openRes.message}`, flags: 64 });
       }
       const view = buildInventoryTab(userId, userTag);
       return interaction.update({
-        content: `🥚 **Ovo no Ninho!** ${itemDef.emoji} **${itemDef.name}** foi colocado no Ninho #${emptySlot.slotIndex + 1}! Vá na aba **Chocadeira** para acompanhar o tempo de choco.`,
+        content: openRes.message,
         ...view,
       });
     }
 
     const useRes = useItemOnActivePet(userId, itemId);
     if (!useRes.success) {
-      return interaction.reply({
-        content: useRes.message || 'Falha ao usar o item.',
-        flags: 64,
-      });
+      return interaction.reply({ content: `❌ ${useRes.message}`, flags: 64 });
     }
+    schedulePetsSave();
     const view = buildInventoryTab(userId, userTag);
     return interaction.update({
-      content: useRes.message || `✨ Item **${useRes.item ? useRes.item.name : itemId}** utilizado!`,
+      content: useRes.message,
       ...view,
     });
   }
 
-  // 14. Lojinha: Mudar Categoria
+  // 15. Loja: Mudar categoria
   if (action === 'hub_shop_category') {
-    const selectedCat = interaction.values[0];
-    const view = buildShopTab(userId, selectedCat);
+    const cat = interaction.values[0];
+    const view = buildShopTab(userId, cat);
     return interaction.update(view);
   }
 
-  // 15. Lojinha: Comprar Item
+  // 16. Loja: Comprar item
   if (action === 'hub_shop_buy_item') {
     const itemId = interaction.values[0];
     const buyRes = buyItem(userId, itemId, 1);
     if (!buyRes.success) {
-      return interaction.reply({
-        content: `❌ ${buyRes.message}`,
-        flags: 64,
-      });
+      return interaction.reply({ content: `❌ ${buyRes.message}`, flags: 64 });
     }
-    const itemDef = getItemDefinition(itemId);
-    const view = buildShopTab(userId, itemDef ? itemDef.category : 'comida');
-    return interaction.update(view);
+    const def = getItemDefinition(itemId);
+    const view = buildShopTab(userId, def?.category || 'comida');
+    return interaction.update({
+      content: `🛍️ **Compra Concluída!** Você adquiriu 1x **${def?.name || itemId}**!`,
+      ...view,
+    });
   }
 
-  // 16. Apoio / Doação Modal / Info
+  // 17. Apoiar
   if (action === 'hub_support_info') {
     return interaction.reply({
-      content:
-        '💖 **Apoie o Desenvolvimento de Pyxie!**\n\n' +
-        'Pyxie é um projeto 100% livre de mecânicas abusivas e *pay-to-win*.\n' +
-        'Você pode apoiar doando qualquer valor via LivePix ou Pix direto para manter a hospedagem no ar!\n\n' +
-        '🌟 **Benefícios de Apoiador:**\n' +
-        '• Ícone exclusivo de Apoiador no perfil;\n' +
-        '• Molduras estéticas especiais no Cartão Canvas;\n' +
-        '• Linhas de diálogo únicas e ácidas com a Pyxie.\n\n' +
-        '*(Para configurar ou enviar apoio, fale com a moderação do servidor!)*',
+      content: '💖 **Apoie a Cringelândia & Pyxie!** Use `/diario` para coletar moedas diárias e explore dungeons para subir de nível!',
       flags: 64,
     });
   }
 
-  // 17. Adoção Inicial a partir do Onboarding
+  // 18. Abrir Adoção
   if (action === 'hub_open_adoption') {
     const { buildDexEmbed, buildDexComponents } = require('./adocao');
-    const { createDexAttachment } = require('../services/petRenderer');
-    const { PETS_CATALOG } = require('../services/pets');
-    const monster = PETS_CATALOG.cinna;
     const embed = buildDexEmbed('cinna');
     const components = buildDexComponents(userId, 'cinna');
-    const attachment = createDexAttachment(monster, false);
+    const { createDexAttachment } = require('../services/petRenderer');
+    const { PETS_CATALOG } = require('../services/pets');
+    const attachment = createDexAttachment(PETS_CATALOG.cinna, false);
     return interaction.update({
       embeds: [embed],
       components,
       files: [attachment],
     });
   }
-
-  // Fallback genérico
-  const defaultView = buildPetTab(userId, userTag);
-  return interaction.update(defaultView);
 }
 
 module.exports = {
-  name: PYMONS,
   data: new SlashCommandBuilder()
     .setName(PYMONS)
-    .setDescription('Abre o Hub Central de Pymons de Pyxie (100% interativo via botões).'),
-  aliases: ['pymon', 'pixelmonsters', 'pixelmon', 'monsters', 'pet', 'pets', 'p', 'bicho', 'mascote'],
-  buildPetEmbed: (pet, userTag) => buildPetTab(userTag, userTag).embeds[0],
-  buildHubView: buildPetTab,
-  buildPetTab,
-  buildDungeonTab,
-  buildInventoryTab,
-  buildIncubatorTab,
-  buildShopTab,
-  isPetInteraction: isHubInteraction,
-  handlePetInteraction: handleHubInteraction,
+    .setDescription('Abre o painel Tamagotchi dos seus Pymons, Dungeons e Mochila.')
+    .addSubcommand((sub) =>
+      sub
+        .setName('painel')
+        .setDescription('Abre o painel principal do seu Pymon ativo.')
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('renomear')
+        .setDescription('Altera o nome do seu Pymon ativo.')
+        .addStringOption((opt) =>
+          opt
+            .setName('novo_nome')
+            .setDescription('O novo nome para seu companheiro')
+            .setRequired(true)
+        )
+    ),
+  name: PYMONS,
+  aliases: [PIXELMONSTERS, PET, 'pet', 'pymon'],
+  description: 'Painel Tamagotchi dos Pymons, Dungeons 2D e Adoção.',
   async executeSlash({ interaction }) {
     const userId = interaction.user.id;
     const userTag = interaction.user.displayName || interaction.user.username;
+    const sub = interaction.options.getSubcommand(false);
+
+    if (sub === 'renomear') {
+      const newName = interaction.options.getString('novo_nome');
+      const res = renamePet(userId, newName);
+      if (!res.success) {
+        return interaction.editReply({ content: `❌ ${res.message}` });
+      }
+      const view = buildPetTab(userId, userTag);
+      return interaction.editReply({
+        content: `✨ Nome alterado com sucesso para **${newName}**!`,
+        ...view,
+      });
+    }
+
     const view = buildPetTab(userId, userTag);
     await interaction.editReply(view);
   },
-  async executePrefix({ message }) {
+  async executePrefix({ message, args }) {
     const userId = message.author.id;
     const userTag = message.author.displayName || message.author.username;
+
+    if (args[0] === 'renomear' && args[1]) {
+      const newName = args.slice(1).join(' ');
+      const res = renamePet(userId, newName);
+      if (!res.success) {
+        return message.reply(`❌ ${res.message}`);
+      }
+      const view = buildPetTab(userId, userTag);
+      return message.reply({
+        content: `✨ Nome alterado com sucesso para **${newName}**!`,
+        ...view,
+      });
+    }
+
     const view = buildPetTab(userId, userTag);
     await message.reply(view);
   },
+  buildHubHeaderRow,
+  buildPetTab,
+  buildDungeonTab,
+  buildIncubatorTab,
+  buildInventoryTab,
+  buildShopTab,
+  isHubInteraction,
+  handleHubInteraction,
+  isPetInteraction: isHubInteraction,
+  handlePetInteraction: handleHubInteraction,
 };

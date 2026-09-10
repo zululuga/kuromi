@@ -19,6 +19,8 @@ const DUNGEON_ZONES = [
     emoji: '🌲',
     desc: 'Floresta encantada onde fadas bobas escondem moedas e ovos silvestres.',
     eggs: ['ovo_silvestre', 'ovo_orvalho'],
+    gridW: 5,
+    gridH: 5,
   },
   {
     id: 'recife',
@@ -27,6 +29,8 @@ const DUNGEON_ZONES = [
     emoji: '💧',
     desc: 'Litoral mágico de águas cintilantes e corais de cristal.',
     eggs: ['ovo_orvalho', 'ovo_brisa'],
+    gridW: 5,
+    gridH: 5,
   },
   {
     id: 'colina',
@@ -35,6 +39,8 @@ const DUNGEON_ZONES = [
     emoji: '🪶',
     desc: 'Montanhas suaves com brisas perfumadas e ninhos de pássaros arcanos.',
     eggs: ['ovo_brisa', 'ovo_charme'],
+    gridW: 6,
+    gridH: 6,
   },
   {
     id: 'castelo',
@@ -43,6 +49,8 @@ const DUNGEON_ZONES = [
     emoji: '🏰',
     desc: 'Labirinto de espelhos mágicos, ilusões e os tesouros mais raros.',
     eggs: ['ovo_charme', 'ovo_travessura'],
+    gridW: 6,
+    gridH: 6,
   },
 ];
 
@@ -103,7 +111,99 @@ function getProceduralRun(userId) {
 }
 
 /**
- * Inicia uma nova expedição procedural em memória RAM.
+ * Revela a névoa de guerra ao redor da posição (px, py).
+ */
+function revealGridNeighbors(grid, width, height, px, py) {
+  if (!grid || !grid[py] || !grid[py][px]) return;
+  grid[py][px].revealed = true;
+  grid[py][px].visited = true;
+
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const nx = px + dx;
+      const ny = py + dy;
+      if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+        if (grid[ny] && grid[ny][nx]) {
+          grid[ny][nx].revealed = true;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Gera a matriz procedural de salas 2D da Masmorra.
+ */
+function generateDungeonGrid(zone) {
+  const width = zone.gridW || 5;
+  const height = zone.gridH || 5;
+  const grid = [];
+
+  const possibleEvents = [
+    { type: 'BATTLE', weight: 35 },
+    { type: 'NPC_DUEL', weight: 20 },
+    { type: 'CHEST', weight: 15 },
+    { type: 'EGG_NEST', weight: 10 },
+    { type: 'TRAP', weight: 8 },
+    { type: 'FOUNTAIN', weight: 6 },
+    { type: 'EMPTY', weight: 6 },
+  ];
+
+  function pickRandomEvent() {
+    const totalWeight = possibleEvents.reduce((sum, e) => sum + e.weight, 0);
+    let rand = Math.random() * totalWeight;
+    for (const ev of possibleEvents) {
+      if (rand < ev.weight) return ev.type;
+      rand -= ev.weight;
+    }
+    return 'BATTLE';
+  }
+
+  for (let y = 0; y < height; y++) {
+    const row = [];
+    for (let x = 0; x < width; x++) {
+      const terrain = TERRAINS[Math.floor(Math.random() * TERRAINS.length)];
+      const eventType = pickRandomEvent();
+      row.push({
+        x,
+        y,
+        terrain,
+        eventType,
+        revealed: false,
+        visited: false,
+        cleared: false,
+      });
+    }
+    grid.push(row);
+  }
+
+  // 1. Ponto Inicial (0, 0)
+  grid[0][0].eventType = 'START';
+  grid[0][0].terrain = TERRAINS[0];
+  grid[0][0].revealed = true;
+  grid[0][0].visited = true;
+  grid[0][0].cleared = true;
+
+  // 2. Portal de Saída (width - 1, height - 1)
+  const exitX = width - 1;
+  const exitY = height - 1;
+  grid[exitY][exitX].eventType = 'EXIT';
+  grid[exitY][exitX].terrain = TERRAINS[0];
+
+  // Revela o início e seus arredores
+  revealGridNeighbors(grid, width, height, 0, 0);
+
+  return {
+    grid,
+    gridW: width,
+    gridH: height,
+    playerPos: { x: 0, y: 0 },
+    exitPos: { x: exitX, y: exitY },
+  };
+}
+
+/**
+ * Inicia uma nova expedição procedural em memória RAM com mapa em grade 2D.
  */
 function startProceduralRun(userId, zoneId = 'bosque', activePet) {
   if (!activePet) {
@@ -146,20 +246,28 @@ function startProceduralRun(userId, zoneId = 'bosque', activePet) {
     };
   }
 
+  const gridData = generateDungeonGrid(zone);
+
   const newRun = {
     userId,
     runId: `run_${crypto.randomUUID().slice(0, 8)}`,
     zone,
+    grid: gridData.grid,
+    gridW: gridData.gridW,
+    gridH: gridData.gridH,
+    playerPos: gridData.playerPos,
+    exitPos: gridData.exitPos,
     step: 0,
-    maxSteps: 10 + activePet.level * 2,
+    maxSteps: 15 + activePet.level * 2,
     coinsAccumulated: 0,
     xpAccumulated: 0,
     eggsFound: [],
     chestsFound: [],
     itemsFound: [],
-    logs: [`🐾 **${activePet.name}** adentrou em **${zone.name}**!`],
+    logs: [`🐾 **${activePet.name}** adentrou em **${zone.name}**! Navegue pelo mapa com o D-Pad.`],
     currentTerrain: TERRAINS[0],
     isExhausted: false,
+    atExit: false,
     lastActivityAt: Date.now(),
   };
 
@@ -168,9 +276,9 @@ function startProceduralRun(userId, zoneId = 'bosque', activePet) {
 }
 
 /**
- * Executa um passo na expedição procedural, consumindo estamina do pet.
+ * Move o jogador pelo grid procedural (UP, DOWN, LEFT, RIGHT).
  */
-function advanceStep(userId, activePet, awardXpFn) {
+function movePlayer(userId, direction, activePet, awardXpFn) {
   const run = getProceduralRun(userId);
   if (!run) {
     return { success: false, reason: 'no_active_run', message: 'Você não tem nenhuma expedição ativa. Inicie uma nova!' };
@@ -205,16 +313,38 @@ function advanceStep(userId, activePet, awardXpFn) {
     };
   }
 
-  // Sorteia o terreno do passo
-  const terrain = TERRAINS[Math.floor(Math.random() * TERRAINS.length)];
-  run.currentTerrain = terrain;
-  const baseCost = 10;
-  const totalCost = Math.max(6, baseCost + terrain.costModifier);
+  const dirMap = {
+    UP: { dx: 0, dy: -1, name: 'Norte ⬆️' },
+    DOWN: { dx: 0, dy: 1, name: 'Sul ⬇️' },
+    LEFT: { dx: -1, dy: 0, name: 'Oeste ⬅️' },
+    RIGHT: { dx: 1, dy: 0, name: 'Leste ➡️' },
+  };
 
-  // Consome energia e zera de forma limpa
+  const dirData = dirMap[direction] || dirMap.RIGHT;
+  const nx = run.playerPos.x + dirData.dx;
+  const ny = run.playerPos.y + dirData.dy;
+
+  // Validação de Limites da Grade
+  if (nx < 0 || nx >= run.gridW || ny < 0 || ny >= run.gridH) {
+    return {
+      success: false,
+      reason: 'wall',
+      message: `🧱 **Parede de Masmorra!** Você encontrou o limite da sala ao ${dirData.name}. Escolha outra direção.`,
+    };
+  }
+
+  const targetTile = run.grid[ny][nx];
+  run.currentTerrain = targetTile.terrain;
+
+  const baseCost = 10;
+  const totalCost = Math.max(5, baseCost + (targetTile.terrain?.costModifier || 0));
+
+  // Consome energia e atualiza fome
   activePet.energy = Math.max(0, activePet.energy - totalCost);
   activePet.lastEnergyUpdateAt = Date.now();
-  activePet.hunger = Math.max(0, (typeof activePet.hunger === 'number' ? activePet.hunger : 80) - 3);
+  activePet.hunger = Math.max(0, (typeof activePet.hunger === 'number' ? activePet.hunger : 80) - 2);
+
+  run.playerPos = { x: nx, y: ny };
   run.step += 1;
   run.lastActivityAt = Date.now();
 
@@ -222,125 +352,150 @@ function advanceStep(userId, activePet, awardXpFn) {
     run.isExhausted = true;
   }
 
-  // Rola o evento procedural do passo
-  const roll = Math.random();
+  // Revela névoa de guerra ao redor da nova posição
+  revealGridNeighbors(run.grid, run.gridW, run.gridH, nx, ny);
+
+  // Processa o Evento da Sala
   let eventResult = {};
 
-  if (roll < 0.42) {
-    // 42% Batalha Selvagem (Combate Rápido em RAM)
-    const enemyAtk = Math.max(5, Math.floor(activePet.stats.atk * 0.8 + Math.random() * 5));
-    const damageTaken = Math.max(2, Math.floor(enemyAtk - activePet.stats.def * 0.3));
-    activePet.stats.hp = Math.max(0, activePet.stats.hp - damageTaken);
-
-    const coinsWon = Math.floor(35 + Math.random() * 55 + activePet.level * 10);
-    const xpWon = Math.floor(15 + Math.random() * 20);
-
-    run.coinsAccumulated += coinsWon;
-    run.xpAccumulated += xpWon;
-
+  if (targetTile.cleared) {
     eventResult = {
-      type: 'BATTLE',
-      emoji: '⚔️',
-      title: 'Monstro das Sombras!',
-      description: `${activePet.name} venceu uma criatura selvagem e recolheu **+${coinsWon} moedas** e **+${xpWon} XP** (Sofreu -${damageTaken} HP).`,
+      type: 'CLEARED',
+      emoji: '👣',
+      title: 'Corredor Seguro',
+      description: `${activePet.name} moveu-se para (${nx + 1}, ${ny + 1}) em uma sala já explorada.`,
     };
-  } else if (roll < 0.64) {
-    // 22% Desafio de Duelo com Treinador NPC Procedural
-    const npc = generateNpcTrainer(activePet.level);
-    const playerCombatPower = (activePet.stats.atk * 1.3) + (activePet.stats.spd * 0.7) + (Math.random() * 12);
-    const npcCombatPower = (npc.stats.atk * 1.3) + (npc.stats.spd * 0.7) + (Math.random() * 12);
+  } else {
+    targetTile.cleared = true;
 
-    if (playerCombatPower >= npcCombatPower) {
-      // Jogador vence o duelo
-      const coinsWon = Math.floor(65 + Math.random() * 65 + activePet.level * 15);
-      const xpWon = Math.floor(30 + Math.random() * 25);
-      const damageTaken = Math.max(3, Math.floor(npc.stats.atk * 0.45 - activePet.stats.def * 0.25));
+    if (targetTile.eventType === 'EXIT') {
+      run.atExit = true;
+      const exitCoins = Math.floor(100 + activePet.level * 20);
+      const exitXp = 50;
+      run.coinsAccumulated += exitCoins;
+      run.xpAccumulated += exitXp;
 
+      eventResult = {
+        type: 'EXIT',
+        emoji: '🚩',
+        title: 'Portal de Saída Descoberto!',
+        description: `✨ ${activePet.name} encontrou o **Portal Mágico de Saída** da Dungeon! Ganhou **+${exitCoins} moedas** e **+${exitXp} XP**. Você pode resgatar 100% dos espólios com segurança!`,
+      };
+    } else if (targetTile.eventType === 'NPC_DUEL') {
+      const npc = generateNpcTrainer(activePet.level);
+      const playerCombatPower = (activePet.stats.atk * 1.3) + (activePet.stats.spd * 0.7) + (Math.random() * 12);
+      const npcCombatPower = (npc.stats.atk * 1.3) + (npc.stats.spd * 0.7) + (Math.random() * 12);
+
+      if (playerCombatPower >= npcCombatPower) {
+        const coinsWon = Math.floor(65 + Math.random() * 65 + activePet.level * 15);
+        const xpWon = Math.floor(30 + Math.random() * 25);
+        const damageTaken = Math.max(3, Math.floor(npc.stats.atk * 0.45 - activePet.stats.def * 0.25));
+
+        activePet.stats.hp = Math.max(0, activePet.stats.hp - damageTaken);
+        run.coinsAccumulated += coinsWon;
+        run.xpAccumulated += xpWon;
+
+        eventResult = {
+          type: 'NPC_DUEL',
+          emoji: '🏆',
+          title: 'Duelo com Treinador Vencido!',
+          description: `${activePet.name} aceitou o desafio de **${npc.name}** (${npc.petDef.emoji} ${npc.petDef.name} Nv.${npc.level}) e **VENCEU**! Ganhou **+${coinsWon} moedas** e **+${xpWon} XP** (Sofreu -${damageTaken} HP).`,
+        };
+      } else {
+        const damageTaken = Math.max(10, Math.floor(npc.stats.atk * 0.85 - activePet.stats.def * 0.25 + 5));
+        const penaltyCoins = Math.min(run.coinsAccumulated, Math.floor(25 + Math.random() * 35 + activePet.level * 5));
+
+        activePet.stats.hp = Math.max(0, activePet.stats.hp - damageTaken);
+        run.coinsAccumulated = Math.max(0, run.coinsAccumulated - penaltyCoins);
+
+        eventResult = {
+          type: 'NPC_DUEL_LOSS',
+          emoji: '💔',
+          title: 'Derrota em Duelo com Treinador!',
+          description: `**${npc.name}** e seu ${npc.petDef.emoji} **${npc.petDef.name}** superaram ${activePet.name}! Sofreu **-${damageTaken} HP** e perdeu **${penaltyCoins} moedas** dos espólios.`,
+        };
+      }
+    } else if (targetTile.eventType === 'BATTLE') {
+      const enemyAtk = Math.max(5, Math.floor(activePet.stats.atk * 0.8 + Math.random() * 5));
+      const damageTaken = Math.max(2, Math.floor(enemyAtk - activePet.stats.def * 0.3));
       activePet.stats.hp = Math.max(0, activePet.stats.hp - damageTaken);
+
+      const coinsWon = Math.floor(35 + Math.random() * 55 + activePet.level * 10);
+      const xpWon = Math.floor(15 + Math.random() * 20);
+
       run.coinsAccumulated += coinsWon;
       run.xpAccumulated += xpWon;
 
       eventResult = {
-        type: 'NPC_DUEL',
-        emoji: '🏆',
-        title: 'Duelo com Treinador Vencido!',
-        description: `${activePet.name} aceitou o desafio de **${npc.name}** (${npc.petDef.emoji} ${npc.petDef.name} Nv.${npc.level}) e **VENCEU**! Ganhou **+${coinsWon} moedas** e **+${xpWon} XP** (Sofreu -${damageTaken} HP).`,
+        type: 'BATTLE',
+        emoji: '👾',
+        title: 'Monstro das Sombras!',
+        description: `${activePet.name} venceu uma criatura selvagem e recolheu **+${coinsWon} moedas** e **+${xpWon} XP** (Sofreu -${damageTaken} HP).`,
       };
-    } else {
-      // Jogador perde o duelo (penalidade justa de moedas e dano)
-      const damageTaken = Math.max(10, Math.floor(npc.stats.atk * 0.85 - activePet.stats.def * 0.25 + 5));
-      const penaltyCoins = Math.min(run.coinsAccumulated, Math.floor(25 + Math.random() * 35 + activePet.level * 5));
-
-      activePet.stats.hp = Math.max(0, activePet.stats.hp - damageTaken);
-      run.coinsAccumulated = Math.max(0, run.coinsAccumulated - penaltyCoins);
+    } else if (targetTile.eventType === 'CHEST') {
+      const isRareChest = Math.random() < 0.25;
+      const chestId = isRareChest ? 'bau_caos' : 'bau_madeira';
+      const chestName = isRareChest ? 'Baú Travesso de Pyxie 💜' : 'Baú Rústico 📦';
+      run.chestsFound = run.chestsFound || [];
+      run.chestsFound.push(chestId);
+      run.xpAccumulated += 15;
 
       eventResult = {
-        type: 'NPC_DUEL_LOSS',
-        emoji: '💔',
-        title: 'Derrota em Duelo com Treinador!',
-        description: `**${npc.name}** e seu ${npc.petDef.emoji} **${npc.petDef.name}** superaram ${activePet.name}! Sofreu **-${damageTaken} HP** e perdeu **${penaltyCoins} moedas** dos espólios.`,
+        type: 'CHEST',
+        emoji: '📦',
+        title: 'Baú Misterioso Encontrado!',
+        description: `${activePet.name} encontrou um **${chestName}** trancado entre as raízes! Guardado nos espólios.`,
+      };
+    } else if (targetTile.eventType === 'EGG_NEST') {
+      const possibleEggs = run.zone.eggs;
+      const eggId = possibleEggs[Math.floor(Math.random() * possibleEggs.length)];
+      const eggName = eggId === 'ovo_orvalho' ? 'Ovo de Orvalho 💧'
+        : eggId === 'ovo_brisa' ? 'Ovo de Brisa 🪶'
+        : eggId === 'ovo_silvestre' ? 'Ovo Silvestre 🌿'
+        : eggId === 'ovo_charme' ? 'Ovo de Charme 🌸' : 'Ovo de Travessura 🔮';
+
+      run.eggsFound = run.eggsFound || [];
+      run.eggsFound.push(eggId);
+      run.xpAccumulated += 30;
+
+      eventResult = {
+        type: 'EGG_NEST',
+        emoji: '🥚',
+        title: 'Ninho Secreto Descoberto!',
+        description: `Com muita sorte, ${activePet.name} encontrou um **${eggName}** raro! Guardado nos espólios.`,
+      };
+    } else if (targetTile.eventType === 'TRAP') {
+      const trapDmg = Math.floor(8 + Math.random() * 8);
+      activePet.stats.hp = Math.max(0, activePet.stats.hp - trapDmg);
+
+      eventResult = {
+        type: 'TRAP',
+        emoji: '🪤',
+        title: 'Armadilha Antiga!',
+        description: `${activePet.name} pisou em falso e acionou espinhos mágicos (-${trapDmg} HP).`,
+      };
+    } else if (targetTile.eventType === 'FOUNTAIN') {
+      const recoveredEnergy = 8;
+      activePet.energy = Math.min(100, activePet.energy + recoveredEnergy);
+      run.xpAccumulated += 10;
+
+      eventResult = {
+        type: 'FOUNTAIN',
+        emoji: '⛲',
+        title: 'Fonte Cristalina de Pyxie',
+        description: `Uma brisa de orvalho revigorou ${activePet.name} (+${recoveredEnergy} ⚡ de Energia).`,
+      };
+    } else {
+      eventResult = {
+        type: 'EMPTY',
+        emoji: '🌿',
+        title: 'Clareira Serena',
+        description: `${activePet.name} descansou brevemente por uma clareira mágica e segura.`,
       };
     }
-  } else if (roll < 0.80) {
-    // 16% Baú de Tesouro Encontrado!
-    const isRareChest = Math.random() < 0.25;
-    const chestId = isRareChest ? 'bau_caos' : 'bau_madeira';
-    const chestName = isRareChest ? 'Baú Travesso de Pyxie 💜' : 'Baú Rústico 📦';
-    run.chestsFound = run.chestsFound || [];
-    run.chestsFound.push(chestId);
-    run.xpAccumulated += 15;
-
-    eventResult = {
-      type: 'CHEST',
-      emoji: '📦',
-      title: 'Baú Misterioso Encontrado!',
-      description: `${activePet.name} encontrou um **${chestName}** trancado entre as raízes! Guardado nos espólios.`,
-    };
-  } else if (roll < 0.88) {
-    // 8% Ninho Selvagem com Ovo Raro
-    const possibleEggs = run.zone.eggs;
-    const eggId = possibleEggs[Math.floor(Math.random() * possibleEggs.length)];
-    const eggName = eggId === 'ovo_orvalho' ? 'Ovo de Orvalho 💧'
-      : eggId === 'ovo_brisa' ? 'Ovo de Brisa 🪶'
-      : eggId === 'ovo_silvestre' ? 'Ovo Silvestre 🌿'
-      : eggId === 'ovo_charme' ? 'Ovo de Charme 🌸' : 'Ovo de Travessura 🔮';
-
-    run.eggsFound = run.eggsFound || [];
-    run.eggsFound.push(eggId);
-    run.xpAccumulated += 30;
-
-    eventResult = {
-      type: 'EGG_NEST',
-      emoji: '🥚',
-      title: 'Ninho Secreto Descoberto!',
-      description: `Com muita sorte, ${activePet.name} encontrou um **${eggName}** raro! Guardado nos espólios.`,
-    };
-  } else if (roll < 0.95) {
-    // 7% Armadilha / Emboscada
-    const trapDmg = Math.floor(8 + Math.random() * 8);
-    activePet.stats.hp = Math.max(0, activePet.stats.hp - trapDmg);
-
-    eventResult = {
-      type: 'TRAP',
-      emoji: '🪤',
-      title: 'Armadilha Antiga!',
-      description: `${activePet.name} pisou em falso e acionou espinhos mágicos (-${trapDmg} HP).`,
-    };
-  } else {
-    // 5% Fonte Restauradora (Rara)
-    const recoveredEnergy = 6;
-    activePet.energy = Math.min(100, activePet.energy + recoveredEnergy);
-    run.xpAccumulated += 10;
-
-    eventResult = {
-      type: 'FOUNTAIN',
-      emoji: '⛲',
-      title: 'Fonte Cristalina de Pyxie',
-      description: `Uma brisa de orvalho revigorou ligeiramente ${activePet.name} (+${recoveredEnergy} ⚡ de Energia).`,
-    };
   }
 
-  run.logs.push(`[Passo ${run.step} - ${terrain.emoji}] ${eventResult.description}`);
+  run.logs.push(`[(${nx + 1},${ny + 1}) - ${targetTile.terrain.emoji}] ${eventResult.description}`);
   if (run.logs.length > 5) run.logs.shift();
 
   // VERIFICAÇÃO DE DESMAIO (HP zerado)
@@ -349,7 +504,6 @@ function advanceStep(userId, activePet, awardXpFn) {
     activePet.energy = 0;
     activePet.happiness = Math.max(0, (activePet.happiness || 50) - 25);
 
-    // Penalidade crítica de desmaio: salva apenas 25% das moedas, perde todos os ovos
     const faintCoins = Math.floor(run.coinsAccumulated * 0.25);
     const lostCoins = run.coinsAccumulated - faintCoins;
     const lostEggsCount = (run.eggsFound || []).length;
@@ -376,7 +530,7 @@ function advanceStep(userId, activePet, awardXpFn) {
     return {
       success: true,
       run,
-      terrain,
+      terrain: targetTile.terrain,
       cost: totalCost,
       event: eventResult,
       autoCompleted: true,
@@ -391,22 +545,14 @@ function advanceStep(userId, activePet, awardXpFn) {
     };
   }
 
-  // Se completou todos os passos da dungeon, finaliza com 100% dos espólios
-  let autoCompleted = false;
-  let completionResult = null;
-  if (run.step >= run.maxSteps) {
-    autoCompleted = true;
-    completionResult = retreatRun(userId, activePet, awardXpFn);
-  }
-
   return {
     success: true,
     run,
-    terrain,
+    terrain: targetTile.terrain,
     cost: totalCost,
     event: eventResult,
-    autoCompleted,
-    completionResult,
+    autoCompleted: false,
+    fainted: false,
     petStatus: {
       hp: activePet.stats.hp,
       maxHp: activePet.stats.maxHp,
@@ -414,6 +560,38 @@ function advanceStep(userId, activePet, awardXpFn) {
       hunger: activePet.hunger,
     },
   };
+}
+
+/**
+ * Função de conveniência/compatibilidade que avança para um vizinho válido não visitado ou direita/baixo.
+ */
+function advanceStep(userId, activePet, awardXpFn) {
+  const run = getProceduralRun(userId);
+  if (!run) {
+    return { success: false, reason: 'no_active_run', message: 'Nenhuma expedição ativa.' };
+  }
+
+  const { x, y } = run.playerPos;
+  const candidates = [
+    { dir: 'RIGHT', nx: x + 1, ny: y },
+    { dir: 'DOWN', nx: x, ny: y + 1 },
+    { dir: 'UP', nx: x, ny: y - 1 },
+    { dir: 'LEFT', nx: x - 1, ny: y },
+  ];
+
+  // Prioriza salas dentro dos limites ainda não visitadas
+  let chosen = candidates.find(
+    (c) => c.nx >= 0 && c.nx < run.gridW && c.ny >= 0 && c.ny < run.gridH && !run.grid[c.ny][c.nx].visited
+  );
+
+  // Se todas já foram visitadas, escolhe qualquer direção válida
+  if (!chosen) {
+    chosen = candidates.find(
+      (c) => c.nx >= 0 && c.nx < run.gridW && c.ny >= 0 && c.ny < run.gridH
+    ) || candidates[0];
+  }
+
+  return movePlayer(userId, chosen.dir, activePet, awardXpFn);
 }
 
 /**
@@ -435,7 +613,6 @@ function retreatRun(userId, activePet, awardXpFn) {
   const savedEggs = [];
 
   if (isExhaustedRescue) {
-    // Penalidades de exaustão: -40% moedas, -30% XP, 50% de chance de quebra de ovos frágeis, -20 Humor
     coinsWon = Math.floor(run.coinsAccumulated * 0.60);
     lostCoins = run.coinsAccumulated - coinsWon;
     xpWon = Math.floor(run.xpAccumulated * 0.70);
@@ -525,7 +702,6 @@ function panicFlee(userId, activePet) {
     acc.coins = (Number(acc.coins) || 0) + partialCoins;
   });
 
-  // Salva baús no inventário
   for (const chestId of (run.chestsFound || [])) {
     addItem(userId, chestId, 1);
   }
@@ -550,6 +726,7 @@ module.exports = {
   getDungeonZones,
   getProceduralRun,
   startProceduralRun,
+  movePlayer,
   advanceStep,
   retreatRun,
   panicFlee,

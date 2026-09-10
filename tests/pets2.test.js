@@ -29,13 +29,14 @@ const {
 } = require('../src/services/pets');
 const {
   startProceduralRun,
+  movePlayer,
   advanceStep,
   retreatRun,
   panicFlee,
   getDungeonZones,
 } = require('../src/services/proceduralExplorer');
 const { createDuelChallenge, resolveDuelChallenge } = require('../src/services/petDuels');
-const { renderPetCard, renderDexCard } = require('../src/services/petRenderer');
+const { renderPetCard, renderDexCard, renderExpeditionMap } = require('../src/services/petRenderer');
 const { addItem } = require('../src/services/inventory');
 const { updateUserAccount } = require('../src/services/economy');
 
@@ -149,7 +150,7 @@ async function runPetTests() {
     assert.equal(expandRes.success, true, 'Deve expandir a chocadeira.');
     assert.equal(getIncubator(USER_A).maxSlots, 5, 'Chocadeira deve ter 5 slots após expansão.');
 
-    // 7. Exploração Procedural por Passos em RAM
+    // 7. Exploração Procedural com Mapa 2D em RAM
     const petA = getActivePet(USER_A);
     petA.hunger = 80;
     petA.energy = 100;
@@ -157,11 +158,29 @@ async function runPetTests() {
 
     const startRunRes = startProceduralRun(USER_A, 'bosque', petA);
     assert.equal(startRunRes.success, true, 'Deve iniciar expedição procedural.');
+    assert.ok(startRunRes.run.grid, 'Expedição deve conter matriz de grade 2D.');
+    assert.equal(startRunRes.run.gridW, 5, 'Grade do Bosque deve ser 5x5.');
+    assert.deepEqual(startRunRes.run.playerPos, { x: 0, y: 0 }, 'Jogador deve começar em (0, 0).');
 
+    // Teste: Colisão com parede ao tentar mover para fora dos limites (Cima / Esquerda a partir de 0,0)
+    const wallUp = movePlayer(USER_A, 'UP', petA);
+    assert.equal(wallUp.success, false, 'Deve bloquear movimento para fora do mapa.');
+    assert.equal(wallUp.reason, 'wall');
+
+    const wallLeft = movePlayer(USER_A, 'LEFT', petA);
+    assert.equal(wallLeft.success, false, 'Deve bloquear movimento para fora do mapa à esquerda.');
+    assert.equal(wallLeft.reason, 'wall');
+
+    // Teste: Movimento válido para Leste (Direita)
     const initialEnergy = petA.energy;
-    const stepRes = advanceStep(USER_A, petA);
-    assert.equal(stepRes.success, true, 'Deve avançar 1 passo na dungeon.');
-    assert.ok(petA.energy < initialEnergy || stepRes.event.type === 'FOUNTAIN', 'Passo deve consumir estamina ou acionar fonte.');
+    const moveRight = movePlayer(USER_A, 'RIGHT', petA);
+    assert.equal(moveRight.success, true, 'Deve mover jogador para a direita com sucesso.');
+    assert.deepEqual(startRunRes.run.playerPos, { x: 1, y: 0 });
+    assert.ok(petA.energy < initialEnergy || moveRight.event.type === 'FOUNTAIN', 'Passo deve consumir estamina ou acionar fonte.');
+
+    // Renderizador de Mapa Canvas 2D
+    const mapBuffer = renderExpeditionMap(startRunRes.run, petA);
+    assert.ok(Buffer.isBuffer(mapBuffer), 'Renderizador deve gerar buffer PNG para o mapa 2D com névoa.');
 
     // Resgate de espólios com energia (sem penalidade)
     const retreatRes = retreatRun(USER_A, petA, awardPetXp);
@@ -225,7 +244,7 @@ async function runPetTests() {
     flushPetsSync();
     assert.ok(fs.existsSync(petsFile), 'Arquivo pets.json deve existir.');
 
-    console.log('Verificação do Módulo Completo de Pyxie (10 Pymons Oficiais, Dex Dinâmica, Silhueta Sombreada, Duelos NPC Procedurais, Chocadeira Delta-Time, Dungeons em RAM, Pixel Art Canvas): OK');
+    console.log('Verificação do Módulo Completo de Pyxie (10 Pymons Oficiais, Dex Dinâmica, Silhueta Sombreada, Mapa Procedural 2D, D-Pad, Duelos NPC, Chocadeira Delta-Time, Pixel Art Canvas): OK');
   } finally {
     fs.writeFileSync(petsFile, originalPets, 'utf8');
     fs.writeFileSync(inventoryFile, originalInventory, 'utf8');

@@ -335,9 +335,6 @@ function renderPetCard(pet) {
 }
 
 /**
- * Renderiza uma entrada visual de Dex para o Pymon inicial selecionado.
- */
-/**
  * Desenha a silhueta sombreada de um Pymon não descoberto.
  */
 function drawSilhouetteSprite(ctx, img, targetX, targetY, targetSize) {
@@ -429,7 +426,7 @@ function renderDexCard(monsterDef, isShiny = false, isUnlocked = true, isShinyUn
     ctx.textAlign = 'left';
     ctx.fillStyle = '#9ca3af';
     ctx.font = 'bold 34px serif';
-    ctx.fillText(`??? (${monsterDef.name[0]}???)`, 310, 75);
+    ctx.fillText(`??? (${monsterDef.name ? monsterDef.name[0] : '?'}???)`, 310, 75);
 
     ctx.fillStyle = theme.accent;
     ctx.font = 'bold 15px sans-serif';
@@ -459,7 +456,6 @@ function renderDexCard(monsterDef, isShiny = false, isUnlocked = true, isShinyUn
     ctx.font = '12px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('DEX DE PYMONS • CRIATURA NÃO REGISTRADA', WIDTH / 2, 470);
-
   } else if (isShiny && !isShinyUnlocked) {
     // 2. Descoberto apenas na forma normal (Shiny bloqueado)
     if (sprite) {
@@ -559,6 +555,8 @@ function renderDexCard(monsterDef, isShiny = false, isUnlocked = true, isShinyUn
   return canvas.toBuffer('image/png');
 }
 
+const renderPokedexCard = renderDexCard;
+
 function createPetAttachment(pet) {
   const buffer = renderPetCard(pet);
   return new AttachmentBuilder(buffer, { name: 'pet_card.png' });
@@ -569,10 +567,231 @@ function createDexAttachment(monsterDef, isShiny = false, isUnlocked = true, isS
   return new AttachmentBuilder(buffer, { name: 'dex_entry.png' });
 }
 
+/**
+ * Renderiza o mapa procedural 2D da expedição em Canvas com Névoa de Guerra e posição do jogador.
+ */
+function renderExpeditionMap(run, activePet) {
+  const MAP_WIDTH = 600;
+  const MAP_HEIGHT = 480;
+
+  const canvas = createCanvas(MAP_WIDTH, MAP_HEIGHT);
+  const ctx = canvas.getContext('2d');
+
+  const zoneId = run?.zone?.id || 'bosque';
+  const themeGradients = {
+    bosque: { bg1: '#071f12', bg2: '#020b06', accent: '#10b981', glow: 'rgba(16, 185, 129, 0.4)' },
+    recife: { bg1: '#061a29', bg2: '#020912', accent: '#06b6d4', glow: 'rgba(6, 182, 212, 0.4)' },
+    colina: { bg1: '#261b07', bg2: '#0d0902', accent: '#f59e0b', glow: 'rgba(245, 158, 11, 0.4)' },
+    castelo: { bg1: '#210729', bg2: '#0b020d', accent: '#c084fc', glow: 'rgba(192, 132, 252, 0.4)' },
+  };
+  const theme = themeGradients[zoneId] || themeGradients.bosque;
+
+  // 1. Fundo Gradiente da Masmorra
+  const bgGrad = ctx.createRadialGradient(MAP_WIDTH / 2, MAP_HEIGHT / 2, 50, MAP_WIDTH / 2, MAP_HEIGHT / 2, 400);
+  bgGrad.addColorStop(0, theme.bg1);
+  bgGrad.addColorStop(1, theme.bg2);
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
+
+  // Moldura Retrô
+  ctx.strokeStyle = theme.accent;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(10, 10, MAP_WIDTH - 20, MAP_HEIGHT - 20);
+
+  // 2. HUD Superior: Informações do Pymon e Espólios
+  // Avatar / Miniatura do Pet
+  const avatarX = 40;
+  const avatarY = 44;
+  const avatarR = 24;
+
+  ctx.save();
+  ctx.shadowColor = theme.glow;
+  ctx.shadowBlur = 10;
+  ctx.strokeStyle = theme.accent;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(avatarX, avatarY, avatarR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.fillStyle = '#0f051d';
+  ctx.beginPath();
+  ctx.arc(avatarX, avatarY, avatarR - 1, 0, Math.PI * 2);
+  ctx.fill();
+
+  const sprite = getCachedSprite(activePet?.key, Boolean(activePet?.shiny));
+  if (sprite) {
+    drawPixelatedSprite(ctx, sprite, avatarX, avatarY, 36);
+  } else {
+    ctx.font = '20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(activePet?.emoji || '🐾', avatarX, avatarY);
+  }
+  ctx.restore();
+
+  // Nome e Barras de Vida / Energia
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 15px sans-serif';
+  ctx.fillText(`${activePet?.name || 'Pymon'} (Nv. ${activePet?.level || 1})`, 75, 32);
+
+  const curHp = activePet?.stats?.hp ?? 55;
+  const maxHp = activePet?.stats?.maxHp ?? 55;
+  const curEnergy = activePet?.energy ?? 100;
+
+  drawProgressBar(ctx, 75, 44, 150, 12, curHp, maxHp, '#10b981', '#34d399', `HP: ${curHp}/${maxHp}`);
+  drawProgressBar(ctx, 75, 59, 150, 12, curEnergy, 100, '#eab308', '#facc15', `⚡ ${curEnergy}%`);
+
+  // Painel de Espólios Acumulados (Lado Direito)
+  const lootPanelX = 360;
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.beginPath();
+  ctx.roundRect(lootPanelX, 22, 215, 52, 6);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = theme.accent;
+  ctx.font = 'bold 11px sans-serif';
+  ctx.fillText(`🗺️ ${run?.zone?.name || 'Dungeon'}`, lootPanelX + 10, 36);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '12px sans-serif';
+  const coinsText = `🪙 +${run?.coinsAccumulated || 0}`;
+  const chestsText = `📦 x${(run?.chestsFound || []).length}`;
+  const eggsText = `🥚 x${(run?.eggsFound || []).length}`;
+  ctx.fillText(`${coinsText}   ${chestsText}   ${eggsText}`, lootPanelX + 10, 58);
+
+  // 3. Grid de Salas 2D (Centro do Canvas)
+  const grid = run?.grid || [];
+  const gridH = grid.length || 5;
+  const gridW = grid[0]?.length || 5;
+
+  const cellSize = gridW > 5 ? 44 : 52;
+  const cellGap = 6;
+  const totalBoardW = gridW * cellSize + (gridW - 1) * cellGap;
+  const totalBoardH = gridH * cellSize + (gridH - 1) * cellGap;
+
+  const boardStartX = Math.floor((MAP_WIDTH - totalBoardW) / 2);
+  const boardStartY = 95 + Math.floor((335 - totalBoardH) / 2);
+
+  const playerPos = run?.playerPos || { x: 0, y: 0 };
+  const exitPos = run?.exitPos || { x: gridW - 1, y: gridH - 1 };
+
+  for (let y = 0; y < gridH; y++) {
+    for (let x = 0; x < gridW; x++) {
+      const tile = grid[y]?.[x] || { revealed: false, visited: false, cleared: false, eventType: 'EMPTY' };
+      const cellX = boardStartX + x * (cellSize + cellGap);
+      const cellY = boardStartY + y * (cellSize + cellGap);
+      const isPlayer = playerPos.x === x && playerPos.y === y;
+      const isExit = exitPos.x === x && exitPos.y === y;
+
+      ctx.save();
+      if (!tile.revealed) {
+        // Sala Oculta (Névoa de Guerra)
+        ctx.fillStyle = '#0a0614';
+        ctx.strokeStyle = '#1b1130';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(cellX, cellY, cellSize, cellSize, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('?', cellX + cellSize / 2, cellY + cellSize / 2);
+
+      } else {
+        // Sala Revelada
+        if (tile.visited) {
+          ctx.fillStyle = '#1c1033';
+          ctx.strokeStyle = '#3b2066';
+        } else {
+          ctx.fillStyle = '#120b24';
+          ctx.strokeStyle = '#271545';
+        }
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(cellX, cellY, cellSize, cellSize, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        // Desenha Ícones do Conteúdo da Sala
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        if (isExit) {
+          ctx.shadowColor = '#f59e0b';
+          ctx.shadowBlur = 12;
+          ctx.font = 'bold 22px sans-serif';
+          ctx.fillText('🚩', cellX + cellSize / 2, cellY + cellSize / 2);
+        } else if (isPlayer) {
+          // Jogador na Célula
+          ctx.shadowColor = theme.accent;
+          ctx.shadowBlur = 15;
+          ctx.strokeStyle = theme.accent;
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.roundRect(cellX - 1, cellY - 1, cellSize + 2, cellSize + 2, 7);
+          ctx.stroke();
+
+          if (sprite) {
+            drawPixelatedSprite(ctx, sprite, cellX + cellSize / 2, cellY + cellSize / 2, cellSize - 10);
+          } else {
+            ctx.font = '22px sans-serif';
+            ctx.fillText(activePet?.emoji || '🐾', cellX + cellSize / 2, cellY + cellSize / 2);
+          }
+        } else if (tile.visited) {
+          // Sala já visitada
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+          ctx.font = '14px sans-serif';
+          ctx.fillText('•', cellX + cellSize / 2, cellY + cellSize / 2);
+        } else {
+          // Revelada mas ainda não visitada (Exibe ícone/pistas do que há na sala)
+          ctx.font = '18px sans-serif';
+          const eventIcons = {
+            BATTLE: '👾',
+            NPC_DUEL: '⚔️',
+            CHEST: '📦',
+            EGG_NEST: '🥚',
+            TRAP: '🪤',
+            FOUNTAIN: '⛲',
+            EMPTY: '·',
+          };
+          const icon = eventIcons[tile.eventType] || '·';
+          ctx.fillText(icon, cellX + cellSize / 2, cellY + cellSize / 2);
+        }
+      }
+      ctx.restore();
+    }
+  }
+
+  // 4. Rodapé do Mapa
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const posText = `Posição: (${playerPos.x + 1}, ${playerPos.y + 1})  •  Passos: ${run?.step || 0}  •  Use os botões direcionais D-Pad`;
+  ctx.fillText(posText, MAP_WIDTH / 2, MAP_HEIGHT - 22);
+
+  return canvas.toBuffer('image/png');
+}
+
+function createExpeditionMapAttachment(run, activePet) {
+  const buffer = renderExpeditionMap(run, activePet);
+  return new AttachmentBuilder(buffer, { name: 'dungeon_map.png' });
+}
+
 module.exports = {
   renderPetCard,
   renderDexCard,
+  renderExpeditionMap,
   createPetAttachment,
   createDexAttachment,
+  createExpeditionMapAttachment,
   preloadSprites,
 };
+

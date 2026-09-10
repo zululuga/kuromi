@@ -397,6 +397,7 @@ client.on('messageCreate', async (message) => {
   if (!command || typeof command.executePrefix !== 'function') return;
 
   incrementCommand();
+  await command.executePrefix({ message, args, prefix });
   try {
     await command.executePrefix({ message, args, prefix });
   } catch (error) {
@@ -407,6 +408,12 @@ client.on('messageCreate', async (message) => {
 
 // O registro compartilhado também encaminha cada slash command ao próprio arquivo.
 client.on('interactionCreate', async (interaction) => {
+  if (tarotCommand.isTarotButton(interaction)) {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await tarotCommand.executeButton({ interaction });
+    return;
+  }
   try {
     if (tarotCommand.isTarotButton(interaction)) {
       incrementCommand();
@@ -415,6 +422,13 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
+  if (interaction.isButton() && interaction.customId === 'tarot:draw') {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await interaction.deferReply({ ephemeral: true });
+    await tarotCommand.executeSlash({ interaction });
+    return;
+  }
     if (interaction.isButton() && interaction.customId === 'tarot:draw') {
       incrementCommand();
       recordUniqueUser(interaction.user.id);
@@ -423,6 +437,12 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
+  if (typeof marriageCommand?.isMarriageButton === 'function' && marriageCommand.isMarriageButton(interaction)) {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await marriageCommand.executeButton({ interaction });
+    return;
+  }
     if (typeof marriageCommand?.isMarriageButton === 'function' && marriageCommand.isMarriageButton(interaction)) {
       incrementCommand();
       recordUniqueUser(interaction.user.id);
@@ -430,6 +450,12 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
+  if (typeof helpCommand?.isHelpButton === 'function' && helpCommand.isHelpButton(interaction)) {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await helpCommand.executeButton({ interaction });
+    return;
+  }
     if (typeof helpCommand?.isHelpButton === 'function' && helpCommand.isHelpButton(interaction)) {
       incrementCommand();
       recordUniqueUser(interaction.user.id);
@@ -437,6 +463,12 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
+  if (typeof shopCommand?.isShopInteraction === 'function' && shopCommand.isShopInteraction(interaction)) {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await shopCommand.handleShopInteraction(interaction);
+    return;
+  }
     if (typeof shopCommand?.isShopInteraction === 'function' && shopCommand.isShopInteraction(interaction)) {
       incrementCommand();
       recordUniqueUser(interaction.user.id);
@@ -444,6 +476,12 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
+  if (typeof inventoryCommand?.isInventoryInteraction === 'function' && inventoryCommand.isInventoryInteraction(interaction)) {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await inventoryCommand.handleInventoryInteraction(interaction);
+    return;
+  }
     if (typeof inventoryCommand?.isInventoryInteraction === 'function' && inventoryCommand.isInventoryInteraction(interaction)) {
       incrementCommand();
       recordUniqueUser(interaction.user.id);
@@ -451,6 +489,12 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
+  if (typeof petCommand?.isPetInteraction === 'function' && petCommand.isPetInteraction(interaction)) {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await petCommand.handlePetInteraction(interaction);
+    return;
+  }
     if (typeof petCommand?.isPetInteraction === 'function' && petCommand.isPetInteraction(interaction)) {
       incrementCommand();
       recordUniqueUser(interaction.user.id);
@@ -458,6 +502,12 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
+  if (typeof adoptionCommand?.isAdoptionInteraction === 'function' && adoptionCommand.isAdoptionInteraction(interaction)) {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await adoptionCommand.handleAdoptionInteraction(interaction);
+    return;
+  }
     if (typeof dexCommand?.isDexInteraction === 'function' && dexCommand.isDexInteraction(interaction)) {
       incrementCommand();
       recordUniqueUser(interaction.user.id);
@@ -465,6 +515,12 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
+  if (typeof dungeonCommand?.isDungeonInteraction === 'function' && dungeonCommand.isDungeonInteraction(interaction)) {
+    incrementCommand();
+    recordUniqueUser(interaction.user.id);
+    await dungeonCommand.handleDungeonInteraction(interaction);
+    return;
+  }
     if (typeof adoptionCommand?.isAdoptionInteraction === 'function' && adoptionCommand.isAdoptionInteraction(interaction)) {
       incrementCommand();
       recordUniqueUser(interaction.user.id);
@@ -472,6 +528,7 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
+  if (typeof duelCommand?.isDuelInteraction === 'function' && duelCommand.isDuelInteraction(interaction)) {
     if (typeof dungeonCommand?.isDungeonInteraction === 'function' && dungeonCommand.isDungeonInteraction(interaction)) {
       incrementCommand();
       recordUniqueUser(interaction.user.id);
@@ -490,7 +547,11 @@ client.on('interactionCreate', async (interaction) => {
 
     incrementCommand();
     recordUniqueUser(interaction.user.id);
+    await duelCommand.handleDuelInteraction(interaction);
+    return;
+  }
 
+  if (!interaction.isChatInputCommand()) return;
     const command = commandsByName.get(interaction.commandName);
     const isEphemeral = Boolean(
       command?.ephemeral ||
@@ -504,6 +565,20 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
+  incrementCommand();
+  recordUniqueUser(interaction.user.id);
+
+  const command = commandsByName.get(interaction.commandName);
+  const isEphemeral = Boolean(
+    command?.ephemeral ||
+    command?.name === 'tarot' ||
+    command?.name === 'ajuda' ||
+    command?.name === 'inventario'
+  );
+  await interaction.deferReply({ ephemeral: isEphemeral });
+  if (!command || typeof command.executeSlash !== 'function') {
+    await interaction.editReply({ content: 'Esse comando ainda não está disponível. Não olhe para mim assim; eu também estou investigando.' });
+    return;
     await command.executeSlash({ interaction });
   } catch (error) {
     console.error(`Erro ao processar interaction (${interaction.commandName || interaction.customId}):`, error);
@@ -513,6 +588,8 @@ client.on('interactionCreate', async (interaction) => {
       await interaction.reply({ content: '❌ Ocorreu um erro ao processar esta ação.', ephemeral: true }).catch(() => null);
     }
   }
+
+  await command.executeSlash({ interaction });
 });
 
 client.on('error', (error) => {
