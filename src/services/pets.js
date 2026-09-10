@@ -360,7 +360,7 @@ function adoptPet(userId, speciesKey) {
 function feedPet(userId, itemKey = 'racao_cringe') {
   const activePet = getActivePet(userId);
   if (!activePet) {
-    return { success: false, reason: 'no_active_pet' };
+    return { success: false, reason: 'no_active_pet', message: 'Você não possui nenhum Pymon ativo!' };
   }
 
   if (activePet.hunger >= 100) {
@@ -382,7 +382,7 @@ function feedPet(userId, itemKey = 'racao_cringe') {
 
   const removed = removeItem(userId, itemKey, 1);
   if (!removed) {
-    return { success: false, reason: 'failed_consume' };
+    return { success: false, reason: 'failed_consume', message: `Não foi possível consumir o item **${item.name}**.` };
   }
 
   const fx = item.effects || { hunger: 25, happiness: 10, energy: 5, heal: 0, xp: 5 };
@@ -413,6 +413,7 @@ function feedPet(userId, itemKey = 'racao_cringe') {
     success: true,
     pet: activePet,
     item,
+    message: `🥣 Você alimentou **${activePet.name}** com **${item.name}**! (${effectsApplied.join(' • ')})`,
     effectsSummary: effectsApplied.join(' • '),
     statusSummary: `HP: ${activePet.stats.hp}/${activePet.stats.maxHp} • Fome: ${activePet.hunger}% • Humor: ${activePet.happiness}% • Energia: ${activePet.energy}%`,
     leveledUp: xpResult.leveledUp,
@@ -423,7 +424,7 @@ function feedPet(userId, itemKey = 'racao_cringe') {
 function petCarinho(userId, now = Date.now()) {
   const activePet = getActivePet(userId);
   if (!activePet) {
-    return { success: false, reason: 'no_active_pet' };
+    return { success: false, reason: 'no_active_pet', message: 'Você não possui nenhum Pymon ativo!' };
   }
 
   const lastCarinho = activePet.lastCarinhoAt || 0;
@@ -434,6 +435,7 @@ function petCarinho(userId, now = Date.now()) {
       reason: 'cooldown',
       remainingMs,
       remainingMinutes: Math.ceil(remainingMs / (60 * 1000)),
+      message: `⏳ Seu pet já recebeu muito carinho! Aguarde **${Math.ceil(remainingMs / (60 * 1000))}m** para brincar novamente.`,
     };
   }
 
@@ -448,6 +450,7 @@ function petCarinho(userId, now = Date.now()) {
     pet: activePet,
     xpGained: 20,
     happinessGained: 20,
+    message: `💖 Você fez carinho em **${activePet.name}**! (+20% Felicidade • +20 XP)`,
     leveledUp: xpResult.leveledUp,
     newLevel: activePet.level,
   };
@@ -456,7 +459,7 @@ function petCarinho(userId, now = Date.now()) {
 function petSleep(userId, now = Date.now()) {
   const activePet = getActivePet(userId);
   if (!activePet) {
-    return { success: false, reason: 'no_active_pet' };
+    return { success: false, reason: 'no_active_pet', message: 'Você não possui nenhum Pymon ativo!' };
   }
 
   const lastSleep = activePet.lastSleepAt || 0;
@@ -467,6 +470,7 @@ function petSleep(userId, now = Date.now()) {
       reason: 'cooldown',
       remainingMs,
       remainingHours: Math.ceil(remainingMs / (60 * 60 * 1000)),
+      message: `💤 Seu pet ainda está descansado! Poderá dormir novamente em **${Math.ceil(remainingMs / (60 * 60 * 1000))}h**.`,
     };
   }
 
@@ -488,7 +492,7 @@ function petSleep(userId, now = Date.now()) {
 function renamePet(userId, newName) {
   const activePet = getActivePet(userId);
   if (!activePet) {
-    return { success: false, reason: 'no_active_pet' };
+    return { success: false, reason: 'no_active_pet', message: 'Você não possui nenhum Pymon ativo!' };
   }
 
   const clean = String(newName || '').trim().slice(0, 24);
@@ -499,14 +503,14 @@ function renamePet(userId, newName) {
   activePet.name = clean;
   schedulePetsSave();
 
-  return { success: true, pet: activePet, newName: clean };
+  return { success: true, pet: activePet, newName: clean, message: `✨ Seu Pymon agora se chama **${clean}**!` };
 }
 
 function awardPetXp(userId, petId, xpAmount) {
   const record = getUserPetRecord(userId);
   const pet = (record.pets || []).find((p) => p.id === petId);
   if (!pet) {
-    return { success: false, reason: 'pet_not_found' };
+    return { success: false, reason: 'pet_not_found', message: 'Pymon não encontrado na sua coleção.' };
   }
 
   pet.xp = (pet.xp || 0) + Math.max(0, xpAmount);
@@ -540,21 +544,21 @@ function awardPetXp(userId, petId, xpAmount) {
 function useItemOnActivePet(userId, itemKey) {
   const activePet = getActivePet(userId);
   if (!activePet) {
-    return { success: false, reason: 'no_active_pet' };
+    return { success: false, reason: 'no_active_pet', message: 'Você não possui nenhum Pymon ativo!' };
   }
 
   const item = getItemDefinition(itemKey);
   if (!item) {
-    return { success: false, reason: 'item_not_found' };
+    return { success: false, reason: 'item_not_found', message: 'Item não encontrado no catálogo.' };
   }
 
   if (!hasItem(userId, itemKey, 1)) {
-    return { success: false, reason: 'no_item' };
+    return { success: false, reason: 'no_item', message: `Você não possui **${item.name}** na sua mochila! Compre na Lojinha ou resgate o Kit Inicial.` };
   }
 
   const removed = removeItem(userId, itemKey, 1);
   if (!removed) {
-    return { success: false, reason: 'failed_consume' };
+    return { success: false, reason: 'failed_consume', message: `Não foi possível consumir o item **${item.name}** da sua mochila.` };
   }
 
   const fx = item.effects || {};
@@ -590,6 +594,7 @@ function useItemOnActivePet(userId, itemKey) {
     applied: 'buff',
     pet: activePet,
     item,
+    message: `✨ Você usou **${item.name}** em **${activePet.name}**! (${effectsApplied.join(' • ')})`,
     effectsSummary: effectsApplied.join(' • '),
     statusSummary: `HP: ${activePet.stats.hp}/${activePet.stats.maxHp} • Fome: ${activePet.hunger}% • Humor: ${activePet.happiness}% • Energia: ${activePet.energy}%`,
     leveledUp: xpResult.leveledUp,

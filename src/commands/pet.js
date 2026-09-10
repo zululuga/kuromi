@@ -860,7 +860,7 @@ async function handleHubInteraction(interaction) {
     const activePet = getActivePet(userId);
     const startRes = startProceduralRun(userId, zoneId, activePet);
     if (!startRes.success) {
-      return interaction.reply({ content: `❌ ${startRes.message}`, flags: 64 });
+      return interaction.reply({ content: `❌ ${startRes.message || 'Não foi possível iniciar a expedição.'}`, flags: 64 });
     }
     const view = buildDungeonTab(userId, userTag);
     return interaction.update(view);
@@ -874,7 +874,7 @@ async function handleHubInteraction(interaction) {
     schedulePetsSave();
 
     if (!moveRes.success) {
-      return interaction.reply({ content: `❌ ${moveRes.message}`, flags: 64 });
+      return interaction.reply({ content: `❌ ${moveRes.message || 'Não foi possível mover nessa direção.'}`, flags: 64 });
     }
 
     const view = buildDungeonTab(userId, userTag);
@@ -894,11 +894,11 @@ async function handleHubInteraction(interaction) {
     const retreatRes = retreatRun(userId, activePet, awardPetXp);
     schedulePetsSave();
     if (!retreatRes.success) {
-      return interaction.reply({ content: `❌ ${retreatRes.message}`, flags: 64 });
+      return interaction.reply({ content: `❌ ${retreatRes.message || 'Não foi possível resgatar os espólios.'}`, flags: 64 });
     }
     const view = buildDungeonTab(userId, userTag);
     return interaction.update({
-      content: retreatRes.message,
+      content: retreatRes.message || '✨ Espólios resgatados com sucesso!',
       ...view,
     });
   }
@@ -909,11 +909,11 @@ async function handleHubInteraction(interaction) {
     const fleeRes = panicFlee(userId, activePet);
     schedulePetsSave();
     if (!fleeRes.success) {
-      return interaction.reply({ content: `❌ ${fleeRes.message}`, flags: 64 });
+      return interaction.reply({ content: `❌ ${fleeRes.message || 'Não foi possível fugir.'}`, flags: 64 });
     }
     const view = buildDungeonTab(userId, userTag);
     return interaction.update({
-      content: fleeRes.message,
+      content: fleeRes.message || '💨 Você fugiu da masmorra!',
       ...view,
     });
   }
@@ -923,7 +923,7 @@ async function handleHubInteraction(interaction) {
     const res = useItemOnActivePet(userId, 'frasco_eter');
     schedulePetsSave();
     if (!res.success) {
-      return interaction.reply({ content: `❌ ${res.message}`, flags: 64 });
+      return interaction.reply({ content: `❌ ${res.message || 'Você não possui Frasco de Éter na sua mochila! Compre na Lojinha.'}`, flags: 64 });
     }
     const view = buildDungeonTab(userId, userTag);
     return interaction.update(view);
@@ -937,23 +937,23 @@ async function handleHubInteraction(interaction) {
     if (def && def.effects && def.effects.isChest) {
       const openRes = openChest(userId, itemId);
       if (!openRes.success) {
-        return interaction.reply({ content: `❌ ${openRes.message}`, flags: 64 });
+        return interaction.reply({ content: `❌ ${openRes.message || 'Não foi possível abrir o baú.'}`, flags: 64 });
       }
       const view = buildInventoryTab(userId, userTag);
       return interaction.update({
-        content: openRes.message,
+        content: openRes.message || '📦 Baú aberto!',
         ...view,
       });
     }
 
     const useRes = useItemOnActivePet(userId, itemId);
     if (!useRes.success) {
-      return interaction.reply({ content: `❌ ${useRes.message}`, flags: 64 });
+      return interaction.reply({ content: `❌ ${useRes.message || 'Não foi possível usar este item.'}`, flags: 64 });
     }
     schedulePetsSave();
     const view = buildInventoryTab(userId, userTag);
     return interaction.update({
-      content: useRes.message,
+      content: useRes.message || '✨ Item utilizado com sucesso!',
       ...view,
     });
   }
@@ -970,7 +970,7 @@ async function handleHubInteraction(interaction) {
     const itemId = interaction.values[0];
     const buyRes = buyItem(userId, itemId, 1);
     if (!buyRes.success) {
-      return interaction.reply({ content: `❌ ${buyRes.message}`, flags: 64 });
+      return interaction.reply({ content: `❌ ${buyRes.message || 'Saldo insuficiente ou item indisponível.'}`, flags: 64 });
     }
     const def = getItemDefinition(itemId);
     const view = buildShopTab(userId, def?.category || 'comida');

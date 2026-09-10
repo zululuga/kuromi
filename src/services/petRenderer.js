@@ -641,12 +641,12 @@ function renderExpeditionMap(run, activePet) {
   const curEnergy = activePet?.energy ?? 100;
 
   drawProgressBar(ctx, 75, 44, 150, 12, curHp, maxHp, '#10b981', '#34d399', `HP: ${curHp}/${maxHp}`);
-  drawProgressBar(ctx, 75, 59, 150, 12, curEnergy, 100, '#eab308', '#facc15', `⚡ ${curEnergy}%`);
+  drawProgressBar(ctx, 75, 59, 150, 12, curEnergy, 100, '#eab308', '#facc15', `ENERGIA: ${curEnergy}%`);
 
   // Painel de Espólios Acumulados (Lado Direito)
   const lootPanelX = 360;
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
   ctx.beginPath();
   ctx.roundRect(lootPanelX, 22, 215, 52, 6);
   ctx.fill();
@@ -654,13 +654,13 @@ function renderExpeditionMap(run, activePet) {
 
   ctx.fillStyle = theme.accent;
   ctx.font = 'bold 11px sans-serif';
-  ctx.fillText(`🗺️ ${run?.zone?.name || 'Dungeon'}`, lootPanelX + 10, 36);
+  ctx.fillText(`MASMORRA: ${run?.zone?.name?.toUpperCase() || 'DUNGEON'}`, lootPanelX + 10, 36);
 
   ctx.fillStyle = '#ffffff';
-  ctx.font = '12px sans-serif';
-  const coinsText = `🪙 +${run?.coinsAccumulated || 0}`;
-  const chestsText = `📦 x${(run?.chestsFound || []).length}`;
-  const eggsText = `🥚 x${(run?.eggsFound || []).length}`;
+  ctx.font = 'bold 11px sans-serif';
+  const coinsText = `MOEDAS: +${run?.coinsAccumulated || 0}`;
+  const chestsText = `BAÚS: ${(run?.chestsFound || []).length}`;
+  const eggsText = `OVOS: ${(run?.eggsFound || []).length}`;
   ctx.fillText(`${coinsText}   ${chestsText}   ${eggsText}`, lootPanelX + 10, 58);
 
   // 3. Grid de Salas 2D (Centro do Canvas)
@@ -686,6 +686,8 @@ function renderExpeditionMap(run, activePet) {
       const cellY = boardStartY + y * (cellSize + cellGap);
       const isPlayer = playerPos.x === x && playerPos.y === y;
       const isExit = exitPos.x === x && exitPos.y === y;
+      const cellCx = cellX + cellSize / 2;
+      const cellCy = cellY + cellSize / 2;
 
       ctx.save();
       if (!tile.revealed) {
@@ -698,12 +700,11 @@ function renderExpeditionMap(run, activePet) {
         ctx.fill();
         ctx.stroke();
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
         ctx.font = 'bold 16px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('?', cellX + cellSize / 2, cellY + cellSize / 2);
-
+        ctx.fillText('?', cellCx, cellCy);
       } else {
         // Sala Revelada
         if (tile.visited) {
@@ -719,15 +720,22 @@ function renderExpeditionMap(run, activePet) {
         ctx.fill();
         ctx.stroke();
 
-        // Desenha Ícones do Conteúdo da Sala
+        // Desenha Marcador Universal Retro
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         if (isExit) {
+          // Portal de Saída (Estrela Dourada com Aura)
           ctx.shadowColor = '#f59e0b';
-          ctx.shadowBlur = 12;
-          ctx.font = 'bold 22px sans-serif';
-          ctx.fillText('🚩', cellX + cellSize / 2, cellY + cellSize / 2);
+          ctx.shadowBlur = 14;
+          ctx.fillStyle = '#f59e0b';
+          ctx.beginPath();
+          ctx.arc(cellCx, cellCy, 11, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#0f051d';
+          ctx.font = 'bold 13px sans-serif';
+          ctx.fillText('★', cellCx, cellCy + 1);
         } else if (isPlayer) {
           // Jogador na Célula
           ctx.shadowColor = theme.accent;
@@ -739,30 +747,77 @@ function renderExpeditionMap(run, activePet) {
           ctx.stroke();
 
           if (sprite) {
-            drawPixelatedSprite(ctx, sprite, cellX + cellSize / 2, cellY + cellSize / 2, cellSize - 10);
+            drawPixelatedSprite(ctx, sprite, cellCx, cellCy, cellSize - 10);
           } else {
-            ctx.font = '22px sans-serif';
-            ctx.fillText(activePet?.emoji || '🐾', cellX + cellSize / 2, cellY + cellSize / 2);
+            ctx.fillStyle = theme.accent;
+            ctx.beginPath();
+            ctx.arc(cellCx, cellCy, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillText('P', cellCx, cellCy + 1);
           }
         } else if (tile.visited) {
           // Sala já visitada
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-          ctx.font = '14px sans-serif';
-          ctx.fillText('•', cellX + cellSize / 2, cellY + cellSize / 2);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+          ctx.font = 'bold 16px sans-serif';
+          ctx.fillText('•', cellCx, cellCy);
         } else {
-          // Revelada mas ainda não visitada (Exibe ícone/pistas do que há na sala)
-          ctx.font = '18px sans-serif';
-          const eventIcons = {
-            BATTLE: '👾',
-            NPC_DUEL: '⚔️',
-            CHEST: '📦',
-            EGG_NEST: '🥚',
-            TRAP: '🪤',
-            FOUNTAIN: '⛲',
-            EMPTY: '·',
-          };
-          const icon = eventIcons[tile.eventType] || '·';
-          ctx.fillText(icon, cellX + cellSize / 2, cellY + cellSize / 2);
+          // Marcadores com Símbolos Universais
+          switch (tile.eventType) {
+            case 'BATTLE':
+              ctx.shadowColor = '#ef4444';
+              ctx.shadowBlur = 10;
+              ctx.fillStyle = '#ef4444';
+              ctx.font = 'bold 18px sans-serif';
+              ctx.fillText('⚔', cellCx, cellCy);
+              break;
+            case 'NPC_DUEL':
+              ctx.shadowColor = '#c084fc';
+              ctx.shadowBlur = 10;
+              ctx.fillStyle = '#c084fc';
+              ctx.font = 'bold 13px sans-serif';
+              ctx.fillText('VS', cellCx, cellCy);
+              break;
+            case 'CHEST':
+              ctx.shadowColor = '#f59e0b';
+              ctx.shadowBlur = 10;
+              ctx.fillStyle = '#fbbf24';
+              ctx.font = 'bold 18px sans-serif';
+              ctx.fillText('◆', cellCx, cellCy);
+              break;
+            case 'EGG_NEST':
+              ctx.shadowColor = '#38bdf8';
+              ctx.shadowBlur = 10;
+              ctx.fillStyle = '#38bdf8';
+              ctx.beginPath();
+              ctx.ellipse(cellCx, cellCy, 6, 8.5, 0, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#ffffff';
+              ctx.beginPath();
+              ctx.arc(cellCx - 1.5, cellCy - 2.5, 1.5, 0, Math.PI * 2);
+              ctx.fill();
+              break;
+            case 'TRAP':
+              ctx.shadowColor = '#f97316';
+              ctx.shadowBlur = 10;
+              ctx.fillStyle = '#f97316';
+              ctx.font = 'bold 16px sans-serif';
+              ctx.fillText('▲', cellCx, cellCy);
+              break;
+            case 'FOUNTAIN':
+              ctx.shadowColor = '#06b6d4';
+              ctx.shadowBlur = 10;
+              ctx.fillStyle = '#22d3ee';
+              ctx.font = 'bold 19px sans-serif';
+              ctx.fillText('✚', cellCx, cellCy);
+              break;
+            default:
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+              ctx.font = '16px sans-serif';
+              ctx.fillText('·', cellCx, cellCy);
+              break;
+          }
         }
       }
       ctx.restore();
