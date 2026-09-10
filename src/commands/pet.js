@@ -48,7 +48,7 @@ const {
 const { getUserAccount } = require('../services/economy');
 const { PYXIE_COLORS, pyxieFooter, getRandomPhrase } = require('../utils/pyxieVoice');
 const { formatCoins, formatRemaining } = require('./economyHelpers');
-const { PIXELMONSTERS, PET } = require('./commandNames');
+const { PYMONS, PIXELMONSTERS, PET } = require('./commandNames');
 
 // --- Component Builders ---
 
@@ -56,7 +56,7 @@ function buildHubHeaderRow(userId, currentTab = 'pet') {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`hub_tab:pet:${userId}`)
-      .setLabel('Meu Monster')
+      .setLabel('Meu Pymon')
       .setEmoji('🐾')
       .setStyle(currentTab === 'pet' ? ButtonStyle.Primary : ButtonStyle.Secondary),
     new ButtonBuilder()
@@ -82,7 +82,7 @@ function buildHubHeaderRow(userId, currentTab = 'pet') {
   );
 }
 
-// 1. Tab Meu Monster
+// 1. Tab Meu Pymon
 function buildPetTab(userId, userTag) {
   const activePet = getActivePet(userId);
   const userPets = getUserPets(userId);
@@ -103,7 +103,7 @@ function buildPetTab(userId, userTag) {
       `> *"${getRandomPhrase('feed')}"*`
     )
     .setImage('attachment://pet_card.png')
-    .setFooter({ text: pyxieFooter('PixelMonsters • 100% Interativo') })
+    .setFooter({ text: pyxieFooter('Pymons • 100% Interativo') })
     .setTimestamp();
 
   const components = [buildHubHeaderRow(userId, 'pet')];
@@ -492,10 +492,10 @@ function buildShopTab(userId, userTag, category = 'comida') {
 function buildOnboardingView(userId, userDisplayName) {
   const embed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.lilac)
-    .setTitle('✨ ✦ Boas-vindas ao Reino dos PixelMonsters! ✦ ✨')
+    .setTitle('✨ ✦ Boas-vindas ao Reino dos Pymons! ✦ ✨')
     .setDescription(
-      `Ora, ora, **${userDisplayName}**! Você ainda não possui nenhum PixelMonster ao seu lado.\n\n` +
-      `Visite a nossa **Pokédex de Adoção** com \`/adocao\` para escolher seu parceiro inicial:\n` +
+      `Ora, ora, **${userDisplayName}**! Você ainda não possui nenhum Pymon ao seu lado.\n\n` +
+      `Visite a nossa **Dex de Adoção** com \`/adocao\` para escolher seu parceiro inicial:\n` +
       `• 🧁 **Cinna** (Charme) — Doçura radiante e astúcia\n` +
       `• 💧 **Bonorka** (Orvalho) — Serenidade aquática e resistência\n` +
       `• 🍃 **Pomcorin** (Silvestre) — Agilidade pura e vigor natural\n\n` +
@@ -503,7 +503,7 @@ function buildOnboardingView(userId, userDisplayName) {
       `🎁 Pyxie também preparou um **Kit Inicial Gratuito**:\n` +
       `• 🪙 **+150 Moedas** • 🥣 **2x Rações** • 🩹 **1x Curativo** • 📦 **1x Baú Rústico**`
     )
-    .setFooter({ text: pyxieFooter('PixelMonsters • Escolha seu inicial em /adocao') })
+    .setFooter({ text: pyxieFooter('Pymons • Escolha seu inicial em /adocao') })
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(
@@ -868,9 +868,18 @@ async function handleHubInteraction(interaction) {
 
   // 17. Adoção Inicial a partir do Onboarding
   if (action === 'hub_open_adoption') {
-    const { buildPokedexSelectionView } = require('./adocao');
-    const view = buildPokedexSelectionView(userId, userTag, 'cinna');
-    return interaction.update(view);
+    const { buildDexEmbed, buildDexComponents } = require('./adocao');
+    const { createDexAttachment } = require('../services/petRenderer');
+    const { PETS_CATALOG } = require('../services/pets');
+    const monster = PETS_CATALOG.cinna;
+    const embed = buildDexEmbed('cinna');
+    const components = buildDexComponents(userId, 'cinna');
+    const attachment = createDexAttachment(monster, false);
+    return interaction.update({
+      embeds: [embed],
+      components,
+      files: [attachment],
+    });
   }
 
   // Fallback genérico
@@ -879,11 +888,11 @@ async function handleHubInteraction(interaction) {
 }
 
 module.exports = {
-  name: PIXELMONSTERS,
+  name: PYMONS,
   data: new SlashCommandBuilder()
-    .setName(PIXELMONSTERS)
-    .setDescription('Abre o Hub Central de PixelMonsters de Pyxie (100% interativo via botões).'),
-  aliases: ['pixelmon', 'monsters', 'pet', 'pets', 'p', 'bicho', 'mascote'],
+    .setName(PYMONS)
+    .setDescription('Abre o Hub Central de Pymons de Pyxie (100% interativo via botões).'),
+  aliases: ['pymon', 'pixelmonsters', 'pixelmon', 'monsters', 'pet', 'pets', 'p', 'bicho', 'mascote'],
   buildPetEmbed: (pet, userTag) => buildPetTab(userTag, userTag).embeds[0],
   buildHubView: buildPetTab,
   buildPetTab,

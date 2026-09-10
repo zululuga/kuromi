@@ -196,7 +196,7 @@ function setActivePet(userId, petIdentifier) {
 }
 
 /**
- * Adoção de PixelMonster inicial (Cinna, Bonorka ou Pomcorin).
+ * Adoção de Pymon inicial (Cinna, Bonorka ou Pomcorin).
  * Gratuita, com 5% de chance de Shiny. Bloqueada para quem já tem 1+ pet.
  */
 function adoptPet(userId, speciesKey) {
@@ -207,7 +207,7 @@ function adoptPet(userId, speciesKey) {
     return {
       success: false,
       reason: 'already_has_starter',
-      message: 'Você já escolheu seu PixelMonster inicial! Obtenha novos companheiros explorando Dungeons e chocando ovos na Chocadeira.',
+      message: 'Você já escolheu seu Pymon inicial! Obtenha novos companheiros explorando Dungeons e chocando ovos na Chocadeira.',
     };
   }
 
@@ -215,14 +215,14 @@ function adoptPet(userId, speciesKey) {
   const species = petsCatalog[normalized] || petsCatalog.cinna;
 
   if (!species) {
-    return { success: false, reason: 'invalid_species', message: 'PixelMonster inicial não encontrado no catálogo.' };
+    return { success: false, reason: 'invalid_species', message: 'Pymon inicial não encontrado no catálogo.' };
   }
 
   if (!species.isStarter) {
     return {
       success: false,
       reason: 'not_starter',
-      message: 'Apenas os 3 PixelMonsters iniciais (Cinna, Bonorka e Pomcorin) podem ser escolhidos na adoção inicial!',
+      message: 'Apenas os 3 Pymons iniciais (Cinna, Bonorka e Pomcorin) podem ser escolhidos na adoção inicial!',
     };
   }
 
@@ -295,7 +295,7 @@ function feedPet(userId, itemKey = 'racao_cringe') {
 
   const item = getItemDefinition(itemKey);
   if (!item || item.category !== 'comida') {
-    return { success: false, reason: 'invalid_food', message: 'Este item não é uma comida válida para PixelMonsters.' };
+    return { success: false, reason: 'invalid_food', message: 'Este item não é uma comida válida para Pymons.' };
   }
 
   if (!hasItem(userId, itemKey, 1)) {

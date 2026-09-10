@@ -321,7 +321,7 @@ function renderPetCard(pet) {
   ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
   ctx.font = '11px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('PIXELMONSTERS • REINO TRAVESSO DE PYXIE', WIDTH / 2, 470);
+  ctx.fillText('PYMONS • REINO TRAVESSO DE PYXIE', WIDTH / 2, 470);
 
   const buffer = canvas.toBuffer('image/png');
 
@@ -335,9 +335,9 @@ function renderPetCard(pet) {
 }
 
 /**
- * Renderiza uma entrada visual de Pokédex para o inicial selecionado.
+ * Renderiza uma entrada visual de Dex para o Pymon inicial selecionado.
  */
-function renderPokedexCard(monsterDef, isShiny = false) {
+function renderDexCard(monsterDef, isShiny = false) {
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
   const theme = ELEMENT_THEMES[monsterDef.element] || ELEMENT_THEMES.CHARME;
@@ -349,7 +349,7 @@ function renderPokedexCard(monsterDef, isShiny = false) {
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  // Moldura Pokédex
+  // Moldura Dex
   ctx.strokeStyle = theme.accent;
   ctx.lineWidth = 3;
   ctx.strokeRect(16, 16, WIDTH - 32, HEIGHT - 32);
@@ -393,9 +393,9 @@ function renderPokedexCard(monsterDef, isShiny = false) {
 
   ctx.fillStyle = theme.accent;
   ctx.font = 'bold 15px sans-serif';
-  ctx.fillText(`PixelMonster Inicial  •  Elemento: ${monsterDef.element}`, 310, 110);
+  ctx.fillText(`Pymon Inicial  •  Elemento: ${monsterDef.element}`, 310, 110);
 
-  // Descrição Pokédex com quebra de linha inteligente
+  // Descrição Dex com quebra de linha inteligente
   ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
   ctx.font = 'italic 15px sans-serif';
   const descText = `"${monsterDef.description || ''}"`;
@@ -418,29 +418,35 @@ function renderPokedexCard(monsterDef, isShiny = false) {
     drawProgressBar(ctx, 310, yPos, 440, 24, st.val, 100, st.bar, st.bar, st.label);
   });
 
-  // Rodapé Pokédex
+  // Rodapé Dex
   ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
   ctx.font = '12px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('POKÉDEX PIXELMONSTERS • ESCOLHA SEU COMPANHEIRO INICIAL', WIDTH / 2, 470);
+  ctx.fillText('DEX PYMONS • ESCOLHA SEU COMPANHEIRO INICIAL', WIDTH / 2, 470);
 
   return canvas.toBuffer('image/png');
 }
+
+const renderPokedexCard = renderDexCard;
 
 function createPetAttachment(pet) {
   const buffer = renderPetCard(pet);
   return new AttachmentBuilder(buffer, { name: 'pet_card.png' });
 }
 
-function createPokedexAttachment(monsterDef, isShiny = false) {
-  const buffer = renderPokedexCard(monsterDef, isShiny);
-  return new AttachmentBuilder(buffer, { name: 'pokedex_entry.png' });
+function createDexAttachment(monsterDef, isShiny = false) {
+  const buffer = renderDexCard(monsterDef, isShiny);
+  return new AttachmentBuilder(buffer, { name: 'dex_entry.png' });
 }
+
+const createPokedexAttachment = createDexAttachment;
 
 module.exports = {
   renderPetCard,
+  renderDexCard,
   renderPokedexCard,
   createPetAttachment,
+  createDexAttachment,
   createPokedexAttachment,
   preloadSprites,
 };

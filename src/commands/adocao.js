@@ -19,7 +19,7 @@ const { ADOPTION } = require('./commandNames');
 
 const STARTER_KEYS = ['cinna', 'bonorka', 'pomcorin'];
 
-function buildPokedexEmbed(selectedKey = 'cinna') {
+function buildDexEmbed(selectedKey = 'cinna') {
   const starter = PETS_CATALOG[selectedKey] || PETS_CATALOG.cinna;
 
   const colorMap = {
@@ -30,29 +30,31 @@ function buildPokedexEmbed(selectedKey = 'cinna') {
 
   const embed = new EmbedBuilder()
     .setColor(colorMap[starter.element] || PYXIE_COLORS.lilac)
-    .setTitle(`📖  ✦  Pokédex PixelMonsters — Escolha seu Inicial!`)
+    .setTitle(`📖  ✦  Dex de Pymons — Escolha seu Inicial!`)
     .setDescription(
       `Escolha o seu companheiro para iniciar sua jornada no Reino de Pyxie!\n\n` +
       `✨ **PROBABILIDADE SHINY**\n` +
-      `Há **5% de chance** do seu inicial nascer em sua forma **Shiny Rara**!\n\n` +
+      `Há **5% de chance** do seu Pymon inicial nascer em sua forma **Shiny Rara**!\n\n` +
       `🔒 **REGRA DE ADOÇÃO**\n` +
-      `Você só pode escolher **1 inicial**. Após a escolha, novos PixelMonsters só poderão ser obtidos encontrando ovos em **Dungeons** e chocando na **Chocadeira**!\n\n` +
+      `Você só pode escolher **1 Pymon inicial**. Após a escolha, novos Pymons só poderão ser obtidos encontrando ovos em **Dungeons** e chocando na **Chocadeira**!\n\n` +
       `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-      `🐾 **Monstro Selecionado:** ${starter.emoji} **${starter.name}** (\`${starter.element}\`)\n` +
+      `🐾 **Pymon Selecionado:** ${starter.emoji} **${starter.name}** (\`${starter.element}\`)\n` +
       `> *"${starter.description}"*\n\n` +
       `💖 HP: **${starter.baseStats.hp}**  •  ⚔️ ATK: **${starter.baseStats.atk}**  •  🛡️ DEF: **${starter.baseStats.def}**  •  💨 SPD: **${starter.baseStats.spd}**`
     )
-    .setImage('attachment://pokedex_entry.png')
-    .setFooter({ text: pyxieFooter('Pokédex PixelMonsters • Escolha seu companheiro inicial') })
+    .setImage('attachment://dex_entry.png')
+    .setFooter({ text: pyxieFooter('Dex de Pymons • Escolha seu companheiro inicial') })
     .setTimestamp();
 
   return embed;
 }
 
-function buildPokedexComponents(userId, selectedKey = 'cinna') {
+const buildPokedexEmbed = buildDexEmbed;
+
+function buildDexComponents(userId, selectedKey = 'cinna') {
   const starters = getStarters();
 
-  // Botões de Navegação Pokédex entre os 3 iniciais
+  // Botões de Navegação Dex entre os 3 iniciais
   const navRow = new ActionRowBuilder();
   for (const st of starters) {
     const isSelected = st.key === selectedKey;
@@ -70,7 +72,7 @@ function buildPokedexComponents(userId, selectedKey = 'cinna') {
   const actionRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`adopt_confirm:${selectedMonster.key}:${userId}`)
-      .setLabel(`Escolher ${selectedMonster.name} como meu Inicial!`)
+      .setLabel(`Escolher ${selectedMonster.name} como meu Pymon!`)
       .setEmoji('✨')
       .setStyle(ButtonStyle.Success)
   );
@@ -78,26 +80,28 @@ function buildPokedexComponents(userId, selectedKey = 'cinna') {
   return [navRow, actionRow];
 }
 
+const buildPokedexComponents = buildDexComponents;
+
 function buildAdoptedLockedView(userId, userPets) {
   const active = userPets[0];
   const embed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.lilac)
-    .setTitle('🔒  ✦  Centro de Adoção PixelMonsters — Adoção Concluída')
+    .setTitle('🔒  ✦  Centro de Adoção de Pymons — Adoção Concluída')
     .setDescription(
-      `Olá, aventureiro! Você já escolheu seu PixelMonster inicial (**${active ? active.name : 'Seu Inicial'}**).\n\n` +
-      `🌟 **Como conseguir mais PixelMonsters?**\n` +
+      `Olá, aventureiro! Você já escolheu seu Pymon inicial (**${active ? active.name : 'Seu Inicial'}**).\n\n` +
+      `🌟 **Como conseguir mais Pymons?**\n` +
       `O Centro de Adoção é exclusivo para tutores iniciantes. Para expandir sua coleção com novas espécies e variantes raras:\n\n` +
-      `1. 🗺️ Aventure-se nas **Dungeons** com \`/pixelmonsters\` para encontrar **Ovos Misteriosos**;\n` +
+      `1. 🗺️ Aventure-se nas **Dungeons** com \`/pymons\` para encontrar **Ovos Misteriosos**;\n` +
       `2. 🥚 Coloque os ovos na sua **Chocadeira** e acelere o tempo de choco;\n` +
-      `3. 🐣 Quebre a casca para despertar novas criaturas autorais com **até 20% de chance Shiny**!`
+      `3. 🐣 Quebre a casca para despertar novos Pymons autorais com **até 20% de chance Shiny**!`
     )
-    .setFooter({ text: pyxieFooter('Adoção Bloqueada • Obtenha mais monstros via Dungeons') })
+    .setFooter({ text: pyxieFooter('Adoção Bloqueada • Obtenha mais Pymons via Dungeons') })
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`hub_tab:pet:${userId}`)
-      .setLabel('Meu PixelMonster')
+      .setLabel('Meu Pymon')
       .setEmoji('🐾')
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
@@ -131,7 +135,7 @@ async function handleAdoptionInteraction(interaction) {
 
   if (targetUserId && targetUserId !== interaction.user.id) {
     return interaction.reply({
-      content: '❌ Este Pokédex pertence a outro aventureiro. Use `/adocao` para abrir o seu!',
+      content: '❌ Esta Dex pertence a outro aventureiro. Use `/adocao` para abrir a sua!',
       flags: 64,
     });
   }
@@ -142,18 +146,18 @@ async function handleAdoptionInteraction(interaction) {
   // Se já tiver pet e tentar interagir
   if (userPets.length > 0 && action === 'adopt_confirm') {
     return interaction.reply({
-      content: '🔒 Você já possui um PixelMonster inicial! Obtenha novos monstros explorando Dungeons e chocando ovos.',
+      content: '🔒 Você já possui um Pymon inicial! Obtenha novos companheiros explorando Dungeons e chocando ovos.',
       flags: 64,
     });
   }
 
-  // 1. Navegar entre os 3 iniciais na Pokédex
+  // 1. Navegar entre os 3 iniciais na Dex
   if (action === 'adopt_preview') {
     const selectedKey = parts[1] || 'cinna';
     const monster = PETS_CATALOG[selectedKey] || PETS_CATALOG.cinna;
-    const embed = buildPokedexEmbed(selectedKey);
-    const components = buildPokedexComponents(userId, selectedKey);
-    const attachment = createPokedexAttachment(monster, false);
+    const embed = buildDexEmbed(selectedKey);
+    const components = buildDexComponents(userId, selectedKey);
+    const attachment = createDexAttachment(monster, false);
 
     return interaction.update({
       embeds: [embed],
@@ -181,7 +185,7 @@ async function handleAdoptionInteraction(interaction) {
 
     const embed = new EmbedBuilder()
       .setColor(adopted.shiny ? '#facc15' : PYXIE_COLORS.emerald)
-      .setTitle(`🎉  ✦  Você escolheu ${adopted.name} como seu PixelMonster!`)
+      .setTitle(`🎉  ✦  Você escolheu ${adopted.name} como seu Pymon!`)
       .setDescription(
         `${shinyBanner}` +
         `O seu companheiro **${adopted.name}** ${adopted.emoji} já está aos seus cuidados!\n\n` +
@@ -189,10 +193,10 @@ async function handleAdoptionInteraction(interaction) {
         `• **Nível Inicial:** **1**\n` +
         `• **Vida:** **${adopted.stats.hp}/${adopted.stats.maxHp}**  |  ⚡ **Energia:** **${adopted.energy}%**\n\n` +
         `🎁 **Kit de Sobrevivência Entregue:** Você recebeu 2x Ração da Floresta, 1x Curativo e 1x Baú Rústico na Mochila!\n\n` +
-        `*Acesse o painel principal com \`/pixelmonsters\` para alimentá-lo, treinar e desbravar as Dungeons!*`
+        `*Acesse o painel principal com \`/pymons\` para alimentá-lo, treinar e desbravar as Dungeons!*`
       )
       .setImage('attachment://pet_card.png')
-      .setFooter({ text: pyxieFooter('PixelMonster Adotado • Centro de Adoção Trancado') })
+      .setFooter({ text: pyxieFooter('Pymon Adotado • Centro de Adoção Trancado') })
       .setTimestamp();
 
     const actionRow = new ActionRowBuilder().addComponents(
@@ -213,7 +217,7 @@ async function handleAdoptionInteraction(interaction) {
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId(`hub_tab:pet:${userId}`)
-        .setLabel('Abrir PixelMonsters')
+        .setLabel('Abrir Pymons')
         .setEmoji('🎮')
         .setStyle(ButtonStyle.Secondary)
     );
@@ -230,10 +234,12 @@ module.exports = {
   name: ADOPTION,
   data: new SlashCommandBuilder()
     .setName(ADOPTION)
-    .setDescription('Abre a Pokédex de escolha do seu PixelMonster Inicial (Cinna, Bonorka ou Pomcorin).'),
-  aliases: ['adotar', 'adote', 'inicial', 'starters', 'starter'],
+    .setDescription('Abre a Dex de escolha do seu Pymon Inicial (Cinna, Bonorka ou Pomcorin).'),
+  aliases: ['adotar', 'adote', 'inicial', 'starters', 'starter', 'dex'],
   isAdoptionInteraction,
   handleAdoptionInteraction,
+  buildDexEmbed,
+  buildDexComponents,
   buildPokedexEmbed,
   buildPokedexComponents,
   buildAdoptedLockedView,
@@ -248,9 +254,9 @@ module.exports = {
 
     const defaultKey = 'cinna';
     const monster = PETS_CATALOG[defaultKey];
-    const embed = buildPokedexEmbed(defaultKey);
-    const components = buildPokedexComponents(userId, defaultKey);
-    const attachment = createPokedexAttachment(monster, false);
+    const embed = buildDexEmbed(defaultKey);
+    const components = buildDexComponents(userId, defaultKey);
+    const attachment = createDexAttachment(monster, false);
 
     await interaction.editReply({
       embeds: [embed],
@@ -269,9 +275,9 @@ module.exports = {
 
     const defaultKey = 'cinna';
     const monster = PETS_CATALOG[defaultKey];
-    const embed = buildPokedexEmbed(defaultKey);
-    const components = buildPokedexComponents(userId, defaultKey);
-    const attachment = createPokedexAttachment(monster, false);
+    const embed = buildDexEmbed(defaultKey);
+    const components = buildDexComponents(userId, defaultKey);
+    const attachment = createDexAttachment(monster, false);
 
     await message.reply({
       embeds: [embed],

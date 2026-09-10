@@ -209,7 +209,7 @@ async function runPetTests() {
     flushPetsSync();
     assert.ok(fs.existsSync(petsFile), 'Arquivo pets.json deve existir.');
 
-    console.log('Verificação do Módulo Completo de Pyxie (10 PixelMonsters Oficiais, Pokédex Inicial 5% Shiny, Chocadeira Delta-Time, Dungeons em RAM, Pixel Art Canvas): OK');
+    console.log('Verificação do Módulo Completo de Pyxie (10 Pymons Oficiais, Dex Inicial 5% Shiny, Chocadeira Delta-Time, Dungeons em RAM, Pixel Art Canvas): OK');
   } finally {
     fs.writeFileSync(petsFile, originalPets, 'utf8');
     fs.writeFileSync(inventoryFile, originalInventory, 'utf8');
