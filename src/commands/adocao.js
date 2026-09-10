@@ -38,7 +38,8 @@ function buildDexEmbed(selectedKey = 'cinna') {
       `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
       `🐾 **Pymon Selecionado:** ${starter.emoji} **${starter.name}** (\`${starter.element}\`)\n` +
       `> *"${starter.description}"*\n\n` +
-      `💖 HP: **${starter.baseStats.hp}**  •  ⚔️ ATK: **${starter.baseStats.atk}**  •  🛡️ DEF: **${starter.baseStats.def}**  •  💨 SPD: **${starter.baseStats.spd}**`
+      `• 💖 **HP:** ${starter.baseStats.hp}  •  ⚔️ **ATK:** ${starter.baseStats.atk}\n` +
+      `• 🛡️ **DEF:** ${starter.baseStats.def}  •  💨 **SPD:** ${starter.baseStats.spd}`
     )
     .setImage('attachment://dex_entry.png')
     .setFooter({ text: 'Dex de Pymons • Escolha seu companheiro inicial' })
@@ -89,8 +90,8 @@ function buildAdoptedLockedView(userId, userPets) {
       `Olá, aventureiro! Você já escolheu seu Pymon inicial (**${active ? active.name : 'Seu Inicial'}**).\n\n` +
       `🌟 **Como conseguir mais Pymons?**\n` +
       `O Centro de Adoção é exclusivo para tutores iniciantes. Para expandir sua coleção com novas espécies e variantes raras:\n\n` +
-      `1. 🗺️ Aventure-se nas **Dungeons** com \`/pymons\` para encontrar **Ovos Misteriosos**;\n` +
-      `2. 🥚 Coloque os ovos na sua **Chocadeira** e acelere o tempo de choco;\n` +
+      `1. 🗺️ Aventure-se nas **Dungeons** com \`/pymons\` para encontrar **Ovos Misteriosos**;\n\n` +
+      `2. 🥚 Coloque os ovos na sua **Chocadeira** e acompanhe o tempo de choco;\n\n` +
       `3. 🐣 Quebre a casca para despertar novos Pymons autorais com **até 20% de chance Shiny**!`
     )
     .setFooter({ text: 'Adoção Concluída • Obtenha mais Pymons via Dungeons' })
@@ -189,8 +190,13 @@ async function handleAdoptionInteraction(interaction) {
         `O seu companheiro **${adopted.name}** ${adopted.emoji} já está aos seus cuidados!\n\n` +
         `• **Elemento:** \`${adopted.element}\`\n` +
         `• **Nível Inicial:** **1**\n` +
-        `• **Vida:** **${adopted.stats.hp}/${adopted.stats.maxHp}**  |  ⚡ **Energia:** **${adopted.energy}%**\n\n` +
-        `🎁 **Kit de Sobrevivência Entregue:** Você recebeu 2x Ração da Floresta, 1x Curativo e 1x Baú Rústico na Mochila!\n\n` +
+        `• **Vida:** **${adopted.stats.hp}/${adopted.stats.maxHp}**\n` +
+        `• **Energia:** **${adopted.energy}%**\n\n` +
+        `🎁 **Kit de Sobrevivência Entregue na Mochila:**\n` +
+        `• 🪙 **+150 Moedas**\n` +
+        `• 🥣 **2x Ração da Floresta**\n` +
+        `• 🩹 **1x Curativo**\n` +
+        `• 📦 **1x Baú Rústico**\n\n` +
         `*Acesse o painel principal com \`/pymons\` para alimentá-lo, treinar e desbravar as Dungeons!*`
       )
       .setImage('attachment://pet_card.png')

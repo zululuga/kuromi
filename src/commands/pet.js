@@ -98,8 +98,10 @@ function buildPetTab(userId, userTag) {
     .setDescription(
       `**Treinador:** ${userTag}\n` +
       `**Espécie:** ${activePet.species} • **Elemento:** \`${activePet.element}\` • **Nível:** **${activePet.level}**\n\n` +
-      `💖 **Vida:** ${activePet.stats.hp}/${activePet.stats.maxHp}  |  🍖 **Fome:** ${activePet.hunger}%  |  😊 **Humor:** ${activePet.happiness}%  |  ⚡ **Energia:** ${activePet.energy}%\n` +
-      `⭐ **XP:** ${activePet.xp}/${activePet.xpToNext}  |  🏆 **Duelos:** ${activePet.duelosVencidos || 0}V - ${activePet.duelosPerdidos || 0}D`
+      `💖 **Vida:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  •  🍖 **Fome:** **${activePet.hunger}%**\n` +
+      `⚡ **Energia:** **${activePet.energy}%**  •  😊 **Humor:** **${activePet.happiness}%**\n\n` +
+      `⭐ **XP:** **${activePet.xp}/${activePet.xpToNext}**\n` +
+      `🏆 **Duelos:** **${activePet.duelosVencidos || 0}V - ${activePet.duelosPerdidos || 0}D**`
     )
     .setImage('attachment://pet_card.png')
     .setFooter({ text: 'Pymons • Painel de Controle' })
@@ -270,8 +272,8 @@ function buildDungeonTab(userId, userTag) {
       .setDescription(
         `Prepare **${activePet.name}** (${activePet.emoji} Nv. ${activePet.level}) para explorar labirintos mágicos!\n\n` +
         `⚡ **Energia Atual:** **${activePet.energy}/100 ⚡** (Custo: **10 ⚡/passo**)\n` +
-        `💖 **HP Atual:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  |  🍖 **Fome:** **${activePet.hunger}%**\n\n` +
-        `**Zonas Disponíveis:**\n` +
+        `💖 **HP Atual:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  •  🍖 **Fome:** **${activePet.hunger}%**\n\n` +
+        `**Zonas Disponíveis:**\n\n` +
         zones
           .map((z) => `${z.emoji} **${z.name}** (Nv. Mín: ${z.minLevel})\n> *${z.desc}*`)
           .join('\n\n')
@@ -318,10 +320,10 @@ function buildDungeonTab(userId, userTag) {
     .setTitle(`🧭  ✦  ${run.zone.emoji} ${run.zone.name} — Passo ${run.step}/${run.maxSteps}`)
     .setDescription(
       `**Explorador:** ${activePet.name} (${activePet.emoji} Nv. ${activePet.level})\n` +
-      `⚡ **Energia:** **${activePet.energy} ⚡** | 💖 **HP:** **${activePet.stats.hp}/${activePet.stats.maxHp}** | 🍖 **Fome:** ${activePet.hunger}%\n` +
-      `🏞️ **Terreno Atual:** ${run.currentTerrain.emoji} **${run.currentTerrain.name}** (*${run.currentTerrain.desc}*)\n\n` +
+      `💖 **HP:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  •  ⚡ **Energia:** **${activePet.energy} ⚡**  •  🍖 **Fome:** **${activePet.hunger}%**\n\n` +
+      `🏞️ **Terreno:** ${run.currentTerrain.emoji} **${run.currentTerrain.name}**\n> *${run.currentTerrain.desc}*\n\n` +
       `💰 **Moedas Acumuladas:** **+${run.coinsAccumulated}**\n` +
-      `🪺 **Ovos Resgatados:** **${run.eggsFound.length > 0 ? run.eggsFound.map((e) => `\`${e}\``).join(', ') : 'Nenhum ainda'}**\n\n` +
+      `🪺 **Ovos Resgatados:** ${run.eggsFound.length > 0 ? run.eggsFound.map((e) => `\`${e}\``).join(', ') : '*Nenhum ainda*'}\n\n` +
       `📜 **Diário da Expedição:**\n` +
       run.logs.map((l) => `> ${l}`).join('\n')
     )
@@ -494,13 +496,16 @@ function buildOnboardingView(userId, userDisplayName) {
     .setTitle('✨ ✦ Boas-vindas ao Reino dos Pymons! ✦ ✨')
     .setDescription(
       `Ora, ora, **${userDisplayName}**! Você ainda não possui nenhum Pymon ao seu lado.\n\n` +
-      `Clique no botão **Adotar Meu Starter** abaixo para abrir a Dex e escolher seu parceiro inicial:\n` +
-      `• 🧁 **Cinna** (Charme) — Doçura radiante e astúcia\n` +
-      `• 💧 **Bonorka** (Orvalho) — Serenidade aquática e resistência\n` +
-      `• 🍃 **Pomcorin** (Silvestre) — Agilidade pura e vigor natural\n\n` +
-      `✨ *Todo inicial tem **5% de chance de nascer Shiny**!*\n\n` +
-      `🎁 Pyxie também preparou um **Kit Inicial Gratuito**:\n` +
-      `• 🪙 **+150 Moedas** • 🥣 **2x Rações** • 🩹 **1x Curativo** • 📦 **1x Baú Rústico**`
+      `Clique no botão **Adotar Meu Starter** abaixo para abrir a Dex e escolher seu parceiro inicial:\n\n` +
+      `• 🧁 **Cinna** (\`Charme\`) — Doçura radiante e astúcia\n` +
+      `• 💧 **Bonorka** (\`Orvalho\`) — Serenidade aquática e resistência\n` +
+      `• 🍃 **Pomcorin** (\`Silvestre\`) — Agilidade pura e vigor natural\n\n` +
+      `✨ **Probabilidade Shiny:** Todo inicial tem **5% de chance** de nascer Shiny Raro!\n\n` +
+      `🎁 **Kit Inicial Gratuito incluso:**\n` +
+      `• 🪙 **+150 Moedas**\n` +
+      `• 🥣 **2x Rações da Floresta**\n` +
+      `• 🩹 **1x Curativo**\n` +
+      `• 📦 **1x Baú Rústico**`
     )
     .setFooter({ text: 'Pymons • Inicie sua jornada pelo botão abaixo' })
     .setTimestamp();
