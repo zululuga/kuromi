@@ -48,7 +48,7 @@ const {
 const { getUserAccount } = require('../services/economy');
 const { PYXIE_COLORS, pyxieFooter, getRandomPhrase } = require('../utils/pyxieVoice');
 const { formatCoins, formatRemaining } = require('./economyHelpers');
-const { PET } = require('./commandNames');
+const { PIXELMONSTERS, PET } = require('./commandNames');
 
 // --- Component Builders ---
 
@@ -56,7 +56,7 @@ function buildHubHeaderRow(userId, currentTab = 'pet') {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`hub_tab:pet:${userId}`)
-      .setLabel('Meu Pet')
+      .setLabel('Meu Monster')
       .setEmoji('🐾')
       .setStyle(currentTab === 'pet' ? ButtonStyle.Primary : ButtonStyle.Secondary),
     new ButtonBuilder()
@@ -82,7 +82,7 @@ function buildHubHeaderRow(userId, currentTab = 'pet') {
   );
 }
 
-// 1. Tab Meu Pet
+// 1. Tab Meu Monster
 function buildPetTab(userId, userTag) {
   const activePet = getActivePet(userId);
   const userPets = getUserPets(userId);
@@ -96,14 +96,14 @@ function buildPetTab(userId, userTag) {
     .setColor(PYXIE_COLORS.lilac)
     .setTitle(`${activePet.emoji}  ✦  ${activePet.name}${shinyTag}`)
     .setDescription(
-      `**Tutor:** ${userTag}\n` +
+      `**Treinador:** ${userTag}\n` +
       `**Espécie:** ${activePet.species} • **Elemento:** \`${activePet.element}\` • **Nível:** **${activePet.level}**\n\n` +
       `💖 **Vida:** ${activePet.stats.hp}/${activePet.stats.maxHp}  |  🍖 **Fome:** ${activePet.hunger}%  |  😊 **Humor:** ${activePet.happiness}%  |  ⚡ **Energia:** ${activePet.energy}%\n` +
       `⭐ **XP:** ${activePet.xp}/${activePet.xpToNext}  |  🏆 **Duelos:** ${activePet.duelosVencidos || 0}V - ${activePet.duelosPerdidos || 0}D\n\n` +
       `> *"${getRandomPhrase('feed')}"*`
     )
     .setImage('attachment://pet_card.png')
-    .setFooter({ text: pyxieFooter('Hub Central • 100% Interativo') })
+    .setFooter({ text: pyxieFooter('PixelMonsters • 100% Interativo') })
     .setTimestamp();
 
   const components = [buildHubHeaderRow(userId, 'pet')];
@@ -249,7 +249,6 @@ function buildIncubatorTab(userId, userTag) {
     components.push(actionRow);
   }
 
-  return { embeds: [embed], components };
   return { embeds: [embed], components, files: [] };
 }
 
@@ -271,16 +270,13 @@ function buildDungeonTab(userId, userTag) {
       .setTitle(`🗺️  ✦  Expedições & Dungeons Procedurais — ${userTag}`)
       .setDescription(
         `Prepare **${activePet.name}** (${activePet.emoji} Nv. ${activePet.level}) para explorar labirintos mágicos!\n\n` +
-        `⚡ **Energia Atual:** **${activePet.energy}/100 ⚡** (Custo médio: **8 ⚡/passo**)\n` +
-        `💖 **HP Atual:** **${activePet.stats.hp}/${activePet.stats.maxHp}**\n\n` +
-        `⚡ **Energia Atual:** **${activePet.energy}/100 ⚡** (Custo médio: **10 ⚡/passo**)\n` +
+        `⚡ **Energia Atual:** **${activePet.energy}/100 ⚡** (Custo: **10 ⚡/passo**)\n` +
         `💖 **HP Atual:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  |  🍖 **Fome:** **${activePet.hunger}%**\n\n` +
         `**Zonas Disponíveis:**\n` +
         zones
           .map((z) => `${z.emoji} **${z.name}** (Nv. Mín: ${z.minLevel})\n> *${z.desc}*`)
           .join('\n\n')
       )
-      .setFooter({ text: pyxieFooter('Consumo de Estamina por Passo • Encontros em RAM') })
       .setFooter({ text: pyxieFooter('Passos consom estamina • Fome 0% ou 0 HP impedem exploração') })
       .setTimestamp();
 
@@ -417,7 +413,6 @@ function buildInventoryTab(userId, userTag) {
     );
   }
 
-  return { embeds: [embed], components };
   return { embeds: [embed], components, files: [] };
 }
 
@@ -490,7 +485,6 @@ function buildShopTab(userId, userTag, category = 'comida') {
     );
   }
 
-  return { embeds: [embed], components };
   return { embeds: [embed], components, files: [] };
 }
 
@@ -498,18 +492,18 @@ function buildShopTab(userId, userTag, category = 'comida') {
 function buildOnboardingView(userId, userDisplayName) {
   const embed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.lilac)
-    .setTitle('✨ ✦ Boas-vindas ao Reino de Mascotes de Pyxie! ✦ ✨')
+    .setTitle('✨ ✦ Boas-vindas ao Reino dos PixelMonsters! ✦ ✨')
     .setDescription(
-      `Ora, ora, **${userDisplayName}**! Parece que você ainda não tem nenhum mascote para chamar de seu.\n\n` +
-      `Pyxie preparou um **Kit Inicial de Aventureiro** gratuito para você dar os primeiros passos no bosque mágico!\n\n` +
-      `🎁 **O que vem no Kit Inicial:**\n` +
-      `• 🪙 **+150 Moedas** para adotar seu 1º pet;\n` +
-      `• 🥣 **2x Rações da Floresta**;\n` +
-      `• 🩹 **1x Curativo de Coração**;\n` +
-      `• 📦 **1x Baú Rústico**.\n\n` +
-      `*Clique no botão verde abaixo para resgatar o kit e começar!*`
+      `Ora, ora, **${userDisplayName}**! Você ainda não possui nenhum PixelMonster ao seu lado.\n\n` +
+      `Visite a nossa **Pokédex de Adoção** com \`/adocao\` para escolher seu parceiro inicial:\n` +
+      `• 🧁 **Cinna** (Charme) — Doçura radiante e astúcia\n` +
+      `• 💧 **Bonorka** (Orvalho) — Serenidade aquática e resistência\n` +
+      `• 🍃 **Pomcorin** (Silvestre) — Agilidade pura e vigor natural\n\n` +
+      `✨ *Todo inicial tem **5% de chance de nascer Shiny**!*\n\n` +
+      `🎁 Pyxie também preparou um **Kit Inicial Gratuito**:\n` +
+      `• 🪙 **+150 Moedas** • 🥣 **2x Rações** • 🩹 **1x Curativo** • 📦 **1x Baú Rústico**`
     )
-    .setFooter({ text: pyxieFooter('Reino Encantado de Pyxie • 1-Clique Acessível') })
+    .setFooter({ text: pyxieFooter('PixelMonsters • Escolha seu inicial em /adocao') })
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(
@@ -520,12 +514,11 @@ function buildOnboardingView(userId, userDisplayName) {
       .setStyle(ButtonStyle.Success),
     new ButtonBuilder()
       .setCustomId(`hub_open_adoption:${userId}`)
-      .setLabel('Centro de Adoção')
+      .setLabel('Adotar Meu Starter')
       .setEmoji('🐾')
       .setStyle(ButtonStyle.Primary)
   );
 
-  return { embeds: [embed], components: [row] };
   return { embeds: [embed], components: [row], files: [] };
 }
 
@@ -873,17 +866,24 @@ async function handleHubInteraction(interaction) {
     });
   }
 
+  // 17. Adoção Inicial a partir do Onboarding
+  if (action === 'hub_open_adoption') {
+    const { buildPokedexSelectionView } = require('./adocao');
+    const view = buildPokedexSelectionView(userId, userTag, 'cinna');
+    return interaction.update(view);
+  }
+
   // Fallback genérico
   const defaultView = buildPetTab(userId, userTag);
   return interaction.update(defaultView);
 }
 
 module.exports = {
-  name: PET,
+  name: PIXELMONSTERS,
   data: new SlashCommandBuilder()
-    .setName(PET)
-    .setDescription('Abre o Hub Central de Mascotes de Pyxie (100% interativo via botões).'),
-  aliases: ['pets', 'bicho', 'mascote', 'p'],
+    .setName(PIXELMONSTERS)
+    .setDescription('Abre o Hub Central de PixelMonsters de Pyxie (100% interativo via botões).'),
+  aliases: ['pixelmon', 'monsters', 'pet', 'pets', 'p', 'bicho', 'mascote'],
   buildPetEmbed: (pet, userTag) => buildPetTab(userTag, userTag).embeds[0],
   buildHubView: buildPetTab,
   buildPetTab,

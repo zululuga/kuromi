@@ -2,176 +2,121 @@ const {
   SlashCommandBuilder,
   EmbedBuilder,
   ActionRowBuilder,
-  StringSelectMenuBuilder,
   ButtonBuilder,
   ButtonStyle,
+  StringSelectMenuBuilder,
 } = require('discord.js');
 const {
   adoptPet,
   PETS_CATALOG,
-  getPetsByElement,
-  hasClaimedStarterKit,
-  claimStarterKit,
+  getStarters,
+  getUserPets,
   getActivePet,
 } = require('../services/pets');
-const { createPetAttachment } = require('../services/petRenderer');
+const { createPetAttachment, createPokedexAttachment } = require('../services/petRenderer');
 const { PYXIE_COLORS, pyxieFooter } = require('../utils/pyxieVoice');
-const { formatCoins } = require('./economyHelpers');
 const { ADOPTION } = require('./commandNames');
 
-const ELEMENTS = [
-  { label: 'Todos os Elementos', value: 'TODOS', emoji: '⭐', desc: 'Ver todas as 18 espécies' },
-  { label: 'Elemento Orvalho', value: 'ORVALHO', emoji: '💧', desc: 'Alta defesa e regeneração de HP' },
-  { label: 'Elemento Brisa', value: 'BRISA', emoji: '🪶', desc: 'Ágeis com alto ataque e velocidade' },
-  { label: 'Elemento Silvestre', value: 'SILVESTRE', emoji: '🌿', desc: 'Equilibrados e resistentes' },
-  { label: 'Elemento Charme', value: 'CHARME', emoji: '🌸', desc: 'Foco em carisma e felicidade' },
-  { label: 'Elemento Travessura', value: 'TRAVESSURA', emoji: '🔮', desc: 'Místicos com altíssimo dano' },
-];
+const STARTER_KEYS = ['cinna', 'bonorka', 'pomcorin'];
 
-function getChoices() {
-  return Object.values(PETS_CATALOG)
-    .slice(0, 25)
-    .map((pet) => ({
-      name: `${pet.emoji} ${pet.name} — ${formatCoins(pet.baseCost)}`,
-      value: pet.key,
-    }));
-}
-
-function buildAdoptionEmbed(selectedElement = 'TODOS', selectedPetKey = null) {
-  const isAll = selectedElement === 'TODOS';
-  const pets = isAll ? Object.values(PETS_CATALOG) : getPetsByElement(selectedElement);
-  const elementInfo = ELEMENTS.find((e) => e.value === selectedElement) || ELEMENTS[0];
+function buildPokedexEmbed(selectedKey = 'cinna') {
+  const starter = PETS_CATALOG[selectedKey] || PETS_CATALOG.cinna;
 
   const colorMap = {
-    ORVALHO: PYXIE_COLORS.cyan,
-    BRISA: '#38bdf8',
-    SILVESTRE: PYXIE_COLORS.emerald,
     CHARME: PYXIE_COLORS.neonPink,
-    TRAVESSURA: PYXIE_COLORS.violet,
+    ORVALHO: PYXIE_COLORS.cyan,
+    SILVESTRE: PYXIE_COLORS.emerald,
   };
 
   const embed = new EmbedBuilder()
-    .setColor(colorMap[selectedElement] || PYXIE_COLORS.lilac)
-    .setTitle(`🐾  ✦  Centro de Adoção de Pyxie — ${elementInfo.label}`)
+    .setColor(colorMap[starter.element] || PYXIE_COLORS.lilac)
+    .setTitle(`📖  ✦  Pokédex PixelMonsters — Escolha seu Inicial!`)
     .setDescription(
-      `*${elementInfo.desc}*\n\n` +
-      'Escolha um elemento no menu superior e selecione o mascote desejado no menu de espécies.\n' +
-      'Todos os pets adotados iniciam no **Nível 1** com atributos base balanceados!'
+      `Escolha o seu companheiro inicial para começar sua jornada no Reino de Pyxie!\n\n` +
+      `✨ **PROBABILIDADE SHINY:** Há **5% de chance** do seu inicial nascer **SHINY RARO**!\n` +
+      `🔒 **REGRA DE ADOÇÃO:** Você só pode escolher **1 inicial**. Após a escolha, novos PixelMonsters só poderão ser obtidos encontrando ovos em **Dungeons** e chocando na **Chocadeira**!\n\n` +
+      `**Monstro Selecionado:** ${starter.emoji} **${starter.name}** (\`${starter.element}\`)\n` +
+      `> *"${starter.description}"*\n\n` +
+      `💖 HP: **${starter.baseStats.hp}** | ⚔️ ATK: **${starter.baseStats.atk}** | 🛡️ DEF: **${starter.baseStats.def}** | 💨 SPD: **${starter.baseStats.spd}**`
     )
-    .setFooter({ text: pyxieFooter('Adote com 1 clique • Taxa de 5% Shiny na Adoção') })
+    .setImage('attachment://pokedex_entry.png')
+    .setFooter({ text: pyxieFooter('Pokédex PixelMonsters • 5% Taxa de Shiny Inicial') })
     .setTimestamp();
-
-  if (selectedPetKey && PETS_CATALOG[selectedPetKey]) {
-    const p = PETS_CATALOG[selectedPetKey];
-    embed.addFields({
-      name: `✨ Mascote Selecionado: ${p.emoji} ${p.name}`,
-      value:
-        `**Elemento:** \`${p.element}\` | **Raridade:** \`${p.rarity}\` | **Preço:** **${formatCoins(p.baseCost)}**\n` +
-        `💖 HP: **${p.baseStats.hp}** | ⚔️ ATK: **${p.baseStats.atk}** | 🛡️ DEF: **${p.baseStats.def}** | 💨 SPD: **${p.baseStats.spd}**\n` +
-        `> *"${p.description}"*`,
-      inline: false,
-    });
-  } else {
-    pets.slice(0, 8).forEach((p) => {
-      embed.addFields({
-        name: `${p.emoji} ${p.name} — ${formatCoins(p.baseCost)}`,
-        value: `\`${p.element}\` • HP ${p.baseStats.hp} | ATK ${p.baseStats.atk} | DEF ${p.baseStats.def} | SPD ${p.baseStats.spd}`,
-        inline: true,
-      });
-    });
-  }
 
   return embed;
 }
 
-function buildAdoptionComponents(userId, selectedElement = 'TODOS', selectedPetKey = null) {
-  const isAll = selectedElement === 'TODOS';
-  const pets = isAll ? Object.values(PETS_CATALOG) : getPetsByElement(selectedElement);
+function buildPokedexComponents(userId, selectedKey = 'cinna') {
+  const starters = getStarters();
 
-  // 1. Menu de Seleção de Elemento
-  const elementMenu = new StringSelectMenuBuilder()
-    .setCustomId(`adopt_elem_select:${userId}`)
-    .setPlaceholder('🔮 Filtrar Mascotes por Elemento...')
-    .addOptions(
-      ELEMENTS.map((el) => ({
-        label: el.label,
-        value: el.value,
-        description: el.desc.slice(0, 50),
-        emoji: el.emoji,
-        default: el.value === selectedElement,
-      }))
-    );
-
-  // 2. Menu de Seleção de Pet
-  const petOptions = pets.slice(0, 25).map((p) => ({
-    label: `${p.name} — ${formatCoins(p.baseCost)}`,
-    value: p.key,
-    description: `HP: ${p.baseStats.hp} • ATK: ${p.baseStats.atk} • DEF: ${p.baseStats.def} • SPD: ${p.baseStats.spd}`,
-    emoji: p.emoji,
-    default: p.key === selectedPetKey,
-  }));
-
-  const petMenu = new StringSelectMenuBuilder()
-    .setCustomId(`adopt_pet_select:${userId}`)
-    .setPlaceholder('🐾 Escolha a espécie que deseja adotar...')
-    .addOptions(petOptions);
-
-  // 3. Botões de Ação
-  const buttonRow = new ActionRowBuilder();
-
-  if (selectedPetKey && PETS_CATALOG[selectedPetKey]) {
-    const selectedPet = PETS_CATALOG[selectedPetKey];
-    buttonRow.addComponents(
+  // Botões de Navegação Pokédex entre os 3 iniciais
+  const navRow = new ActionRowBuilder();
+  for (const st of starters) {
+    const isSelected = st.key === selectedKey;
+    navRow.addComponents(
       new ButtonBuilder()
-        .setCustomId(`adopt_confirm:${selectedPet.key}:${userId}`)
-        .setLabel(`Adotar ${selectedPet.name} (${formatCoins(selectedPet.baseCost)})`)
-        .setEmoji(selectedPet.emoji || '🐾')
-        .setStyle(ButtonStyle.Success)
-    );
-  } else {
-    buttonRow.addComponents(
-      new ButtonBuilder()
-        .setCustomId(`adopt_hint:${userId}`)
-        .setLabel('Selecione um Pet Acima para Adotar')
-        .setEmoji('☝️')
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(true)
+        .setCustomId(`adopt_preview:${st.key}:${userId}`)
+        .setLabel(st.name)
+        .setEmoji(st.emoji)
+        .setStyle(isSelected ? ButtonStyle.Primary : ButtonStyle.Secondary)
     );
   }
 
-  if (!hasClaimedStarterKit(userId)) {
-    buttonRow.addComponents(
-      new ButtonBuilder()
-        .setCustomId(`onboard_kit:${userId}`)
-        .setLabel('Resgatar Kit Inicial')
-        .setEmoji('🎁')
-        .setStyle(ButtonStyle.Primary)
-    );
-  }
+  // Botão de Confirmação de Adoção
+  const selectedMonster = PETS_CATALOG[selectedKey] || PETS_CATALOG.cinna;
+  const actionRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`adopt_confirm:${selectedMonster.key}:${userId}`)
+      .setLabel(`Escolher ${selectedMonster.name} como meu Inicial!`)
+      .setEmoji('✨')
+      .setStyle(ButtonStyle.Success)
+  );
 
-  buttonRow.addComponents(
+  return [navRow, actionRow];
+}
+
+function buildAdoptedLockedView(userId, userPets) {
+  const active = userPets[0];
+  const embed = new EmbedBuilder()
+    .setColor(PYXIE_COLORS.lilac)
+    .setTitle('🔒  ✦  Centro de Adoção PixelMonsters — Adoção Concluída')
+    .setDescription(
+      `Olá, aventureiro! Você já escolheu seu PixelMonster inicial (**${active ? active.name : 'Seu Inicial'}**).\n\n` +
+      `🌟 **Como conseguir mais PixelMonsters?**\n` +
+      `O Centro de Adoção é exclusivo para tutores iniciantes. Para expandir sua coleção com novas espécies e variantes raras:\n\n` +
+      `1. 🗺️ Aventure-se nas **Dungeons** com \`/pixelmonsters\` para encontrar **Ovos Misteriosos**;\n` +
+      `2. 🥚 Coloque os ovos na sua **Chocadeira** e acelere o tempo de choco;\n` +
+      `3. 🐣 Quebre a casca para despertar novas criaturas autorais com **até 20% de chance Shiny**!`
+    )
+    .setFooter({ text: pyxieFooter('Adoção Bloqueada • Obtenha mais monstros via Dungeons') })
+    .setTimestamp();
+
+  const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`hub_tab:pet:${userId}`)
-      .setLabel('Ver Meu Pet')
+      .setLabel('Meu PixelMonster')
       .setEmoji('🐾')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId(`hub_tab:dungeon:${userId}`)
+      .setLabel('Explorar Dungeons')
+      .setEmoji('🗺️')
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId(`hub_tab:incubator:${userId}`)
+      .setLabel('Ver Chocadeira')
+      .setEmoji('🥚')
       .setStyle(ButtonStyle.Secondary)
   );
 
-  return [
-    new ActionRowBuilder().addComponents(elementMenu),
-    new ActionRowBuilder().addComponents(petMenu),
-    buttonRow,
-  ];
+  return { embeds: [embed], components: [row], files: [] };
 }
 
 function isAdoptionInteraction(interaction) {
   if (!interaction.customId) return false;
   return (
-    interaction.customId.startsWith('adopt_elem_select:') ||
-    interaction.customId.startsWith('adopt_pet_select:') ||
-    interaction.customId.startsWith('adopt_confirm:') ||
-    interaction.customId.startsWith('adopt_feed_direct:') ||
-    interaction.customId.startsWith('adopt_carinho_direct:')
+    interaction.customId.startsWith('adopt_preview:') ||
+    interaction.customId.startsWith('adopt_confirm:')
   );
 }
 
@@ -183,70 +128,68 @@ async function handleAdoptionInteraction(interaction) {
 
   if (targetUserId && targetUserId !== interaction.user.id) {
     return interaction.reply({
-      content: '❌ Este centro de adoção pertence a outro aventureiro. Use `/adocao` para abrir o seu!',
+      content: '❌ Este Pokédex pertence a outro aventureiro. Use `/adocao` para abrir o seu!',
       flags: 64,
     });
   }
 
   const userId = interaction.user.id;
+  const userPets = getUserPets(userId);
 
-  // 1. Filtrar por Elemento
-  if (action === 'adopt_elem_select') {
-    const selectedElement = interaction.values[0];
-    const embed = buildAdoptionEmbed(selectedElement, null);
-    const components = buildAdoptionComponents(userId, selectedElement, null);
-    return interaction.update({ embeds: [embed], components });
+  // Se já tiver pet e tentar interagir
+  if (userPets.length > 0 && action === 'adopt_confirm') {
+    return interaction.reply({
+      content: '🔒 Você já possui um PixelMonster inicial! Obtenha novos monstros explorando Dungeons e chocando ovos.',
+      flags: 64,
+    });
   }
 
-  // 2. Selecionar Pet específico
-  if (action === 'adopt_pet_select') {
-    const selectedPetKey = interaction.values[0];
-    const petDef = PETS_CATALOG[selectedPetKey];
-    const element = petDef ? petDef.element : 'TODOS';
-    const embed = buildAdoptionEmbed(element, selectedPetKey);
-    const components = buildAdoptionComponents(userId, element, selectedPetKey);
-    return interaction.update({ embeds: [embed], components });
+  // 1. Navegar entre os 3 iniciais na Pokédex
+  if (action === 'adopt_preview') {
+    const selectedKey = parts[1] || 'cinna';
+    const monster = PETS_CATALOG[selectedKey] || PETS_CATALOG.cinna;
+    const embed = buildPokedexEmbed(selectedKey);
+    const components = buildPokedexComponents(userId, selectedKey);
+    const attachment = createPokedexAttachment(monster, false);
+
+    return interaction.update({
+      embeds: [embed],
+      components,
+      files: [attachment],
+    });
   }
 
-  // 3. Confirmar Adoção
+  // 2. Confirmar escolha do Inicial
   if (action === 'adopt_confirm') {
-    const petKey = parts[1];
-    const result = adoptPet(userId, petKey);
+    const selectedKey = parts[1] || 'cinna';
+    const result = adoptPet(userId, selectedKey);
 
     if (!result.success) {
-      if (result.reason === 'insufficient_coins') {
-        return interaction.reply({
-          content: `❌ ${result.message} Você pode conseguir moedas trabalhando (\`/trabalho\`) ou explorando dungeons!`,
-          flags: 64,
-        });
-      }
-      if (result.reason === 'max_pets_reached') {
-        return interaction.reply({
-          content: `❌ ${result.message}`,
-          flags: 64,
-        });
-      }
       return interaction.reply({
-        content: `❌ ${result.message || 'Falha ao adotar este pet.'}`,
+        content: `❌ ${result.message}`,
         flags: 64,
       });
     }
 
     const adopted = result.pet;
-    const shinyText = adopted.shiny ? ' ✨ **SHINY RARO!**' : '';
+    const shinyBanner = adopted.shiny
+      ? '✨✨ **PARABÉNS! SEU INICIAL NASCEU SHINY (5% DE CHANCE)!** ✨✨\n\n'
+      : '';
 
     const embed = new EmbedBuilder()
-      .setColor(PYXIE_COLORS.emerald)
-      .setTitle(`🎉  ✦  Parabéns! Você adotou um ${adopted.species}!${shinyText}`)
+      .setColor(adopted.shiny ? '#facc15' : PYXIE_COLORS.emerald)
+      .setTitle(`🎉  ✦  Você escolheu ${adopted.name} como seu PixelMonster!`)
       .setDescription(
-        `O seu novo companheiro **${adopted.name}** ${adopted.emoji} já está aos seus cuidados!\n\n` +
+        `${shinyBanner}` +
+        `O seu companheiro **${adopted.name}** ${adopted.emoji} já está aos seus cuidados!\n\n` +
         `• **Elemento:** \`${adopted.element}\`\n` +
         `• **Nível Inicial:** **1**\n` +
-        `• **Vida:** ${adopted.stats.hp}/${adopted.stats.maxHp}  |  ⚡ **Energia:** ${adopted.energy}%\n\n` +
-        `*Cuide bem dele para que ele fique forte e enfrente os desafios das dungeons!*`
+        `• **Vida:** **${adopted.stats.hp}/${adopted.stats.maxHp}**  |  ⚡ **Energia:** **${adopted.energy}%**\n\n` +
+        `🎁 **Kit de Sobrevivência Entregue:** Você recebeu 2x Ração da Floresta, 1x Curativo e 1x Baú Rústico na Mochila!\n\n` +
+        `*Acesse o painel principal com \`/pixelmonsters\` para alimentá-lo, treinar e desbravar as Dungeons!*`
       )
       .setImage('attachment://pet_card.png')
-      .setFooter({ text: pyxieFooter('Adotado com Sucesso • Pronto para Aventuras') })
+      .setFooter({ text: pyxieFooter('PixelMonster Adotado • Centro de Adoção Trancado') })
       .setTimestamp();
 
     const actionRow = new ActionRowBuilder().addComponents(
@@ -263,12 +206,12 @@ async function handleAdoptionInteraction(interaction) {
       new ButtonBuilder()
         .setCustomId(`hub_tab:dungeon:${userId}`)
         .setLabel('Explorar Dungeons')
-        .setEmoji('🧭')
+        .setEmoji('🗺️')
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId(`hub_tab:pet:${userId}`)
-        .setLabel('Abrir Hub do Pet')
-        .setEmoji('🐾')
+        .setLabel('Abrir PixelMonsters')
+        .setEmoji('🎮')
         .setStyle(ButtonStyle.Secondary)
     );
 
@@ -284,44 +227,53 @@ module.exports = {
   name: ADOPTION,
   data: new SlashCommandBuilder()
     .setName(ADOPTION)
-    .setDescription('Abre o Centro de Adoção de Mascotes com filtros por elemento e 1-clique.')
-    .addStringOption((option) =>
-      option
-        .setName('pet')
-        .setDescription('Espécie do pet para adoção rápida')
-        .setRequired(false)
-        .addChoices(...getChoices())
-    ),
-  aliases: ['adotar', 'adote', 'petshop', 'canil'],
+    .setDescription('Abre a Pokédex de escolha do seu PixelMonster Inicial (Cinna, Bonorka ou Pomcorin).'),
+  aliases: ['adotar', 'adote', 'inicial', 'starters', 'starter'],
   isAdoptionInteraction,
   handleAdoptionInteraction,
+  buildPokedexEmbed,
+  buildPokedexComponents,
+  buildAdoptedLockedView,
   async executeSlash({ interaction }) {
     const userId = interaction.user.id;
-    const directPet = interaction.options.getString('pet');
+    const userPets = getUserPets(userId);
 
-    if (directPet) {
-      const result = adoptPet(userId, directPet);
-      if (!result.success) {
-        return interaction.editReply({ content: `❌ ${result.message || 'Falha ao adotar.'}` });
-      }
-      const adopted = result.pet;
-      const shinyText = adopted.shiny ? ' ✨ **SHINY!**' : '';
-      const embed = new EmbedBuilder()
-        .setColor(PYXIE_COLORS.emerald)
-        .setTitle(`🎉  ✦  Mascote Adotado com Sucesso!${shinyText}`)
-        .setDescription(`Você adotou **${adopted.name}** ${adopted.emoji} por ${formatCoins(result.cost)}!`)
-        .setImage('attachment://pet_card.png');
-      return interaction.editReply({ embeds: [embed], files: [createPetAttachment(adopted)] });
+    if (userPets.length > 0) {
+      const lockedView = buildAdoptedLockedView(userId, userPets);
+      return interaction.editReply(lockedView);
     }
 
-    const embed = buildAdoptionEmbed('TODOS', null);
-    const components = buildAdoptionComponents(userId, 'TODOS', null);
-    await interaction.editReply({ embeds: [embed], components });
+    const defaultKey = 'cinna';
+    const monster = PETS_CATALOG[defaultKey];
+    const embed = buildPokedexEmbed(defaultKey);
+    const components = buildPokedexComponents(userId, defaultKey);
+    const attachment = createPokedexAttachment(monster, false);
+
+    await interaction.editReply({
+      embeds: [embed],
+      components,
+      files: [attachment],
+    });
   },
-  async executePrefix({ message, args }) {
+  async executePrefix({ message }) {
     const userId = message.author.id;
-    const embed = buildAdoptionEmbed('TODOS', null);
-    const components = buildAdoptionComponents(userId, 'TODOS', null);
-    await message.reply({ embeds: [embed], components });
+    const userPets = getUserPets(userId);
+
+    if (userPets.length > 0) {
+      const lockedView = buildAdoptedLockedView(userId, userPets);
+      return message.reply(lockedView);
+    }
+
+    const defaultKey = 'cinna';
+    const monster = PETS_CATALOG[defaultKey];
+    const embed = buildPokedexEmbed(defaultKey);
+    const components = buildPokedexComponents(userId, defaultKey);
+    const attachment = createPokedexAttachment(monster, false);
+
+    await message.reply({
+      embeds: [embed],
+      components,
+      files: [attachment],
+    });
   },
 };

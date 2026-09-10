@@ -14,17 +14,15 @@ const HELP_MODULES = [
     desc: 'Visão geral e índice de todos os módulos',
   },
   {
-    id: 'pets',
-    label: 'Pets & RPG Tamagotchi',
+    id: 'pixelmonsters',
+    label: 'PixelMonsters & RPG',
     emoji: '🐾',
-    desc: 'Cuidados, níveis, dungeons e duelos PvP',
+    desc: 'Pokédex inicial, cuidados, chocadeira, dungeons e duelos PvP',
     commands: [
-      { name: '/pet (ou ku!pet)', desc: 'Dashboard do pet ativo com cartão visual em Canvas e botões de ação.' },
-      { name: '/adocao <pet>', desc: 'Adota uma nova espécie para a sua coleção de pets.' },
-      { name: '/petexplorar [zona]', desc: 'Envia seu pet para explorar dungeons em busca de moedas, XP e drops.' },
+      { name: '/pixelmonsters (ou /pet)', desc: 'Dashboard do PixelMonster ativo com cartão visual em Canvas e botões.' },
+      { name: '/adocao', desc: 'Pokédex interativa para escolher seu starter (Cinna, Bonorka ou Pomcorin com 5% Shiny).' },
+      { name: '/petexplorar [zona]', desc: 'Envia seu PixelMonster para explorar dungeons em busca de ovos e moedas.' },
       { name: '/petduelo @usuario [aposta]', desc: 'Desafia outro jogador para um combate por turnos no Coliseu.' },
-      { name: '/pet mochila', desc: 'Lista todos os pets da sua coleção com opção de ativação.' },
-      { name: '/pet renomear <nome>', desc: 'Altera o apelido do seu pet ativo.' },
     ],
   },
   {

@@ -102,50 +102,6 @@ function calculateStats(baseStats, level = 1) {
 }
 
 /**
- * Migra pets legados do economy.json se existirem.
- */
-function migrateLegacyPet(userId, userRecord) {
-  const account = getUserAccount(userId);
-  if (account.pet && Array.isArray(userRecord.pets) && userRecord.pets.length === 0) {
-    const legacy = account.pet;
-    const species = petsCatalog[legacy.key] || petsCatalog.spiralo || Object.values(petsCatalog)[0];
-    const petId = `pet_${crypto.randomUUID().slice(0, 8)}`;
-    const stats = calculateStats(species.baseStats, 1);
-
-    const migratedPet = {
-      id: petId,
-      key: species.key,
-      name: legacy.label || species.name,
-      species: species.name,
-      element: species.element || 'ORVALHO',
-      rarity: species.rarity || 'COMUM',
-      emoji: species.emoji || '🐾',
-      shiny: Boolean(legacy.shiny),
-      corrupt: false,
-      level: 1,
-      xp: 0,
-      xpToNext: calculateXpToNext(1),
-      stats,
-      hunger: 80,
-      happiness: 80,
-      energy: 100,
-      lastFedAt: Date.now(),
-      lastCarinhoAt: 0,
-      lastSleepAt: 0,
-      lastExploreAt: account.lastPetExplorationAt ? new Date(account.lastPetExplorationAt).getTime() : 0,
-      adoptedAt: legacy.adoptedAt ? new Date(legacy.adoptedAt).getTime() : Date.now(),
-      totalExploracoes: Number(account.totalAventuras || 0),
-      duelosVencidos: 0,
-      duelosPerdidos: 0,
-    };
-
-    userRecord.pets.push(migratedPet);
-    userRecord.activePetId = petId;
-    schedulePetsSave();
-  }
-}
-
-/**
  * Calcula decaimento natural de fome e regeneração de energia sob demanda via delta-time.
  */
 function updateDynamicPetState(pet) {
@@ -190,7 +146,6 @@ function getUserPetRecord(userId) {
     };
   }
 
-  migrateLegacyPet(userId, data[userId]);
   ensureUserIncubator(data[userId]);
   return data[userId];
 }
@@ -240,37 +195,39 @@ function setActivePet(userId, petIdentifier) {
   return { success: true, pet };
 }
 
+/**
+ * Adoção de PixelMonster inicial (Cinna, Bonorka ou Pomcorin).
+ * Gratuita, com 5% de chance de Shiny. Bloqueada para quem já tem 1+ pet.
+ */
 function adoptPet(userId, speciesKey) {
   const record = getUserPetRecord(userId);
-  const maxSlots = record.maxPets || DEFAULT_MAX_PETS;
 
-  if (record.pets && record.pets.length >= maxSlots) {
+  // Usuários que já têm pet não podem mais adotar; devem conseguir novos por Dungeons / Chocadeira
+  if (record.pets && record.pets.length > 0) {
     return {
       success: false,
-      reason: 'max_pets_reached',
-      message: `Você já atingiu o limite de ${maxSlots} pets. Use a Expansão de Canil para liberar mais vagas!`,
+      reason: 'already_has_starter',
+      message: 'Você já escolheu seu PixelMonster inicial! Obtenha novos companheiros explorando Dungeons e chocando ovos na Chocadeira.',
     };
   }
 
-  const species = petsCatalog[speciesKey.toLowerCase()];
+  const normalized = String(speciesKey || '').toLowerCase().trim();
+  const species = petsCatalog[normalized] || petsCatalog.cinna;
+
   if (!species) {
-    return { success: false, reason: 'invalid_species', message: 'Espécie de pet não encontrada no catálogo.' };
+    return { success: false, reason: 'invalid_species', message: 'PixelMonster inicial não encontrado no catálogo.' };
   }
 
-  const cost = species.baseCost || 150;
-  const spend = spendCoins(userId, cost);
-  if (!spend.spent) {
+  if (!species.isStarter) {
     return {
       success: false,
-      reason: 'insufficient_coins',
-      needed: cost,
-      current: spend.balance,
-      message: `Você precisa de ${cost} moedas para adotar o ${species.name} (Saldo atual: ${spend.balance}).`,
+      reason: 'not_starter',
+      message: 'Apenas os 3 PixelMonsters iniciais (Cinna, Bonorka e Pomcorin) podem ser escolhidos na adoção inicial!',
     };
   }
 
   const petId = `pet_${crypto.randomUUID().slice(0, 8)}`;
-  const isShiny = Math.random() < 0.05; // 5% chance shiny na adoção direta
+  const isShiny = Math.random() < 0.05; // 5% de chance de Shiny inicial
   const baseStats = species.baseStats || { hp: 55, atk: 12, def: 12, spd: 12 };
   const stats = calculateStats(baseStats, 1);
 
@@ -279,8 +236,8 @@ function adoptPet(userId, speciesKey) {
     key: species.key,
     name: species.name,
     species: species.name,
-    element: species.element || 'ORVALHO',
-    rarity: species.rarity || 'COMUM',
+    element: species.element || 'CHARME',
+    rarity: species.rarity || 'INICIAL',
     emoji: species.emoji || '🐾',
     shiny: isShiny,
     corrupt: false,
@@ -288,8 +245,8 @@ function adoptPet(userId, speciesKey) {
     xp: 0,
     xpToNext: calculateXpToNext(1),
     stats,
-    hunger: 80,
-    happiness: 80,
+    hunger: 100,
+    happiness: 100,
     energy: 100,
     lastFedAt: Date.now(),
     lastCarinhoAt: 0,
@@ -302,8 +259,14 @@ function adoptPet(userId, speciesKey) {
   };
 
   record.pets.push(newPet);
-  if (!record.activePetId) {
-    record.activePetId = petId;
+  record.activePetId = petId;
+
+  // Dá automaticamente os itens de sobrevivência iniciais
+  if (!record.claimedStarterKit) {
+    record.claimedStarterKit = true;
+    addItem(userId, 'racao_cringe', 2);
+    addItem(userId, 'curativo_coracao', 1);
+    addItem(userId, 'bau_madeira', 1);
   }
 
   schedulePetsSave();
@@ -311,8 +274,8 @@ function adoptPet(userId, speciesKey) {
   return {
     success: true,
     pet: newPet,
-    cost,
-    remainingCoins: spend.newBalance,
+    cost: 0,
+    isShiny,
   };
 }
 
@@ -326,17 +289,17 @@ function feedPet(userId, itemKey = 'racao_cringe') {
     return {
       success: false,
       reason: 'pet_full',
-      message: `${activePet.name} já está com a barriga cheia e não aguenta comer mais nada agora!`,
+      message: `${activePet.name} já está de barriga cheia e recusa mais comida no momento!`,
     };
   }
 
   const item = getItemDefinition(itemKey);
   if (!item || item.category !== 'comida') {
-    return { success: false, reason: 'invalid_food', message: 'Este item não é uma comida válida para pets.' };
+    return { success: false, reason: 'invalid_food', message: 'Este item não é uma comida válida para PixelMonsters.' };
   }
 
   if (!hasItem(userId, itemKey, 1)) {
-    return { success: false, reason: 'no_food_in_inventory', message: `Você não tem **${item.name}** no inventário.` };
+    return { success: false, reason: 'no_food_in_inventory', message: `Você não tem **${item.name}** na mochila.` };
   }
 
   const removed = removeItem(userId, itemKey, 1);
@@ -450,37 +413,50 @@ function renamePet(userId, newName) {
     return { success: false, reason: 'no_active_pet' };
   }
 
-  const cleanName = String(newName).trim().slice(0, 24);
-  if (!cleanName || cleanName.length < 2) {
-    return { success: false, reason: 'invalid_name', message: 'O nome deve ter entre 2 e 24 caracteres.' };
+  const clean = String(newName || '').trim().slice(0, 24);
+  if (!clean) {
+    return { success: false, reason: 'invalid_name', message: 'O nome não pode ser vazio.' };
   }
 
-  activePet.name = cleanName;
+  activePet.name = clean;
   schedulePetsSave();
 
-  return { success: true, pet: activePet, newName: cleanName };
+  return { success: true, pet: activePet, newName: clean };
 }
 
 function awardPetXp(userId, petId, xpAmount) {
   const record = getUserPetRecord(userId);
-  const pet = record.pets.find((p) => p.id === petId);
-  if (!pet) return { leveledUp: false };
+  const pet = (record.pets || []).find((p) => p.id === petId);
+  if (!pet) {
+    return { success: false, reason: 'pet_not_found' };
+  }
 
-  pet.xp = (pet.xp || 0) + Number(xpAmount);
+  pet.xp = (pet.xp || 0) + Math.max(0, xpAmount);
   let leveledUp = false;
+  let startingLevel = pet.level || 1;
 
-  while (pet.xp >= (pet.xpToNext || 100)) {
+  while (pet.xp >= pet.xpToNext && pet.level < 100) {
     pet.xp -= pet.xpToNext;
-    pet.level = (pet.level || 1) + 1;
+    pet.level += 1;
     pet.xpToNext = calculateXpToNext(pet.level);
-
-    const species = petsCatalog[pet.key] || petsCatalog.spiralo || Object.values(petsCatalog)[0];
-    pet.stats = calculateStats(species.baseStats, pet.level);
     leveledUp = true;
+
+    // Aumento de atributos base ao subir de nível
+    const species = petsCatalog[pet.key] || petsCatalog.cinna;
+    const baseStats = species ? species.baseStats : { hp: 55, atk: 12, def: 12, spd: 12 };
+    pet.stats = calculateStats(baseStats, pet.level);
   }
 
   schedulePetsSave();
-  return { leveledUp, newLevel: pet.level, currentXp: pet.xp, xpToNext: pet.xpToNext };
+
+  return {
+    success: true,
+    pet,
+    xpGained: xpAmount,
+    leveledUp,
+    oldLevel: startingLevel,
+    newLevel: pet.level,
+  };
 }
 
 function useItemOnActivePet(userId, itemKey) {
@@ -491,31 +467,7 @@ function useItemOnActivePet(userId, itemKey) {
 
   const item = getItemDefinition(itemKey);
   if (!item) {
-    return { success: false, reason: 'invalid_item' };
-  }
-
-  if (item.category === 'comida') {
-    return feedPet(userId, itemKey);
-  }
-
-  if (item.category === 'melhoria' && item.effects && item.effects.isSlotExpansion) {
-    const record = getUserPetRecord(userId);
-    if (!hasItem(userId, itemKey, 1)) {
-      return { success: false, reason: 'no_item' };
-    }
-    removeItem(userId, itemKey, 1);
-    record.maxPets = (record.maxPets || DEFAULT_MAX_PETS) + (item.effects.slots || 2);
-    schedulePetsSave();
-    return {
-      success: true,
-      applied: 'expansion',
-      message: `🏠 Sua mochila de pets foi expandida para suportar **${record.maxPets} pets** simultâneos!`,
-    };
-  }
-
-  if (item.category === 'melhoria' && item.effects && item.effects.isIncubatorExpansion) {
-    const record = getUserPetRecord(userId);
-    return expandIncubator(userId, record, schedulePetsSave);
+    return { success: false, reason: 'item_not_found' };
   }
 
   if (!hasItem(userId, itemKey, 1)) {
@@ -571,6 +523,10 @@ function getPetsByElement(element) {
   return Object.values(petsCatalog).filter((p) => !element || p.element === element);
 }
 
+function getStarters() {
+  return Object.values(petsCatalog).filter((p) => p.isStarter);
+}
+
 function hasClaimedStarterKit(userId) {
   const record = getUserPetRecord(userId);
   return Boolean(record.claimedStarterKit);
@@ -578,7 +534,7 @@ function hasClaimedStarterKit(userId) {
 
 function isFirstTimeUser(userId) {
   const record = getUserPetRecord(userId);
-  return (!record.pets || record.pets.length === 0) && !record.claimedStarterKit;
+  return (!record.pets || record.pets.length === 0);
 }
 
 function claimStarterKit(userId) {
@@ -595,7 +551,7 @@ function claimStarterKit(userId) {
   });
 
   addItem(userId, 'racao_cringe', 2);
-  addItem(userId, 'curativo_fofo', 1);
+  addItem(userId, 'curativo_coracao', 1);
   addItem(userId, 'bau_madeira', 1);
 
   return {
@@ -645,6 +601,7 @@ module.exports = {
   getUserPets,
   setActivePet,
   adoptPet,
+  getStarters,
   feedPet,
   petCarinho,
   petSleep,

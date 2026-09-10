@@ -32,7 +32,7 @@ const {
   getDungeonZones,
 } = require('../src/services/proceduralExplorer');
 const { createDuelChallenge, resolveDuelChallenge } = require('../src/services/petDuels');
-const { renderPetCard } = require('../src/services/petRenderer');
+const { renderPetCard, renderPokedexCard } = require('../src/services/petRenderer');
 const { addItem } = require('../src/services/inventory');
 const { updateUserAccount } = require('../src/services/economy');
 
@@ -62,51 +62,46 @@ async function runPetTests() {
     const duplicateKit = claimStarterKit(NEW_USER);
     assert.equal(duplicateKit.success, false, 'Não deve permitir resgatar o kit duas vezes.');
 
-    // Filtros dos 5 Elementos Autorais
+    // Filtros dos Elementos Oficiais
     const orvalhoPets = getPetsByElement('ORVALHO');
     assert.ok(orvalhoPets.length > 0, 'Deve retornar pets do elemento Orvalho.');
-    assert.ok(orvalhoPets.some((p) => p.key === 'spiralo' || p.key === 'goticoide'));
+    assert.ok(orvalhoPets.some((p) => p.key === 'bonorka' || p.key === 'kerobola'));
 
     const silvestrePets = getPetsByElement('SILVESTRE');
-    assert.ok(silvestrePets.some((p) => p.key === 'algodozinho' || p.key === 'migalha'));
+    assert.ok(silvestrePets.some((p) => p.key === 'pomcorin' || p.key === 'clovis'));
 
     const charmePets = getPetsByElement('CHARME');
-    assert.ok(charmePets.some((p) => p.key === 'fitilho' || p.key === 'gatissima'));
+    assert.ok(charmePets.some((p) => p.key === 'cinna' || p.key === 'spiromuffin'));
 
     const travessuraPets = getPetsByElement('TRAVESSURA');
-    assert.ok(travessuraPets.some((p) => p.key === 'sonivoro' || p.key === 'puncodrilo'));
+    assert.ok(travessuraPets.some((p) => p.key === 'bakuphant' || p.key === 'nekomandra'));
 
     // Dá moedas para os dois usuários
     updateUserAccount(USER_A, (acc) => { acc.coins = 100000; });
     updateUserAccount(USER_B, (acc) => { acc.coins = 100000; });
 
-    // 1. Adoção de Pet Autoral
-    const adoptA = adoptPet(USER_A, 'spiralo');
-    assert.equal(adoptA.success, true, 'Usuário A deve adotar Spiralo com sucesso.');
-    assert.equal(adoptA.pet.element, 'ORVALHO', 'Spiralo deve ser do elemento Orvalho.');
+    // 1. Adoção de PixelMonster Starter
+    const adoptA = adoptPet(USER_A, 'bonorka');
+    assert.equal(adoptA.success, true, 'Usuário A deve adotar Bonorka com sucesso.');
+    assert.equal(adoptA.pet.element, 'ORVALHO', 'Bonorka deve ser do elemento Orvalho.');
 
     const activeA = getActivePet(USER_A);
     assert.ok(activeA, 'Usuário A deve ter um pet ativo.');
-    assert.equal(activeA.species, 'Spiralo');
+    assert.equal(activeA.species, 'Bonorka');
     assert.equal(activeA.level, 1);
 
-    // 2. Múltiplos pets
-    const adoptA2 = adoptPet(USER_A, 'fitilho');
-    assert.equal(adoptA2.success, true, 'Usuário A deve conseguir adotar um segundo pet.');
-    const userPets = getUserPets(USER_A);
-    assert.equal(userPets.length, 2, 'Usuário A deve ter 2 pets na mochila.');
-
-    // Trocar pet ativo
-    const switchRes = setActivePet(USER_A, 'fitilho');
-    assert.equal(switchRes.success, true, 'Deve conseguir trocar para o Fitilho.');
-    assert.equal(getActivePet(USER_A).species, 'Fitilho');
+    // 2. Bloqueio de adoção para quem já possui starter
+    const adoptA2 = adoptPet(USER_A, 'cinna');
+    assert.equal(adoptA2.success, false, 'Usuário que já tem starter não pode adotar outro.');
+    assert.equal(adoptA2.reason, 'already_has_starter');
 
     // 3. Renomear Pet
-    const renameRes = renamePet(USER_A, 'Fitilho Imperial');
+    const renameRes = renamePet(USER_A, 'Bonorka Imperial');
     assert.equal(renameRes.success, true);
-    assert.equal(getActivePet(USER_A).name, 'Fitilho Imperial');
+    assert.equal(getActivePet(USER_A).name, 'Bonorka Imperial');
 
     // 4. Tamagotchi: Alimentação e Carinho
+    getActivePet(USER_A).hunger = 50;
     addItem(USER_A, 'sushizinho', 1);
     const feedRes = feedPet(USER_A, 'sushizinho');
     assert.equal(feedRes.success, true, 'Pet deve ser alimentado com sucesso.');
@@ -194,7 +189,7 @@ async function runPetTests() {
     petA.energy = 100;
 
     // 8. Duelo PvP entre Pets
-    adoptPet(USER_B, 'sonivoro');
+    adoptPet(USER_B, 'cinna');
     const challengeRes = createDuelChallenge(USER_A, USER_B, 100);
     assert.equal(challengeRes.success, true, 'Desafio de duelo deve ser criado.');
 
@@ -203,15 +198,18 @@ async function runPetTests() {
     assert.ok(duelResolve.battleLogs.length > 0, 'Duelo deve conter logs de batalha.');
     assert.ok([USER_A, USER_B].includes(duelResolve.winnerUserId));
 
-    // 9. Renderizador de Cartão Canvas
+    // 9. Renderizador de Cartão Canvas & Pokédex
     const cardBuffer = renderPetCard(getActivePet(USER_A));
-    assert.ok(Buffer.isBuffer(cardBuffer), 'Renderizador deve gerar um buffer de imagem PNG.');
+    assert.ok(Buffer.isBuffer(cardBuffer), 'Renderizador deve gerar um buffer de imagem PNG para o pet card.');
+
+    const pokedexBuffer = renderPokedexCard('cinna');
+    assert.ok(Buffer.isBuffer(pokedexBuffer), 'Renderizador deve gerar um buffer de imagem PNG para a pokedex.');
 
     // 10. Flush Síncrono
     flushPetsSync();
     assert.ok(fs.existsSync(petsFile), 'Arquivo pets.json deve existir.');
 
-    console.log('Verificação do Módulo Completo de Pyxie (18 Mascotes, 5 Elementos, Chocadeira Delta-Time, Dungeons em RAM, Canvas): OK');
+    console.log('Verificação do Módulo Completo de Pyxie (10 PixelMonsters Oficiais, Pokédex Inicial 5% Shiny, Chocadeira Delta-Time, Dungeons em RAM, Pixel Art Canvas): OK');
   } finally {
     fs.writeFileSync(petsFile, originalPets, 'utf8');
     fs.writeFileSync(inventoryFile, originalInventory, 'utf8');
