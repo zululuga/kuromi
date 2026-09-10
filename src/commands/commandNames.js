@@ -29,4 +29,5 @@ module.exports = {
   USE: 'usar',
   AGENDA: 'agenda',
   EMOJIS: 'emojis',
+  DEX: 'dex',
 };

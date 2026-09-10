@@ -70,15 +70,15 @@ function buildHubHeaderRow(userId, currentTab = 'pet') {
       .setEmoji('🗺️')
       .setStyle(currentTab === 'dungeon' ? ButtonStyle.Primary : ButtonStyle.Secondary),
     new ButtonBuilder()
+      .setCustomId(`hub_tab:dex:${userId}`)
+      .setLabel('Dex')
+      .setEmoji('📖')
+      .setStyle(currentTab === 'dex' ? ButtonStyle.Primary : ButtonStyle.Secondary),
+    new ButtonBuilder()
       .setCustomId(`hub_tab:inventory:${userId}`)
       .setLabel('Mochila')
       .setEmoji('🎒')
-      .setStyle(currentTab === 'inventory' ? ButtonStyle.Primary : ButtonStyle.Secondary),
-    new ButtonBuilder()
-      .setCustomId(`hub_tab:shop:${userId}`)
-      .setLabel('Lojinha')
-      .setEmoji('🛒')
-      .setStyle(currentTab === 'shop' ? ButtonStyle.Primary : ButtonStyle.Secondary)
+      .setStyle(currentTab === 'inventory' ? ButtonStyle.Primary : ButtonStyle.Secondary)
   );
 }
 
@@ -98,8 +98,6 @@ function buildPetTab(userId, userTag) {
     .setDescription(
       `**Treinador:** ${userTag}\n` +
       `**Espécie:** ${activePet.species} • **Elemento:** \`${activePet.element}\` • **Nível:** **${activePet.level}**\n\n` +
-      `💖 **Vida:** ${activePet.stats.hp}/${activePet.stats.maxHp}  |  🍖 **Fome:** ${activePet.hunger}%  |  😊 **Humor:** ${activePet.happiness}%  |  ⚡ **Energia:** ${activePet.energy}%\n` +
-      `⭐ **XP:** ${activePet.xp}/${activePet.xpToNext}  |  🏆 **Duelos:** ${activePet.duelosVencidos || 0}V - ${activePet.duelosPerdidos || 0}D`
       `💖 **Vida:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  •  🍖 **Fome:** **${activePet.hunger}%**\n` +
       `⚡ **Energia:** **${activePet.energy}%**  •  😊 **Humor:** **${activePet.happiness}%**\n\n` +
       `⭐ **XP:** **${activePet.xp}/${activePet.xpToNext}**\n` +
@@ -507,13 +505,6 @@ function buildOnboardingView(userId, userDisplayName) {
     .setTitle('✨ ✦ Boas-vindas ao Reino dos Pymons! ✦ ✨')
     .setDescription(
       `Ora, ora, **${userDisplayName}**! Você ainda não possui nenhum Pymon ao seu lado.\n\n` +
-      `Clique no botão **Adotar Meu Starter** abaixo para abrir a Dex e escolher seu parceiro inicial:\n` +
-      `• 🧁 **Cinna** (Charme) — Doçura radiante e astúcia\n` +
-      `• 💧 **Bonorka** (Orvalho) — Serenidade aquática e resistência\n` +
-      `• 🍃 **Pomcorin** (Silvestre) — Agilidade pura e vigor natural\n\n` +
-      `✨ *Todo inicial tem **5% de chance de nascer Shiny**!*\n\n` +
-      `🎁 Pyxie também preparou um **Kit Inicial Gratuito**:\n` +
-      `• 🪙 **+150 Moedas** • 🥣 **2x Rações** • 🩹 **1x Curativo** • 📦 **1x Baú Rústico**`
       `Clique no botão **Adotar Meu Starter** abaixo para abrir a Dex e escolher seu parceiro inicial:\n\n` +
       `• 🧁 **Cinna** (\`Charme\`) — Doçura radiante e astúcia\n` +
       `• 💧 **Bonorka** (\`Orvalho\`) — Serenidade aquática e resistência\n` +
@@ -569,6 +560,9 @@ function isHubInteraction(interaction) {
     interaction.customId.startsWith('hub_shop_category:') ||
     interaction.customId.startsWith('hub_shop_buy_item:') ||
     interaction.customId.startsWith('hub_open_adoption:') ||
+    interaction.customId.startsWith('dex_select:') ||
+    interaction.customId.startsWith('dex_nav:') ||
+    interaction.customId.startsWith('dex_toggle_shiny:') ||
     // Compatibilidade com IDs legados
     interaction.customId.startsWith('pet_') ||
     interaction.customId.startsWith('onboard_')
@@ -606,6 +600,11 @@ async function handleHubInteraction(interaction) {
       const view = buildDungeonTab(userId, userTag);
       return interaction.update(view);
     }
+    if (tabName === 'dex') {
+      const { buildDexView } = require('./dex');
+      const view = buildDexView(userId, userTag, 'cinna', false);
+      return interaction.update(view);
+    }
     if (tabName === 'inventory') {
       const view = buildInventoryTab(userId, userTag);
       return interaction.update(view);
@@ -614,6 +613,12 @@ async function handleHubInteraction(interaction) {
       const view = buildShopTab(userId, 'comida');
       return interaction.update(view);
     }
+  }
+
+  // Interações diretas da Dex
+  if (action.startsWith('dex_')) {
+    const { handleDexInteraction } = require('./dex');
+    return handleDexInteraction(interaction);
   }
 
   // 2. Resgate de Kit Inicial

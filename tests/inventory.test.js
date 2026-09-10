@@ -23,7 +23,7 @@ const economyFile = path.join(__dirname, '..', 'data', 'economy.json');
 const originalInventory = fs.existsSync(inventoryFile) ? fs.readFileSync(inventoryFile, 'utf8') : '{}';
 const originalEconomy = fs.existsSync(economyFile) ? fs.readFileSync(economyFile, 'utf8') : '{}';
 
-const TEST_USER = 'test_inv_user_123';
+const TEST_USER = `test_inv_user_${Date.now()}`;
 
 try {
   // 1. Catálogo de Itens

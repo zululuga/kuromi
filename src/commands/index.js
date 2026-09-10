@@ -27,6 +27,7 @@ const commands = [
   require('./tarot'),
   require('./agenda'),
   require('./emojis'),
+  require('./dex'),
 ];
 
 const commandsByName = new Map(

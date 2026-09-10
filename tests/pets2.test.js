@@ -23,6 +23,9 @@ const {
   useHourglassOnIncubator,
   expandUserIncubator,
   flushPetsSync,
+  getUserDex,
+  recordDexEntry,
+  getPetsCatalog,
 } = require('../src/services/pets');
 const {
   startProceduralRun,
@@ -32,7 +35,7 @@ const {
   getDungeonZones,
 } = require('../src/services/proceduralExplorer');
 const { createDuelChallenge, resolveDuelChallenge } = require('../src/services/petDuels');
-const { renderPetCard, renderPokedexCard } = require('../src/services/petRenderer');
+const { renderPetCard, renderDexCard } = require('../src/services/petRenderer');
 const { addItem } = require('../src/services/inventory');
 const { updateUserAccount } = require('../src/services/economy');
 
@@ -198,18 +201,31 @@ async function runPetTests() {
     assert.ok(duelResolve.battleLogs.length > 0, 'Duelo deve conter logs de batalha.');
     assert.ok([USER_A, USER_B].includes(duelResolve.winnerUserId));
 
-    // 9. Renderizador de Cartão Canvas & Pokédex
-    const cardBuffer = renderPetCard(getActivePet(USER_A));
-    assert.ok(Buffer.isBuffer(cardBuffer), 'Renderizador deve gerar um buffer de imagem PNG para o pet card.');
+    // 9. Sistema de Dex Dinâmico & Renderizador Canvas com Silhueta
+    const dexA = getUserDex(USER_A);
+    assert.ok(dexA.bonorka, 'Bonorka deve constar na Dex.');
+    assert.equal(dexA.bonorka.discovered, true, 'Bonorka deve estar descoberto para o usuário A.');
 
-    const pokedexBuffer = renderPokedexCard('cinna');
-    assert.ok(Buffer.isBuffer(pokedexBuffer), 'Renderizador deve gerar um buffer de imagem PNG para a pokedex.');
+    const catalog = getPetsCatalog();
+    assert.ok(Object.keys(catalog).length >= 10, 'Catálogo deve conter pelo menos 10 Pymons oficiais.');
+
+    // Card normal do pet ativo
+    const cardBuffer = renderPetCard(getActivePet(USER_A));
+    assert.ok(Buffer.isBuffer(cardBuffer), 'Renderizador deve gerar buffer PNG para o pet card.');
+
+    // Card de Pymon descoberto na Dex
+    const unlockedDexBuffer = renderDexCard(catalog.bonorka, false, true, false);
+    assert.ok(Buffer.isBuffer(unlockedDexBuffer), 'Renderizador deve gerar buffer PNG para Pymon descoberto na Dex.');
+
+    // Card de Pymon NÃO descoberto na Dex (Silhueta sombreada misteriosa)
+    const lockedDexBuffer = renderDexCard(catalog.rionator, false, false, false);
+    assert.ok(Buffer.isBuffer(lockedDexBuffer), 'Renderizador deve gerar buffer PNG com silhueta misteriosa para Pymon não descoberto.');
 
     // 10. Flush Síncrono
     flushPetsSync();
     assert.ok(fs.existsSync(petsFile), 'Arquivo pets.json deve existir.');
 
-    console.log('Verificação do Módulo Completo de Pyxie (10 Pymons Oficiais, Dex Inicial 5% Shiny, Chocadeira Delta-Time, Dungeons em RAM, Pixel Art Canvas): OK');
+    console.log('Verificação do Módulo Completo de Pyxie (10 Pymons Oficiais, Dex Dinâmica, Silhueta Sombreada, Duelos NPC Procedurais, Chocadeira Delta-Time, Dungeons em RAM, Pixel Art Canvas): OK');
   } finally {
     fs.writeFileSync(petsFile, originalPets, 'utf8');
     fs.writeFileSync(inventoryFile, originalInventory, 'utf8');

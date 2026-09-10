@@ -46,6 +46,44 @@ const DUNGEON_ZONES = [
   },
 ];
 
+const NPC_TITLES = [
+  'Treinador', 'Treinadora', 'Mago', 'Maga', 'Explorador', 'Exploradora',
+  'Domador', 'Domadora', 'Alquimista', 'Patrulheiro', 'Guardiã', 'Aventureiro',
+];
+const NPC_FIRST_NAMES = [
+  'Kaelen', 'Lunara', 'Zephyr', 'Maya', 'Ignis', 'Torin', 'Seraphina',
+  'Flynn', 'Rowan', 'Lyra', 'Dante', 'Aria', 'Finn', 'Thorne', 'Chloe',
+];
+
+function generateNpcTrainer(playerLevel = 1) {
+  const title = NPC_TITLES[Math.floor(Math.random() * NPC_TITLES.length)];
+  const name = NPC_FIRST_NAMES[Math.floor(Math.random() * NPC_FIRST_NAMES.length)];
+  const fullName = `${title} ${name}`;
+
+  const { getPetsCatalog } = require('./pets');
+  const catalog = getPetsCatalog();
+  const catalogKeys = Object.keys(catalog);
+  const randomKey = catalogKeys[Math.floor(Math.random() * catalogKeys.length)] || 'cinna';
+  const petDef = catalog[randomKey];
+
+  const level = Math.max(1, playerLevel + Math.floor(Math.random() * 3) - 1);
+  const baseStats = petDef.baseStats || { hp: 55, atk: 12, def: 12, spd: 12 };
+  const lvlMult = Math.max(0, level - 1);
+
+  return {
+    name: fullName,
+    petDef,
+    level,
+    stats: {
+      maxHp: baseStats.hp + lvlMult * 10,
+      hp: baseStats.hp + lvlMult * 10,
+      atk: baseStats.atk + lvlMult * 2,
+      def: baseStats.def + lvlMult * 1,
+      spd: baseStats.spd + lvlMult * 1,
+    },
+  };
+}
+
 function cleanupExpiredRuns() {
   const now = Date.now();
   for (const [userId, run] of activeRuns.entries()) {
@@ -188,8 +226,8 @@ function advanceStep(userId, activePet, awardXpFn) {
   const roll = Math.random();
   let eventResult = {};
 
-  if (roll < 0.62) {
-    // 62% Batalha Selvagem (Combate Rápido em RAM)
+  if (roll < 0.42) {
+    // 42% Batalha Selvagem (Combate Rápido em RAM)
     const enemyAtk = Math.max(5, Math.floor(activePet.stats.atk * 0.8 + Math.random() * 5));
     const damageTaken = Math.max(2, Math.floor(enemyAtk - activePet.stats.def * 0.3));
     activePet.stats.hp = Math.max(0, activePet.stats.hp - damageTaken);
@@ -206,8 +244,45 @@ function advanceStep(userId, activePet, awardXpFn) {
       title: 'Monstro das Sombras!',
       description: `${activePet.name} venceu uma criatura selvagem e recolheu **+${coinsWon} moedas** e **+${xpWon} XP** (Sofreu -${damageTaken} HP).`,
     };
+  } else if (roll < 0.64) {
+    // 22% Desafio de Duelo com Treinador NPC Procedural
+    const npc = generateNpcTrainer(activePet.level);
+    const playerCombatPower = (activePet.stats.atk * 1.3) + (activePet.stats.spd * 0.7) + (Math.random() * 12);
+    const npcCombatPower = (npc.stats.atk * 1.3) + (npc.stats.spd * 0.7) + (Math.random() * 12);
+
+    if (playerCombatPower >= npcCombatPower) {
+      // Jogador vence o duelo
+      const coinsWon = Math.floor(65 + Math.random() * 65 + activePet.level * 15);
+      const xpWon = Math.floor(30 + Math.random() * 25);
+      const damageTaken = Math.max(3, Math.floor(npc.stats.atk * 0.45 - activePet.stats.def * 0.25));
+
+      activePet.stats.hp = Math.max(0, activePet.stats.hp - damageTaken);
+      run.coinsAccumulated += coinsWon;
+      run.xpAccumulated += xpWon;
+
+      eventResult = {
+        type: 'NPC_DUEL',
+        emoji: '🏆',
+        title: 'Duelo com Treinador Vencido!',
+        description: `${activePet.name} aceitou o desafio de **${npc.name}** (${npc.petDef.emoji} ${npc.petDef.name} Nv.${npc.level}) e **VENCEU**! Ganhou **+${coinsWon} moedas** e **+${xpWon} XP** (Sofreu -${damageTaken} HP).`,
+      };
+    } else {
+      // Jogador perde o duelo (penalidade justa de moedas e dano)
+      const damageTaken = Math.max(10, Math.floor(npc.stats.atk * 0.85 - activePet.stats.def * 0.25 + 5));
+      const penaltyCoins = Math.min(run.coinsAccumulated, Math.floor(25 + Math.random() * 35 + activePet.level * 5));
+
+      activePet.stats.hp = Math.max(0, activePet.stats.hp - damageTaken);
+      run.coinsAccumulated = Math.max(0, run.coinsAccumulated - penaltyCoins);
+
+      eventResult = {
+        type: 'NPC_DUEL_LOSS',
+        emoji: '💔',
+        title: 'Derrota em Duelo com Treinador!',
+        description: `**${npc.name}** e seu ${npc.petDef.emoji} **${npc.petDef.name}** superaram ${activePet.name}! Sofreu **-${damageTaken} HP** e perdeu **${penaltyCoins} moedas** dos espólios.`,
+      };
+    }
   } else if (roll < 0.80) {
-    // 18% Baú de Tesouro Encontrado!
+    // 16% Baú de Tesouro Encontrado!
     const isRareChest = Math.random() < 0.25;
     const chestId = isRareChest ? 'bau_caos' : 'bau_madeira';
     const chestName = isRareChest ? 'Baú Travesso de Pyxie 💜' : 'Baú Rústico 📦';

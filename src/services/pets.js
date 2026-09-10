@@ -143,11 +143,86 @@ function getUserPetRecord(userId) {
       maxPets: DEFAULT_MAX_PETS,
       pets: [],
       claimedStarterKit: false,
+      dex: {},
     };
   }
 
-  ensureUserIncubator(data[userId]);
-  return data[userId];
+  const record = data[userId];
+  if (!record.dex) {
+    record.dex = {};
+  }
+
+  // Backfill automático de Pymons já pertencentes ao usuário
+  if (Array.isArray(record.pets)) {
+    for (const p of record.pets) {
+      if (p && p.key) {
+        if (!record.dex[p.key]) {
+          record.dex[p.key] = {
+            discovered: true,
+            shinyDiscovered: Boolean(p.shiny),
+            firstSeenAt: p.adoptedAt || Date.now(),
+          };
+        } else if (p.shiny) {
+          record.dex[p.key].shinyDiscovered = true;
+        }
+      }
+    }
+  }
+
+  ensureUserIncubator(record);
+  return record;
+}
+
+/**
+ * Registra a descoberta de um Pymon na Dex do jogador.
+ */
+function recordDexEntry(userId, petKey, isShiny = false) {
+  const record = getUserPetRecord(userId);
+  record.dex = record.dex || {};
+  if (!record.dex[petKey]) {
+    record.dex[petKey] = {
+      discovered: true,
+      shinyDiscovered: Boolean(isShiny),
+      firstSeenAt: Date.now(),
+    };
+  } else {
+    record.dex[petKey].discovered = true;
+    if (isShiny) {
+      record.dex[petKey].shinyDiscovered = true;
+    }
+  }
+  schedulePetsSave();
+  return record.dex[petKey];
+}
+
+/**
+ * Retorna o estado completo da Dex para um usuário, validado dinamicamente com o catálogo.
+ */
+function getUserDex(userId) {
+  const record = getUserPetRecord(userId);
+  record.dex = record.dex || {};
+
+  const catalog = petsCatalog;
+  const result = {};
+
+  for (const [key, petDef] of Object.entries(catalog)) {
+    const entry = record.dex[key];
+    result[key] = {
+      key,
+      name: petDef.name,
+      element: petDef.element,
+      emoji: petDef.emoji,
+      rarity: petDef.rarity,
+      description: petDef.description,
+      baseStats: petDef.baseStats,
+      isStarter: Boolean(petDef.isStarter),
+      discovered: Boolean(entry?.discovered),
+      shinyDiscovered: Boolean(entry?.shinyDiscovered),
+      firstSeenAt: entry?.firstSeenAt || null,
+    };
+  }
+
+  return result;
 }
 
 function getActivePet(userId) {
@@ -260,6 +335,7 @@ function adoptPet(userId, speciesKey) {
 
   record.pets.push(newPet);
   record.activePetId = petId;
+  recordDexEntry(userId, species.key, isShiny);
 
   // Dá automaticamente os itens de sobrevivência iniciais
   if (!record.claimedStarterKit) {
@@ -594,6 +670,7 @@ function expandUserIncubator(userId) {
 
 module.exports = {
   PETS_CATALOG: petsCatalog,
+  getPetsCatalog: () => petsCatalog,
   CARINHO_COOLDOWN_MS,
   SLEEP_COOLDOWN_MS,
   DEFAULT_MAX_PETS,
@@ -617,6 +694,8 @@ module.exports = {
   hatchIncubatorEgg,
   useHourglassOnIncubator,
   expandUserIncubator,
+  getUserDex,
+  recordDexEntry,
   schedulePetsSave,
   flushPetsSync,
 };

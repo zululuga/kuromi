@@ -337,10 +337,45 @@ function renderPetCard(pet) {
 /**
  * Renderiza uma entrada visual de Dex para o Pymon inicial selecionado.
  */
-function renderDexCard(monsterDef, isShiny = false) {
+/**
+ * Desenha a silhueta sombreada de um Pymon não descoberto.
+ */
+function drawSilhouetteSprite(ctx, img, targetX, targetY, targetSize) {
+  if (!img) return;
+  const lowRes = 48;
+  const offCanvas = createCanvas(lowRes, lowRes);
+  const offCtx = offCanvas.getContext('2d');
+  offCtx.drawImage(img, 0, 0, lowRes, lowRes);
+
+  const imgData = offCtx.getImageData(0, 0, lowRes, lowRes);
+  const data = imgData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] > 20) {
+      data[i] = 16;     // R
+      data[i + 1] = 8;  // G
+      data[i + 2] = 26; // B
+      data[i + 3] = 250;// A
+    }
+  }
+  offCtx.putImageData(imgData, 0, 0);
+
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.shadowColor = 'rgba(168, 85, 247, 0.7)';
+  ctx.shadowBlur = 20;
+  ctx.drawImage(offCanvas, targetX - targetSize / 2, targetY - targetSize / 2, targetSize, targetSize);
+  ctx.restore();
+}
+
+/**
+ * Renderiza uma entrada visual da Dex com suporte a Pymons descobertos, não descobertos e Shinies.
+ */
+function renderDexCard(monsterDef, isShiny = false, isUnlocked = true, isShinyUnlocked = false) {
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
-  const theme = ELEMENT_THEMES[monsterDef.element] || ELEMENT_THEMES.CHARME;
+  const theme = isUnlocked
+    ? (ELEMENT_THEMES[monsterDef.element] || ELEMENT_THEMES.CHARME)
+    : ELEMENT_THEMES.TRAVESSURA;
 
   // Background
   const bgGrad = ctx.createRadialGradient(200, 250, 40, WIDTH / 2, HEIGHT / 2, 500);
@@ -378,75 +413,166 @@ function renderDexCard(monsterDef, isShiny = false) {
   ctx.restore();
 
   const sprite = getCachedSprite(monsterDef.key, isShiny);
-  if (sprite) {
-    drawPixelatedSprite(ctx, sprite, avatarCx, avatarCy, 145);
+
+  if (!isUnlocked) {
+    // 1. Pymon NÃO descoberto (Silhueta Sombreada Misteriosa)
+    if (sprite) {
+      drawSilhouetteSprite(ctx, sprite, avatarCx, avatarCy, 145);
+    }
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.font = 'bold 54px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('?', avatarCx, avatarCy);
+
+    // Nome misterioso
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = 'bold 34px serif';
+    ctx.fillText(`??? (${monsterDef.name[0]}???)`, 310, 75);
+
+    ctx.fillStyle = theme.accent;
+    ctx.font = 'bold 15px sans-serif';
+    ctx.fillText('🔒 Pymon Não Registrado  •  Elemento: ???', 310, 110);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.font = 'italic 15px sans-serif';
+    const descText = '"Esta criatura misteriosa ainda não foi registrada por você. Explore as Dungeons e choque novos ovos para desvendar este Pymon!"';
+    const descLines = wrapCanvasText(ctx, descText, 440);
+    descLines.forEach((line, idx) => {
+      ctx.fillText(line, 310, 148 + idx * 22);
+    });
+
+    const statY = 245;
+    const stats = [
+      { label: 'Vida Base (HP)', val: 0, bar: '#4b5563' },
+      { label: 'Ataque (ATK)', val: 0, bar: '#4b5563' },
+      { label: 'Defesa (DEF)', val: 0, bar: '#4b5563' },
+      { label: 'Velocidade (SPD)', val: 0, bar: '#4b5563' },
+    ];
+    stats.forEach((st, idx) => {
+      const yPos = statY + idx * 42;
+      drawProgressBar(ctx, 310, yPos, 440, 24, st.val, 100, st.bar, st.bar, `${st.label}: ???`);
+    });
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('DEX DE PYMONS • CRIATURA NÃO REGISTRADA', WIDTH / 2, 470);
+
+  } else if (isShiny && !isShinyUnlocked) {
+    // 2. Descoberto apenas na forma normal (Shiny bloqueado)
+    if (sprite) {
+      drawSilhouetteSprite(ctx, sprite, avatarCx, avatarCy, 145);
+    }
+    ctx.fillStyle = '#facc15';
+    ctx.font = 'bold 36px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('✨', avatarCx, avatarCy);
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 34px serif';
+    ctx.fillText(`${monsterDef.name} (Shiny)`, 310, 75);
+
+    ctx.fillStyle = '#facc15';
+    ctx.font = 'bold 15px sans-serif';
+    ctx.fillText(`✨ Forma Shiny Bloqueada  •  Elemento: ${monsterDef.element}`, 310, 110);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.font = 'italic 15px sans-serif';
+    const descText = `"Você registrou a espécie ${monsterDef.name}, mas a variante Shiny Rara ainda não foi descoberta. (5% no Inicial / até 20% na Chocadeira)."`;
+    const descLines = wrapCanvasText(ctx, descText, 440);
+    descLines.forEach((line, idx) => {
+      ctx.fillText(line, 310, 148 + idx * 22);
+    });
+
+    const statY = 245;
+    const stats = [
+      { label: 'Vida Base (HP)', val: monsterDef.baseStats?.hp || 55, bar: '#10b981' },
+      { label: 'Ataque (ATK)', val: monsterDef.baseStats?.atk || 12, bar: '#f97316' },
+      { label: 'Defesa (DEF)', val: monsterDef.baseStats?.def || 12, bar: '#38bdf8' },
+      { label: 'Velocidade (SPD)', val: monsterDef.baseStats?.spd || 12, bar: '#ec4899' },
+    ];
+    stats.forEach((st, idx) => {
+      const yPos = statY + idx * 42;
+      drawProgressBar(ctx, 310, yPos, 440, 24, st.val, 100, st.bar, st.bar, st.label);
+    });
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('DEX DE PYMONS • VARIANTE SHINY NÃO DESCOBERTA', WIDTH / 2, 470);
+
+  } else {
+    // 3. Totalmente Descoberto
+    if (sprite) {
+      drawPixelatedSprite(ctx, sprite, avatarCx, avatarCy, 145);
+    }
+
+    if (isShiny) {
+      ctx.fillStyle = '#facc15';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('✨ SHINY REGISTRADO ✨', avatarCx, avatarCy + avatarR + 24);
+    }
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 34px serif';
+    ctx.shadowColor = theme.accent;
+    ctx.shadowBlur = 10;
+    ctx.fillText(`${monsterDef.name}${isShiny ? ' ✨' : ''}`, 310, 75);
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = theme.accent;
+    ctx.font = 'bold 15px sans-serif';
+    ctx.fillText(`${monsterDef.rarity || 'Pymon'}  •  Elemento: ${monsterDef.element}`, 310, 110);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.font = 'italic 15px sans-serif';
+    const descText = `"${monsterDef.description || ''}"`;
+    const descLines = wrapCanvasText(ctx, descText, 440);
+    descLines.forEach((line, idx) => {
+      ctx.fillText(line, 310, 148 + idx * 22);
+    });
+
+    const statY = 245;
+    const stats = [
+      { label: 'Vida Base (HP)', val: monsterDef.baseStats?.hp || 55, bar: '#10b981' },
+      { label: 'Ataque (ATK)', val: monsterDef.baseStats?.atk || 12, bar: '#f97316' },
+      { label: 'Defesa (DEF)', val: monsterDef.baseStats?.def || 12, bar: '#38bdf8' },
+      { label: 'Velocidade (SPD)', val: monsterDef.baseStats?.spd || 12, bar: '#ec4899' },
+    ];
+    stats.forEach((st, idx) => {
+      const yPos = statY + idx * 42;
+      drawProgressBar(ctx, 310, yPos, 440, 24, st.val, 100, st.bar, st.bar, st.label);
+    });
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('DEX DE PYMONS • COMPÊNDIO OFICIAL', WIDTH / 2, 470);
   }
-
-  // Nome e Elemento
-  ctx.textAlign = 'left';
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 34px serif';
-  ctx.shadowColor = theme.accent;
-  ctx.shadowBlur = 10;
-  ctx.fillText(monsterDef.name, 310, 75);
-  ctx.shadowBlur = 0;
-
-  ctx.fillStyle = theme.accent;
-  ctx.font = 'bold 15px sans-serif';
-  ctx.fillText(`Pymon Inicial  •  Elemento: ${monsterDef.element}`, 310, 110);
-
-  // Descrição Dex com quebra de linha inteligente
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-  ctx.font = 'italic 15px sans-serif';
-  const descText = `"${monsterDef.description || ''}"`;
-  const descLines = wrapCanvasText(ctx, descText, 440);
-  descLines.forEach((line, idx) => {
-    ctx.fillText(line, 310, 148 + idx * 22);
-  });
-
-  // Atributos Base
-  const statY = 245;
-  const stats = [
-    { label: 'Vida Base (HP)', val: monsterDef.baseStats?.hp || 55, bar: '#10b981' },
-    { label: 'Ataque (ATK)', val: monsterDef.baseStats?.atk || 12, bar: '#f97316' },
-    { label: 'Defesa (DEF)', val: monsterDef.baseStats?.def || 12, bar: '#38bdf8' },
-    { label: 'Velocidade (SPD)', val: monsterDef.baseStats?.spd || 12, bar: '#ec4899' },
-  ];
-
-  stats.forEach((st, idx) => {
-    const yPos = statY + idx * 42;
-    drawProgressBar(ctx, 310, yPos, 440, 24, st.val, 100, st.bar, st.bar, st.label);
-  });
-
-  // Rodapé Dex
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-  ctx.font = '12px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('DEX PYMONS • ESCOLHA SEU COMPANHEIRO INICIAL', WIDTH / 2, 470);
 
   return canvas.toBuffer('image/png');
 }
-
-const renderPokedexCard = renderDexCard;
 
 function createPetAttachment(pet) {
   const buffer = renderPetCard(pet);
   return new AttachmentBuilder(buffer, { name: 'pet_card.png' });
 }
 
-function createDexAttachment(monsterDef, isShiny = false) {
-  const buffer = renderDexCard(monsterDef, isShiny);
+function createDexAttachment(monsterDef, isShiny = false, isUnlocked = true, isShinyUnlocked = false) {
+  const buffer = renderDexCard(monsterDef, isShiny, isUnlocked, isShinyUnlocked);
   return new AttachmentBuilder(buffer, { name: 'dex_entry.png' });
 }
-
-const createPokedexAttachment = createDexAttachment;
 
 module.exports = {
   renderPetCard,
   renderDexCard,
-  renderPokedexCard,
   createPetAttachment,
   createDexAttachment,
-  createPokedexAttachment,
   preloadSprites,
 };

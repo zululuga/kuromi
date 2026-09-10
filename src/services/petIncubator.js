@@ -212,6 +212,21 @@ function hatchSlotEgg(userId, userRecord, slotIndex, scheduleSaveFn) {
     userRecord.activePetId = petId;
   }
 
+  // Registra descoberta na Dex
+  if (!userRecord.dex) userRecord.dex = {};
+  if (!userRecord.dex[species.key]) {
+    userRecord.dex[species.key] = {
+      discovered: true,
+      shinyDiscovered: Boolean(isShiny),
+      firstSeenAt: now,
+    };
+  } else {
+    userRecord.dex[species.key].discovered = true;
+    if (isShiny) {
+      userRecord.dex[species.key].shinyDiscovered = true;
+    }
+  }
+
   // Remove o ovo da chocadeira
   incubator.slots.splice(eggIndex, 1);
   if (scheduleSaveFn) scheduleSaveFn();
