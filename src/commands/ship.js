@@ -63,6 +63,7 @@ function pickTwoRandom(members) {
 function buildShipEmbed(memberA, memberB, percent) {
   const nameA = memberA.displayName;
   const nameB = memberB.displayName;
+  const guildName = memberA.guild?.name || 'Servidor';
   const isSpecial = isSpecialCouple(memberA, memberB);
   const verdict = getShipVerdict(percent, isSpecial);
   const shipName = buildShipName(nameA, nameB);
@@ -74,24 +75,24 @@ function buildShipEmbed(memberA, memberB, percent) {
 
   if (isSpecial) {
     embed
-      .setTitle(`💖  ✦  Ship Eterno da Cringelândia  ✦  💖`)
+      .setTitle(`💖  ✦  Ship Eterno — ${guildName}  ✦  💖`)
       .setDescription(
         `**${nameA}**  ✦  **${nameB}**\n\n` +
         `💍 Nome do casal: **${shipName}**\n\n` +
         `✨ **100% de amor absoluto** ✨\n\n` +
         `> ✧ ✦ 💖 **${verdict.message}** 💖 ✦ ✧`
       )
-      .setFooter({ text: 'Cringelândia • Conexão predestinada e inabalável • Kuromi aprova' });
+      .setFooter({ text: `${guildName} • Conexão predestinada e inabalável` });
   } else {
     embed
-      .setTitle(`${verdict.emoji}  ✦  Ship Cringelândia`)
+      .setTitle(`${verdict.emoji}  ✦  Ship — ${guildName}`)
       .setDescription(
         `**${nameA}** x **${nameB}**\n\n` +
         `💑 Nome do casal: **${shipName}**\n\n` +
         `**${percent}% de amor**\n\n` +
         `> *${verdict.message}*`
       )
-      .setFooter({ text: 'Cringelândia • Kuromi juntou, Kuromi supervisiona' });
+      .setFooter({ text: `${guildName} • Compatibilidade de Membros` });
   }
 
   return embed;

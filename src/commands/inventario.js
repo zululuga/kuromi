@@ -156,7 +156,7 @@ function buildInventoryComponents(userId, selectedItemId = null) {
   actionRow.addComponents(
     new ButtonBuilder()
       .setCustomId(`hub_tab:pet:${userId}`)
-      .setLabel('Ver Meu Pet')
+      .setLabel('Ver Meu Pymon')
       .setEmoji('🐾')
       .setStyle(ButtonStyle.Primary)
   );

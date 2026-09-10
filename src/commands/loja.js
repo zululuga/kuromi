@@ -92,7 +92,7 @@ function buildShopComponents(currentCategory = 'comida', userId = '') {
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setCustomId(`hub_tab:pet:${userId}`)
-      .setLabel('Ver Meu Pet')
+      .setLabel('Ver Meu Pymon')
       .setEmoji('🐾')
       .setStyle(ButtonStyle.Secondary)
   );

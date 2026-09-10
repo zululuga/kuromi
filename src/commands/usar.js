@@ -18,7 +18,7 @@ function buildReply(result) {
       return '❌ Você não possui nenhum Pymon ativo para receber este item! Inicie sua jornada usando `/pymons`.';
     }
     if (result.reason === 'no_item') {
-      return '❌ Você não possui este item na sua mochila. Compre na `/loja` ou obtenha em `/petexplorar`.';
+      return '❌ Você não possui este item na sua mochila. Compre na `/loja` ou obtenha em `/pymons` (Dungeons).';
     }
     return '❌ Item inválido ou não utilizável diretamente.';
   }

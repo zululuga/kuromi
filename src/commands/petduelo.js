@@ -55,7 +55,7 @@ async function handleDuelInteraction(interaction) {
 
   const duelEmbed = new EmbedBuilder()
     .setColor('#f43f5e')
-    .setTitle('⚔️  ✦  Coliseu da Cringelândia — Resultado do Combate')
+    .setTitle('⚔️  ✦  Coliseu de Pymons — Resultado do Combate')
     .setDescription(
       `**Desafiante:** <@${result.winnerUserId === result.winnerPet.id ? result.winnerUserId : result.loserUserId}> vs **Desafiado:** <@${targetId}>\n` +
       `${betText}\n\n` +
@@ -63,7 +63,7 @@ async function handleDuelInteraction(interaction) {
       `🏆 **Vencedor:** <@${result.winnerUserId}> com **${result.winnerPet.name}**!\n` +
       `🎉 **Recompensas:** +100 XP para o vencedor, +25 XP para o perdedor${result.betAmount > 0 ? ` e **+${formatCoins(result.betAmount)}** transferidos!` : '.'}`
     )
-    .setFooter({ text: 'Cringelândia Arena • Kuromi torceu pelo banho de sangue' })
+    .setFooter({ text: `${interaction.guild?.name || 'Servidor'} • Arena de Duelos de Pymons` })
     .setTimestamp();
 
   await interaction.update({ embeds: [duelEmbed], components: [] });
@@ -134,7 +134,7 @@ module.exports = {
         `${betMsg}\n\n` +
         `<@${target.id}>, clique no botão abaixo em até 60 segundos para aceitar ou recusar:`
       )
-      .setFooter({ text: 'Cringelândia Arena • Que vença o mais forte' });
+      .setFooter({ text: `${message.guild?.name || 'Servidor'} • Arena de Duelos de Pymons` });
 
     const buttons = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -177,7 +177,7 @@ module.exports = {
         return;
       }
       if (challengeRes.reason === 'challenger_hungry') {
-        await interaction.editReply({ content: '❌ Seu pet está com muita fome (< 15%) para lutar! Alimente-o antes.' });
+        await interaction.editReply({ content: '❌ Seu Pymon está com muita fome (< 15%) para lutar! Alimente-o antes.' });
         return;
       }
       await interaction.editReply({ content: '❌ Não foi possível criar o duelo.' });
@@ -191,12 +191,12 @@ module.exports = {
       .setColor('#f43f5e')
       .setTitle('⚔️  ✦  Desafio de Duelo no Coliseu!')
       .setDescription(
-        `<@${interaction.user.id}> está desafiando <@${target.id}> para uma batalha de pets!\n\n` +
+        `<@${interaction.user.id}> está desafiando <@${target.id}> para uma batalha de Pymons!\n\n` +
         `🥊 **${petA.emoji} ${petA.name}** (Lv ${petA.level}, ${petA.element}) **VS** **${petB.emoji} ${petB.name}** (Lv ${petB.level}, ${petB.element})\n` +
         `${betMsg}\n\n` +
         `<@${target.id}>, clique no botão abaixo em até 60 segundos para aceitar ou recusar:`
       )
-      .setFooter({ text: 'Cringelândia Arena • Que vença o mais forte' });
+      .setFooter({ text: `${interaction.guild?.name || 'Servidor'} • Arena de Duelos de Pymons` });
 
     const buttons = new ActionRowBuilder().addComponents(
       new ButtonBuilder()

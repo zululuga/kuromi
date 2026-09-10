@@ -36,14 +36,15 @@ function buildAgendaEmbed(guild, now = Date.now()) {
           `**Frequência:** ${automation.frequency}`,
         inline: false,
       }))
-    : [{ name: 'Nenhuma automação registrada', value: 'A Kuromi ainda está acordando. Tente novamente em alguns segundos.' }];
+    : [{ name: 'Nenhuma automação registrada', value: 'Nenhuma automação programada no momento. Tente novamente em alguns segundos.' }];
 
+  const guildName = guild?.name || '';
   return new EmbedBuilder()
     .setColor('#8b5cf6')
-    .setTitle('📅  ✦  Agenda da Kuromi')
+    .setTitle(`📅  ✦  Agenda de Automações${guildName ? ` — ${guildName}` : ''}`)
     .setDescription('Próximas chamadas automáticas conhecidas. O bump é uma verificação; ele só publica se o canal precisar.')
     .addFields(fields)
-    .setFooter({ text: 'Kuromi • organização impecável, drama inevitável' })
+    .setFooter({ text: `${guildName ? `${guildName} • ` : ''}Cronograma e Lembretes` })
     .setTimestamp();
 }
 

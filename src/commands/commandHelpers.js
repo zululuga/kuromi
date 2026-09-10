@@ -19,7 +19,7 @@ const HELP_MODULES = [
     emoji: '🐾',
     desc: 'Dex inicial, cuidados, chocadeira, dungeons e duelos PvP',
     commands: [
-      { name: '/pymons (ou /pet)', desc: 'Dashboard do Pymon ativo, botões de ação e escolha de starter para iniciantes.' },
+      { name: '/pymons', desc: 'Dashboard do Pymon ativo, botões de ação e escolha de starter para iniciantes.' },
       { name: '/petexplorar [zona]', desc: 'Envia seu Pymon para explorar dungeons em busca de ovos e moedas.' },
       { name: '/petduelo @usuario [aposta]', desc: 'Desafia outro jogador para um combate por turnos no Coliseu.' },
     ],
@@ -30,11 +30,11 @@ const HELP_MODULES = [
     emoji: '🎒',
     desc: 'Comidas, poções, baús e gestão da mochila',
     commands: [
-      { name: '/loja', desc: 'Abre o catálogo da Lojinha da Kuromi com categorias e botões de compra rápida.' },
-      { name: '/inventario (ou ku!mochila)', desc: 'Exibe sua mochila de itens com opções interativas de uso e venda.' },
+      { name: '/loja', desc: 'Abre o catálogo da Lojinha com categorias e botões de compra rápida.' },
+      { name: '/inventario', desc: 'Exibe sua mochila de itens com opções interativas de uso e venda.' },
       { name: '/comprar <item> [qtd]', desc: 'Compra itens diretamente da loja com moedas da carteira.' },
       { name: '/vender <item> [qtd]', desc: 'Vende itens acumulados em explorações por moedinhas.' },
-      { name: '/usar <item>', desc: 'Aplica os efeitos de um item (comida, cura, elixir) no pet ativo.' },
+      { name: '/usar <item>', desc: 'Aplica os efeitos de um item (comida, cura, elixir) no Pymon ativo.' },
     ],
   },
   {
@@ -43,21 +43,21 @@ const HELP_MODULES = [
     emoji: '🪙',
     desc: 'Moedinhas, trabalho, profissões e ranking',
     commands: [
-      { name: '/diario (ou ku!diario)', desc: 'Resgata sua recompensa diária de Moedinhas a cada 24h.' },
+      { name: '/diario', desc: 'Resgata sua recompensa diária de Moedinhas a cada 24h.' },
       { name: '/carteira [@user]', desc: 'Consulta o saldo de moedas e posição no ranking.' },
       { name: '/profissao [escolha]', desc: 'Escolhe ou troca sua carreira profissional.' },
       { name: '/trabalho', desc: 'Executa seu trabalho diário para receber salário e bônus.' },
-      { name: '/ranking', desc: 'Exibe o ranking dos usuários mais ricos da Cringelândia.' },
+      { name: '/ranking', desc: 'Exibe o ranking dos usuários com mais moedas.' },
     ],
   },
   {
     id: 'tarot',
-    label: 'Tarot Cringelândia',
+    label: 'Tarot',
     emoji: '🔮',
     desc: 'Tiragens diárias, 78 cartas e suborno',
     commands: [
       { name: '/tarot', desc: 'Realiza a tiragem da sua carta diária com renderização procedural de alta qualidade.' },
-      { name: 'Suborno do Tarot', desc: 'Pague 350 moedas para forçar uma nova leitura se o destino foi cruel.' },
+      { name: 'Suborno do Tarot', desc: 'Pague moedas para forçar uma nova leitura se o destino foi cruel.' },
     ],
   },
   {
@@ -67,7 +67,7 @@ const HELP_MODULES = [
     desc: 'Casamentos, divórcios, perfil e ships',
     commands: [
       { name: '/casal [@user1] [@user2]', desc: 'Calcula a compatibilidade amorosa e gera um cartão ilustrado.' },
-      { name: '/casamento @user', desc: 'Pede alguém em casamento oficial na Cringelândia (custa 1.000 moedas).' },
+      { name: '/casamento @user', desc: 'Pede alguém em casamento oficial no servidor (custa 1.000 moedas).' },
       { name: '/divorcio', desc: 'Encerra o casamento atual com seu cônjuge.' },
       { name: '/perfil [@user]', desc: 'Exibe o cartão de perfil completo com cônjuge e finanças.' },
     ],
@@ -79,26 +79,27 @@ const HELP_MODULES = [
     desc: 'Status, ping, boas-vindas e configurações',
     commands: [
       { name: '/ajuda [modulo]', desc: 'Abre este guia categorizado.' },
-      { name: '/ping', desc: 'Testa a latência e tempo de resposta da Kuromi.' },
+      { name: '/ping', desc: 'Testa a latência e tempo de resposta do bot.' },
       { name: '/status', desc: 'Mostra o status de operação do bot e informações do servidor.' },
       { name: '/boasvindas #canal', desc: 'Configura o canal de recepção de novos membros (apenas moderadores).' },
-      { name: '/agenda', desc: 'Exibe horários das automações ativas (Tarot, Bump Guide).' },
+      { name: '/agenda', desc: 'Exibe horários das automações ativas.' },
     ],
   },
 ];
 
-function buildModularHelpEmbed(moduleId = 'todos') {
+function buildModularHelpEmbed(moduleId = 'todos', guildName = '') {
   const mod = HELP_MODULES.find((m) => m.id === moduleId) || HELP_MODULES[0];
+  const serverFooter = guildName ? `${guildName} • Guia Oficial de Comandos` : 'Guia Oficial de Comandos';
 
   const embed = new EmbedBuilder()
     .setColor('#E60067')
-    .setTitle(`${mod.emoji}  ✦  Central de Ajuda da Kuromi — ${mod.label}`)
-    .setFooter({ text: 'Cringelândia • Kuromi explica com paciência (mas não abuse)' })
+    .setTitle(`${mod.emoji}  ✦  Central de Ajuda — ${mod.label}`)
+    .setFooter({ text: serverFooter })
     .setTimestamp();
 
   if (mod.id === 'todos') {
     embed.setDescription(
-      'Bem-vindo ao manual completo da Kuromi!\n' +
+      `Bem-vindo à Central de Ajuda${guildName ? ` de **${guildName}**` : ''}!\n\n` +
       'Selecione um **módulo no menu suspenso abaixo** para ver os comandos detalhados:\n\n' +
       HELP_MODULES.filter((m) => m.id !== 'todos')
         .map((m) => `> ${m.emoji} **${m.label}**\n> *${m.desc}*`)

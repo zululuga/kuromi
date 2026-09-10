@@ -41,10 +41,11 @@ function buildBribeRow() {
 function buildTarotEmbed(result, guild) {
   const { card, orientation, paid } = result;
   const isReversed = orientation === 'REVERSED';
+  const guildName = guild?.name || '';
 
   const embed = new EmbedBuilder()
     .setColor(isReversed ? '#f43f5e' : '#c084fc')
-    .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Tarot da Cringelândia  ✦  ${getDisplayOrientation(orientation)}`)
+    .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Tarot${guildName ? ` — ${guildName}` : ''}  ✦  ${getDisplayOrientation(orientation)}`)
     .setDescription(
       `### **${card.num ? `${card.num}. ` : ''}${card.name}**\n\n` +
       `*${card.keywords.join(' • ')}*\n\n` +
@@ -53,8 +54,8 @@ function buildTarotEmbed(result, guild) {
     .setImage('attachment://tarot_cringelandia.png')
     .setFooter({
       text: paid
-        ? '👀 *ué... Que estranho... Jurava que tinha lido outra coisa...*'
-        : 'Sua leitura é privada • Até o destino gosta de um pouco de drama.',
+        ? 'Tiragem Especial • Leitura adicional realizada'
+        : 'Tarot • Sua leitura diária é privada e pessoal',
     })
     .setTimestamp();
 
@@ -62,37 +63,39 @@ function buildTarotEmbed(result, guild) {
 }
 
 function buildAlreadyDrawnEmbed(remainingTime, guild) {
+  const guildName = guild?.name || '';
   return new EmbedBuilder()
     .setColor('#a855f7')
-    .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Tarot da Cringelândia`)
+    .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Tarot${guildName ? ` — ${guildName}` : ''}`)
     .setDescription(
       `🔮 Você já tirou sua carta de hoje!\n\n` +
       `Sua próxima tiragem gratuita estará disponível em **${remainingTime.formatted}** (às 00:00 BRT).\n\n` +
-      `Se não quiser esperar ou quiser tentar uma nova sorte, você pode subornar a Kuromi clicando no botão abaixo.`
+      `Se não quiser esperar ou quiser tentar uma nova sorte, você pode subornar a leitura clicando no botão abaixo.`
     )
-    .setFooter({ text: 'Kuromi adora moedas e finge que muda o destino.' })
+    .setFooter({ text: 'Tarot • Descubra o que as cartas reservam para você' })
     .setTimestamp();
 }
 
-async function logTarotToPublicChannel(client, { user, result }) {
+async function logTarotToPublicChannel(client, { user, result, guild }) {
   try {
     const channel = await client.channels.fetch(TAROT_LOG_CHANNEL_ID).catch(() => null);
     if (!channel || !channel.isTextBased()) return;
 
     const attachment = createTarotAttachment(result.card, result.orientation);
     const isReversed = result.orientation === 'REVERSED';
+    const guildName = guild?.name || '';
     const prefixHumor = result.paid
-      ? '👀 *ué... Que estranho... Jurava que tinha lido outra coisa...*\n\n'
+      ? '🔮 *Tiragem adicional solicitada pelo membro!*\n\n'
       : '';
 
     const publicEmbed = new EmbedBuilder()
       .setColor(result.paid ? '#8b5cf6' : (isReversed ? '#f43f5e' : '#c084fc'))
-      .setTitle('🔮  ✦  Nova Tiragem no Tarot Cringelândia')
+      .setTitle(`🔮  ✦  Nova Tiragem no Tarot${guildName ? ` — ${guildName}` : ''}`)
       .setDescription(
         `${prefixHumor}O membro <@${user.id}> tirou a carta **${result.card.name}** (**POSIÇÃO ${getDisplayOrientation(result.orientation)}**)!`
       )
       .setImage('attachment://tarot_cringelandia.png')
-      .setFooter({ text: result.paid ? 'Tiragem realizada via suborno da Kuromi (350 🪙)' : 'Tiragem diária gratuita' })
+      .setFooter({ text: result.paid ? 'Tiragem realizada via suborno (350 🪙)' : 'Tiragem diária gratuita' })
       .setTimestamp();
 
     await channel.send({

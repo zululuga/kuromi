@@ -18,7 +18,8 @@ async function executeButton({ interaction }) {
   }
 
   const selectedModule = interaction.values[0] || 'todos';
-  const embed = buildModularHelpEmbed(selectedModule);
+  const guildName = interaction.guild?.name || '';
+  const embed = buildModularHelpEmbed(selectedModule, guildName);
   const components = buildModularHelpComponents(selectedModule, userId);
 
   await interaction.update({
@@ -52,13 +53,15 @@ module.exports = {
     ),
   async executePrefix({ message, args }) {
     const mod = args[0] ? args[0].toLowerCase() : 'todos';
-    const embed = buildModularHelpEmbed(mod);
+    const guildName = message.guild?.name || '';
+    const embed = buildModularHelpEmbed(mod, guildName);
     const components = buildModularHelpComponents(mod, message.author.id);
     await message.reply({ embeds: [embed], components });
   },
   async executeSlash({ interaction }) {
     const mod = interaction.options.getString('modulo') || 'todos';
-    const embed = buildModularHelpEmbed(mod);
+    const guildName = interaction.guild?.name || '';
+    const embed = buildModularHelpEmbed(mod, guildName);
     const components = buildModularHelpComponents(mod, interaction.user.id);
     await interaction.editReply({ embeds: [embed], components });
   },

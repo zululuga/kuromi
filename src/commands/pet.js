@@ -98,6 +98,8 @@ function buildPetTab(userId, userTag) {
     .setDescription(
       `**Treinador:** ${userTag}\n` +
       `**Espécie:** ${activePet.species} • **Elemento:** \`${activePet.element}\` • **Nível:** **${activePet.level}**\n\n` +
+      `💖 **Vida:** ${activePet.stats.hp}/${activePet.stats.maxHp}  |  🍖 **Fome:** ${activePet.hunger}%  |  😊 **Humor:** ${activePet.happiness}%  |  ⚡ **Energia:** ${activePet.energy}%\n` +
+      `⭐ **XP:** ${activePet.xp}/${activePet.xpToNext}  |  🏆 **Duelos:** ${activePet.duelosVencidos || 0}V - ${activePet.duelosPerdidos || 0}D`
       `💖 **Vida:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  •  🍖 **Fome:** **${activePet.hunger}%**\n` +
       `⚡ **Energia:** **${activePet.energy}%**  •  😊 **Humor:** **${activePet.happiness}%**\n\n` +
       `⭐ **XP:** **${activePet.xp}/${activePet.xpToNext}**\n` +
@@ -272,6 +274,8 @@ function buildDungeonTab(userId, userTag) {
       .setDescription(
         `Prepare **${activePet.name}** (${activePet.emoji} Nv. ${activePet.level}) para explorar labirintos mágicos!\n\n` +
         `⚡ **Energia Atual:** **${activePet.energy}/100 ⚡** (Custo: **10 ⚡/passo**)\n` +
+        `💖 **HP Atual:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  |  🍖 **Fome:** **${activePet.hunger}%**\n\n` +
+        `**Zonas Disponíveis:**\n` +
         `💖 **HP Atual:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  •  🍖 **Fome:** **${activePet.hunger}%**\n\n` +
         `**Zonas Disponíveis:**\n\n` +
         zones
@@ -320,9 +324,12 @@ function buildDungeonTab(userId, userTag) {
     .setTitle(`🧭  ✦  ${run.zone.emoji} ${run.zone.name} — Passo ${run.step}/${run.maxSteps}`)
     .setDescription(
       `**Explorador:** ${activePet.name} (${activePet.emoji} Nv. ${activePet.level})\n` +
+      `⚡ **Energia:** **${activePet.energy} ⚡** | 💖 **HP:** **${activePet.stats.hp}/${activePet.stats.maxHp}** | 🍖 **Fome:** ${activePet.hunger}%\n` +
+      `🏞️ **Terreno Atual:** ${run.currentTerrain.emoji} **${run.currentTerrain.name}** (*${run.currentTerrain.desc}*)\n\n` +
       `💖 **HP:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  •  ⚡ **Energia:** **${activePet.energy} ⚡**  •  🍖 **Fome:** **${activePet.hunger}%**\n\n` +
       `🏞️ **Terreno:** ${run.currentTerrain.emoji} **${run.currentTerrain.name}**\n> *${run.currentTerrain.desc}*\n\n` +
       `💰 **Moedas Acumuladas:** **+${run.coinsAccumulated}**\n` +
+      `🪺 **Ovos Resgatados:** **${run.eggsFound.length > 0 ? run.eggsFound.map((e) => `\`${e}\``).join(', ') : 'Nenhum ainda'}**\n\n` +
       `🪺 **Ovos Resgatados:** ${run.eggsFound.length > 0 ? run.eggsFound.map((e) => `\`${e}\``).join(', ') : '*Nenhum ainda*'}\n\n` +
       `📜 **Diário da Expedição:**\n` +
       run.logs.map((l) => `> ${l}`).join('\n')
@@ -418,8 +425,12 @@ function buildInventoryTab(userId, userTag) {
 }
 
 // 5. Tab Loja
-function buildShopTab(userId, category = 'comida') {
+function buildShopTab(userId, categoryOrTag = 'comida', maybeCategory = null) {
   const account = getUserAccount(userId);
+  const validCategories = ['comida', 'cura', 'utilitario', 'bau', 'melhoria'];
+  const category = (maybeCategory && validCategories.includes(maybeCategory))
+    ? maybeCategory
+    : (validCategories.includes(categoryOrTag) ? categoryOrTag : 'comida');
   const items = getItemsByCategory(category);
 
   const catNames = {
@@ -496,6 +507,13 @@ function buildOnboardingView(userId, userDisplayName) {
     .setTitle('✨ ✦ Boas-vindas ao Reino dos Pymons! ✦ ✨')
     .setDescription(
       `Ora, ora, **${userDisplayName}**! Você ainda não possui nenhum Pymon ao seu lado.\n\n` +
+      `Clique no botão **Adotar Meu Starter** abaixo para abrir a Dex e escolher seu parceiro inicial:\n` +
+      `• 🧁 **Cinna** (Charme) — Doçura radiante e astúcia\n` +
+      `• 💧 **Bonorka** (Orvalho) — Serenidade aquática e resistência\n` +
+      `• 🍃 **Pomcorin** (Silvestre) — Agilidade pura e vigor natural\n\n` +
+      `✨ *Todo inicial tem **5% de chance de nascer Shiny**!*\n\n` +
+      `🎁 Pyxie também preparou um **Kit Inicial Gratuito**:\n` +
+      `• 🪙 **+150 Moedas** • 🥣 **2x Rações** • 🩹 **1x Curativo** • 📦 **1x Baú Rústico**`
       `Clique no botão **Adotar Meu Starter** abaixo para abrir a Dex e escolher seu parceiro inicial:\n\n` +
       `• 🧁 **Cinna** (\`Charme\`) — Doçura radiante e astúcia\n` +
       `• 💧 **Bonorka** (\`Orvalho\`) — Serenidade aquática e resistência\n` +
@@ -565,7 +583,7 @@ async function handleHubInteraction(interaction) {
 
   if (targetUserId && targetUserId !== interaction.user.id) {
     return interaction.reply({
-      content: '❌ Este painel pertence a outro aventureiro. Use `/pet` para abrir o seu próprio!',
+      content: '❌ Este painel pertence a outro aventureiro. Use `/pymons` para abrir o seu próprio!',
       flags: 64, // Ephemeral
     });
   }
@@ -593,7 +611,7 @@ async function handleHubInteraction(interaction) {
       return interaction.update(view);
     }
     if (tabName === 'shop') {
-      const view = buildShopTab(userId, userTag, 'comida');
+      const view = buildShopTab(userId, 'comida');
       return interaction.update(view);
     }
   }
@@ -835,7 +853,7 @@ async function handleHubInteraction(interaction) {
   // 14. Lojinha: Mudar Categoria
   if (action === 'hub_shop_category') {
     const selectedCat = interaction.values[0];
-    const view = buildShopTab(userId, userTag, selectedCat);
+    const view = buildShopTab(userId, selectedCat);
     return interaction.update(view);
   }
 
@@ -850,7 +868,7 @@ async function handleHubInteraction(interaction) {
       });
     }
     const itemDef = getItemDefinition(itemId);
-    const view = buildShopTab(userId, userTag, itemDef ? itemDef.category : 'comida');
+    const view = buildShopTab(userId, itemDef ? itemDef.category : 'comida');
     return interaction.update(view);
   }
 

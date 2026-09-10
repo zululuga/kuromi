@@ -24,16 +24,17 @@ function buildFile(guild) {
 }
 
 function buildSummary(guild, count, animated) {
+  const guildName = guild?.name || 'Servidor';
   return new EmbedBuilder()
     .setColor('#e60067')
-    .setTitle('🎀  ✦  Lista de emojis da Cringelândia')
-    .setDescription(`Pronto. Eu organizei os emojis de **${guild.name}** porque aparentemente alguém precisava fazer isso.`)
+    .setTitle(`🎀  ✦  Lista de emojis de ${guildName}`)
+    .setDescription(`Pronto. Eu organizei os emojis de **${guildName}** porque aparentemente alguém precisava fazer isso.`)
     .addFields(
       { name: 'Total', value: String(count), inline: true },
       { name: 'Animados', value: String(animated), inline: true },
       { name: 'Arquivo', value: '`emojis-do-servidor.json`', inline: true }
     )
-    .setFooter({ text: 'Kuromi • catálogo baixável, drama controlado' })
+    .setFooter({ text: `${guildName} • Catálogo baixável de emojis` })
     .setTimestamp();
 }
 

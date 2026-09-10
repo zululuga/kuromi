@@ -86,16 +86,16 @@ function startProceduralRun(userId, zoneId = 'bosque', activePet) {
     return {
       success: false,
       reason: 'starving',
-      message: `🍖 **Pet Faminto!** **${activePet.name}** está com **0% de fome** e fraco demais para se aventurar. Alimente-o na aba **Meu Pet** ou na **Mochila** antes de iniciar a exploração!`,
+      message: `🍖 **Pymon Faminto!** **${activePet.name}** está com **0% de fome** e fraco demais para se aventurar. Alimente-o na aba **Meu Pymon** ou na **Mochila** antes de iniciar a exploração!`,
     };
   }
 
   // Proibição: Energia insuficiente
-  if (activePet.energy < 8) {
+  if (typeof activePet.energy === 'number' && activePet.energy <= 0) {
     return {
       success: false,
       reason: 'low_energy',
-      message: `⚡ **Sem Energia!** **${activePet.name}** possui apenas **${activePet.energy} ⚡**. Deixe-o descansar ou use um **Frasco de Éter** na Mochila!`,
+      message: `⚡ **Sem Energia (0 ⚡)!** **${activePet.name}** está completamente sem energia. Deixe-o descansar ou use um **Frasco de Éter** na Mochila!`,
     };
   }
 
@@ -156,29 +156,33 @@ function advanceStep(userId, activePet, awardXpFn) {
     };
   }
 
+  // Valida se a energia já estava zerada
+  if (typeof activePet.energy === 'number' && activePet.energy <= 0) {
+    run.isExhausted = true;
+    return {
+      success: false,
+      reason: 'exhausted',
+      cost: 0,
+      message: `⚡ **Energia Esgotada (0 ⚡)!** **${activePet.name}** está totalmente exausto. Resgate seus espólios ou use um Frasco de Éter!`,
+    };
+  }
+
   // Sorteia o terreno do passo
   const terrain = TERRAINS[Math.floor(Math.random() * TERRAINS.length)];
   run.currentTerrain = terrain;
   const baseCost = 10;
   const totalCost = Math.max(6, baseCost + terrain.costModifier);
 
-  // Valida energia
-  if (activePet.energy < totalCost) {
-    run.isExhausted = true;
-    return {
-      success: false,
-      reason: 'exhausted',
-      cost: totalCost,
-      message: `⚡ **Exaustão!** **${activePet.name}** não tem energia suficiente para atravessar o **${terrain.name}** (Precisa de ${totalCost} ⚡, possui ${activePet.energy} ⚡). Resgate seus espólios ou tome um Frasco de Éter!`,
-    };
-  }
-
-  // Consome energia e fome
+  // Consome energia e zera de forma limpa
   activePet.energy = Math.max(0, activePet.energy - totalCost);
   activePet.lastEnergyUpdateAt = Date.now();
   activePet.hunger = Math.max(0, (typeof activePet.hunger === 'number' ? activePet.hunger : 80) - 3);
   run.step += 1;
   run.lastActivityAt = Date.now();
+
+  if (activePet.energy === 0) {
+    run.isExhausted = true;
+  }
 
   // Rola o evento procedural do passo
   const roll = Math.random();
