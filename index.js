@@ -94,6 +94,10 @@ const client = new Client({
       filter: () => (user) => user.id !== client.user?.id,
     },
   },
+  rest: {
+    timeout: 20000,
+    retries: 3,
+  },
 });
 
 // Envia uma mensagem de inicialização para o canal de alerta do servidor.
@@ -401,7 +405,6 @@ client.on('messageCreate', async (message) => {
   if (!command || typeof command.executePrefix !== 'function') return;
 
   incrementCommand();
-  await command.executePrefix({ message, args, prefix });
   try {
     await command.executePrefix({ message, args, prefix });
   } catch (error) {
@@ -517,7 +520,7 @@ client.on('interactionCreate', async (interaction) => {
       command?.name === 'ajuda' ||
       command?.name === 'inventario'
     );
-    await interaction.deferReply({ ephemeral: isEphemeral });
+    await interaction.deferReply({ flags: isEphemeral ? MessageFlags.Ephemeral : undefined });
     if (!command || typeof command.executeSlash !== 'function') {
       await interaction.editReply({ content: 'Esse comando ainda não está disponível. Não olhe para mim assim; eu também estou investigando.' });
       return;
@@ -529,7 +532,7 @@ client.on('interactionCreate', async (interaction) => {
     if (interaction.deferred || interaction.replied) {
       await interaction.editReply({ content: '❌ Ocorreu um erro ao processar esta ação. Tente novamente mais tarde.' }).catch(() => null);
     } else {
-      await interaction.reply({ content: '❌ Ocorreu um erro ao processar esta ação.', ephemeral: true }).catch(() => null);
+      await interaction.reply({ content: '❌ Ocorreu um erro ao processar esta ação.', flags: MessageFlags.Ephemeral }).catch(() => null);
     }
   }
 });
