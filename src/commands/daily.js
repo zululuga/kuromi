@@ -5,10 +5,14 @@ const { DAILY } = require('./commandNames');
 
 function buildDailyReply(result) {
   if (!result.claimed) {
-    return `⏳ Você já pegou suas Moedinhas hoje. Espere **${formatRemaining(result.remainingMs)}**; até a minha paciência tem cooldown.`;
+    return `⏳ Você já pegou sua recompensa diária hoje. Espere **${formatRemaining(result.remainingMs)}** para resgatar novamente!`;
   }
 
-  return `🪙 Você recebeu **${formatCoins(result.amount)}**. Não diga que eu nunca faço nada por você. Saldo: **${formatCoins(result.balance)}**.`;
+  let text = `🪙 **Recompensa Diária Coletada!**\nVocê recebeu **${formatCoins(result.amount)}**! (Saldo atual: **${formatCoins(result.balance)}**)`;
+  if (result.magicBeanBonus) {
+    text += `\n\n✨ **SORTE ÉPICA (1% de Chance)!** 🌱 Você encontrou **1x Feijão Mágico** reluzente no seu caminho! (Total: **${result.magicBeans} 🌱**)`;
+  }
+  return text;
 }
 
 module.exports = {

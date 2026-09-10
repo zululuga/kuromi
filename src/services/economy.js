@@ -5,13 +5,67 @@ const { getEconomyConfig } = require('./database');
 const economyFile = path.join(__dirname, '..', '..', 'data', 'economy.json');
 const DAILY_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 const WORK_COOLDOWN_MS = 3 * 60 * 60 * 1000;
+
 const CURRENCY_DEFINITIONS = [
   { key: 'coins', label: 'Moedinhas', emoji: '🪙' },
+  { key: 'magicBeans', label: 'Feijões Mágicos', emoji: '🌱' },
 ];
 
-function normalizeCoins(value) {
-  const coins = Number(value);
-  return Number.isFinite(coins) ? coins : 0;
+const TITLES_CATALOG = {
+  cultivador: {
+    id: 'cultivador',
+    name: 'Cultivador de Feijões',
+    emoji: '🌱',
+    cost: 1,
+    desc: 'Para quem sabe que até o menor grão pode florescer.',
+  },
+  explorador: {
+    id: 'explorador',
+    name: 'Conquistador de Masmorras',
+    emoji: '⚔️',
+    cost: 2,
+    desc: 'Desbravador intrépido dos labirintos procedurais.',
+  },
+  shinychaser: {
+    id: 'shinychaser',
+    name: 'Caçador de Shinies',
+    emoji: '✨',
+    cost: 3,
+    desc: 'Colecionador obstinado de criaturas radiantes.',
+  },
+  soberano: {
+    id: 'soberano',
+    name: 'Soberano Supremo',
+    emoji: '👑',
+    cost: 4,
+    desc: 'Uma presença de autoridade e liderança incontestável.',
+  },
+  graomestre: {
+    id: 'graomestre',
+    name: 'Grão-Mestre Arcano',
+    emoji: '🧙‍♂️',
+    cost: 5,
+    desc: 'Detentor de conhecimentos místicos e magia ancestral.',
+  },
+  lendaviva: {
+    id: 'lendaviva',
+    name: 'Lenda Viva',
+    emoji: '🌌',
+    cost: 10,
+    desc: 'Seu nome ecoa com prestígio em todos os reinos.',
+  },
+  magnata: {
+    id: 'magnata',
+    name: 'Magnata Cósmico',
+    emoji: '💎',
+    cost: 15,
+    desc: 'A personificação máxima da prosperidade e riqueza.',
+  },
+};
+
+function normalizeNumber(value, fallback = 0) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : fallback;
 }
 
 function readEconomy() {
@@ -33,16 +87,29 @@ function writeEconomy(economy) {
   fs.writeFileSync(economyFile, JSON.stringify(economy, null, 2), 'utf8');
 }
 
+function normalizeAccount(account) {
+  const acc = account || {};
+  return {
+    ...acc,
+    coins: normalizeNumber(acc.coins, 0),
+    magicBeans: normalizeNumber(acc.magicBeans, 0),
+    profession: acc.profession || null,
+    workCount: normalizeNumber(acc.workCount, 0),
+    lastWorkAt: acc.lastWorkAt || null,
+    lastDailyAt: acc.lastDailyAt || null,
+    titles: Array.isArray(acc.titles) ? acc.titles : [],
+    equippedTitle: acc.equippedTitle || null,
+  };
+}
+
 function getUserAccount(userId) {
   const economy = readEconomy();
-  const account = economy[userId] || { coins: 0, lastDailyAt: null, profession: null, workCount: 0, lastWorkAt: null };
-  return { ...account, coins: normalizeCoins(account.coins) };
+  return normalizeAccount(economy[userId]);
 }
 
 function updateUserAccount(userId, updater) {
   const economy = readEconomy();
-  const account = economy[userId] || { coins: 0, lastDailyAt: null, profession: null, workCount: 0, lastWorkAt: null };
-  account.coins = normalizeCoins(account.coins);
+  const account = normalizeAccount(economy[userId]);
   updater(account);
   economy[userId] = account;
   writeEconomy(economy);
@@ -51,6 +118,33 @@ function updateUserAccount(userId, updater) {
 
 function getBalance(userId) {
   return getUserAccount(userId).coins;
+}
+
+function getMagicBeans(userId) {
+  return getUserAccount(userId).magicBeans;
+}
+
+function addMagicBeans(userId, amount) {
+  const qty = Math.max(0, normalizeNumber(amount, 0));
+  if (qty === 0) return getUserAccount(userId).magicBeans;
+
+  const updated = updateUserAccount(userId, (acc) => {
+    acc.magicBeans = (acc.magicBeans || 0) + qty;
+  });
+  return updated.magicBeans;
+}
+
+function spendMagicBeans(userId, amount) {
+  const qty = Math.max(0, normalizeNumber(amount, 0));
+  const account = getUserAccount(userId);
+  if (account.magicBeans < qty) {
+    return { spent: false, balance: account.magicBeans };
+  }
+
+  const updated = updateUserAccount(userId, (acc) => {
+    acc.magicBeans -= qty;
+  });
+  return { spent: true, balance: updated.magicBeans };
 }
 
 function getCurrencyBalances(userId) {
@@ -62,36 +156,108 @@ function getCurrencyBalances(userId) {
 }
 
 function spendCoins(userId, amount) {
-  const economy = readEconomy();
-  const account = economy[userId] || { coins: 0, lastDailyAt: null };
-  account.coins = normalizeCoins(account.coins);
-  if (account.coins < amount) {
+  const account = getUserAccount(userId);
+  const cost = normalizeNumber(amount, 0);
+  if (account.coins < cost) {
     return { spent: false, balance: account.coins };
   }
 
-  account.coins -= amount;
-  economy[userId] = account;
-  writeEconomy(economy);
-  return { spent: true, balance: account.coins };
+  const updated = updateUserAccount(userId, (acc) => {
+    acc.coins -= cost;
+  });
+  return { spent: true, balance: updated.coins };
 }
 
 function setUserBalance(userId, amount) {
-  const economy = readEconomy();
-  const account = economy[userId] || { coins: 0, lastDailyAt: null };
-  account.coins = normalizeCoins(amount);
-  economy[userId] = account;
-  writeEconomy(economy);
-  return account;
+  return updateUserAccount(userId, (acc) => {
+    acc.coins = normalizeNumber(amount, 0);
+  });
 }
 
 function resetUserEconomy(userId) {
-  const economy = readEconomy();
-  const account = economy[userId] || { coins: 0, lastDailyAt: null };
-  account.coins = 0;
-  account.lastDailyAt = null;
-  economy[userId] = account;
-  writeEconomy(economy);
-  return account;
+  return updateUserAccount(userId, (acc) => {
+    acc.coins = 0;
+    acc.magicBeans = 0;
+    acc.lastDailyAt = null;
+  });
+}
+
+function getTitlesCatalog() {
+  return TITLES_CATALOG;
+}
+
+function getUserTitles(userId) {
+  const account = getUserAccount(userId);
+  return account.titles || [];
+}
+
+function buyTitle(userId, titleId) {
+  const title = TITLES_CATALOG[titleId];
+  if (!title) {
+    return { success: false, reason: 'title_not_found', message: 'Título não encontrado no catálogo.' };
+  }
+
+  const account = getUserAccount(userId);
+  const userTitles = account.titles || [];
+  if (userTitles.includes(titleId)) {
+    return { success: false, reason: 'already_owned', message: `Você já possui o título **${title.name}**!` };
+  }
+
+  if (account.magicBeans < title.cost) {
+    return {
+      success: false,
+      reason: 'insufficient_beans',
+      message: `Você precisa de **${title.cost} 🌱 Feijões Mágicos** para adquirir este título (Saldo atual: ${account.magicBeans} 🌱).`,
+    };
+  }
+
+  const updated = updateUserAccount(userId, (acc) => {
+    acc.magicBeans -= title.cost;
+    acc.titles.push(titleId);
+    acc.equippedTitle = titleId; // Equipa automaticamente ao comprar
+  });
+
+  return {
+    success: true,
+    title,
+    equipped: true,
+    remainingBeans: updated.magicBeans,
+    message: `👑 **Título Adquirido e Equipado!** Você agora ostenta: **${title.emoji} ${title.name}**!`,
+  };
+}
+
+function equipTitle(userId, titleId) {
+  if (!titleId) {
+    updateUserAccount(userId, (acc) => {
+      acc.equippedTitle = null;
+    });
+    return { success: true, equipped: null, message: 'Você desequipou seu título atual.' };
+  }
+
+  const title = TITLES_CATALOG[titleId];
+  if (!title) {
+    return { success: false, reason: 'title_not_found', message: 'Título não encontrado.' };
+  }
+
+  const account = getUserAccount(userId);
+  const userTitles = account.titles || [];
+  if (!userTitles.includes(titleId)) {
+    return { success: false, reason: 'not_owned', message: `Você ainda não desbloqueou o título **${title.name}**!` };
+  }
+
+  updateUserAccount(userId, (acc) => {
+    acc.equippedTitle = titleId;
+  });
+
+  return {
+    success: true,
+    title,
+    message: `✨ Título **${title.emoji} ${title.name}** equipado com sucesso!`,
+  };
+}
+
+function unequipTitle(userId) {
+  return equipTitle(userId, null);
 }
 
 function getWorkStatus(userId, now = Date.now()) {
@@ -111,18 +277,21 @@ function setProfession(userId, profession, cost = 50) {
   if (account.profession === profession) return { changed: false, reason: 'same', balance: account.coins, account };
   if (hasProfession && account.coins < cost) return { changed: false, reason: 'insufficient', balance: account.coins, account };
 
+  const charged = hasProfession ? cost : 0;
+  const updated = updateUserAccount(userId, (current) => {
+    current.profession = profession;
+    if (hasProfession) current.coins -= cost;
+  });
+
   return {
     changed: true,
-    charged: hasProfession ? cost : 0,
-    balance: account.coins - (hasProfession ? cost : 0),
-    account: updateUserAccount(userId, (current) => {
-      current.profession = profession;
-      if (hasProfession) current.coins -= cost;
-    }),
+    charged,
+    balance: updated.coins,
+    account: updated,
   };
 }
 
-function startWork(userId, words, now = Date.now()) {
+function startWork(userId, data = {}, now = Date.now()) {
   const status = getWorkStatus(userId, now);
   if (!status.available) return { started: false, ...status };
 
@@ -132,18 +301,27 @@ function startWork(userId, words, now = Date.now()) {
   });
   return {
     started: true,
-    words,
+    data,
     workCount: account.workCount,
     ...getWorkStatus(userId, now),
   };
 }
 
-function finishWork(userId, success, amount) {
-  if (!success) return { earned: false, amount: 0, balance: getBalance(userId) };
+function finishWork(userId, success, amount, bonusBean = false) {
+  if (!success) return { earned: false, amount: 0, balance: getBalance(userId), magicBeans: getMagicBeans(userId), bonusBean: false };
   const account = updateUserAccount(userId, (current) => {
     current.coins = (Number(current.coins) || 0) + amount;
+    if (bonusBean) {
+      current.magicBeans = (Number(current.magicBeans) || 0) + 1;
+    }
   });
-  return { earned: true, amount, balance: account.coins };
+  return {
+    earned: true,
+    amount,
+    balance: account.coins,
+    magicBeans: account.magicBeans,
+    bonusBean,
+  };
 }
 
 function getDailyStatus(userId, now = Date.now()) {
@@ -159,26 +337,30 @@ function getDailyStatus(userId, now = Date.now()) {
 }
 
 function claimDaily(userId, now = Date.now()) {
-  const economy = readEconomy();
-  const account = economy[userId] || { coins: 0, lastDailyAt: null };
-  account.coins = normalizeCoins(account.coins);
   const status = getDailyStatus(userId, now);
-
   if (!status.available) {
-    return { claimed: false, amount: 0, balance: account.coins, ...status };
+    const acc = getUserAccount(userId);
+    return { claimed: false, amount: 0, balance: acc.coins, magicBeans: acc.magicBeans, magicBeanBonus: false, ...status };
   }
 
   const { minimum, maximum } = getEconomyConfig();
   const amount = Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
-  account.coins += amount;
-  account.lastDailyAt = new Date(now).toISOString();
-  economy[userId] = account;
-  writeEconomy(economy);
+  const wonMagicBean = Math.random() < 0.01; // 1% de chance de Feijão Mágico
+
+  const updated = updateUserAccount(userId, (acc) => {
+    acc.coins += amount;
+    if (wonMagicBean) {
+      acc.magicBeans = (acc.magicBeans || 0) + 1;
+    }
+    acc.lastDailyAt = new Date(now).toISOString();
+  });
 
   return {
     claimed: true,
     amount,
-    balance: account.coins,
+    magicBeanBonus: wonMagicBean,
+    balance: updated.coins,
+    magicBeans: updated.magicBeans,
     nextClaimAt: new Date(now + DAILY_COOLDOWN_MS).toISOString(),
     remainingMs: DAILY_COOLDOWN_MS,
   };
@@ -187,7 +369,7 @@ function claimDaily(userId, now = Date.now()) {
 function getRanking(limit = 10, userIds = null) {
   return Object.entries(readEconomy())
     .filter(([userId]) => !userIds || userIds.has(userId))
-    .map(([userId, account]) => ({ userId, coins: Number(account.coins) || 0 }))
+    .map(([userId, account]) => ({ userId, coins: Number(account.coins) || 0, magicBeans: Number(account.magicBeans) || 0 }))
     .sort((left, right) => right.coins - left.coins)
     .slice(0, limit);
 }
@@ -206,13 +388,22 @@ module.exports = {
   DAILY_COOLDOWN_MS,
   WORK_COOLDOWN_MS,
   CURRENCY_DEFINITIONS,
+  TITLES_CATALOG,
   getUserAccount,
   getBalance,
+  getMagicBeans,
+  addMagicBeans,
+  spendMagicBeans,
   getCurrencyBalances,
   spendCoins,
   setUserBalance,
   resetUserEconomy,
   updateUserAccount,
+  getTitlesCatalog,
+  getUserTitles,
+  buyTitle,
+  equipTitle,
+  unequipTitle,
   getWorkStatus,
   setProfession,
   startWork,

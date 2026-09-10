@@ -23,6 +23,9 @@ const adoptionCommand = require('./src/commands/adocao');
 const dungeonCommand = require('./src/commands/petexplorar');
 const duelCommand = require('./src/commands/petduelo');
 const dexCommand = require('./src/commands/dex');
+const profileCommand = require('./src/commands/perfil');
+const workCommand = require('./src/commands/trabalho');
+const { syncApplicationEmojis } = require('./src/utils/appEmojis');
 const { registerAutomation, updateAutomation } = require('./src/services/automationSchedule');
 const {
   DISCORD_TOKEN,
@@ -316,6 +319,7 @@ client.once('ready', async () => {
   });
 
   await sendStartupAnnouncement();
+  await syncApplicationEmojis(client).catch(() => null);
   startBumpGuideScheduler();
   startTarotScheduler();
 });
@@ -484,6 +488,20 @@ client.on('interactionCreate', async (interaction) => {
       incrementCommand();
       recordUniqueUser(interaction.user.id);
       await duelCommand.handleDuelInteraction(interaction);
+      return;
+    }
+
+    if (typeof profileCommand?.isProfileInteraction === 'function' && profileCommand.isProfileInteraction(interaction)) {
+      incrementCommand();
+      recordUniqueUser(interaction.user.id);
+      await profileCommand.handleProfileInteraction(interaction);
+      return;
+    }
+
+    if (typeof workCommand?.isWorkInteraction === 'function' && workCommand.isWorkInteraction(interaction)) {
+      incrementCommand();
+      recordUniqueUser(interaction.user.id);
+      await workCommand.handleWorkInteraction(interaction);
       return;
     }
 

@@ -13,6 +13,9 @@ const { setEconomyConfig } = require('../src/services/database');
 const {
   claimDaily,
   getBalance,
+  getMagicBeans,
+  addMagicBeans,
+  spendMagicBeans,
   getCurrencyBalances,
   getDailyStatus,
   getUserRank,
@@ -23,6 +26,12 @@ const {
   setUserBalance,
   spendCoins,
   startWork,
+  getTitlesCatalog,
+  getUserTitles,
+  buyTitle,
+  equipTitle,
+  unequipTitle,
+  getUserAccount,
 } = require('../src/services/economy');
 const { createMarriageRequest, endMarriage, getSpouseId, resolveMarriageRequest } = require('../src/services/marriage');
 
@@ -51,6 +60,7 @@ try {
 
   fs.writeFileSync(economyFile, JSON.stringify({ proposer: { coins: 1200, lastDailyAt: null } }), 'utf8');
   assert.equal(getCurrencyBalances('proposer')[0].label, 'Moedinhas');
+  assert.equal(getCurrencyBalances('proposer')[1].label, 'Feijões Mágicos');
   const request = createMarriageRequest('proposer', 'recipient', 'test-guild');
   assert.equal(request.created, true, 'O pedido de casamento deve ser criado.');
   assert.equal(spendCoins('proposer', 1000).spent, true, 'O pedido deve cobrar 1000 Moedinhas.');
@@ -72,20 +82,48 @@ try {
   assert.equal(getDailyStatus('admin-target', Date.parse('2026-01-02T01:00:00.000Z')).available, false, 'Setar saldo deve preservar o cooldown.');
   resetUserEconomy('admin-target');
   assert.equal(getBalance('admin-target'), 0, 'Resetar economia deve zerar o saldo.');
+  assert.equal(getMagicBeans('admin-target'), 0, 'Resetar economia deve zerar os feijões mágicos.');
   assert.equal(getDailyStatus('admin-target').available, true, 'Resetar economia deve liberar o diário.');
+
+  // Testes de Feijões Mágicos & Títulos
+  assert.equal(getMagicBeans('beans-user'), 0, 'Saldo inicial de feijões deve ser 0.');
+  addMagicBeans('beans-user', 5);
+  assert.equal(getMagicBeans('beans-user'), 5, 'Deve creditar 5 feijões mágicos.');
+  assert.equal(spendMagicBeans('beans-user', 2).spent, true, 'Deve gastar 2 feijões.');
+  assert.equal(getMagicBeans('beans-user'), 3, 'Saldo deve ser 3 feijões.');
+  assert.equal(spendMagicBeans('beans-user', 10).spent, false, 'Não deve permitir saldo negativo de feijões.');
+
+  const titlesCatalog = getTitlesCatalog();
+  assert.ok(titlesCatalog.cultivador, 'O título cultivador deve existir.');
+  assert.equal(titlesCatalog.cultivador.cost, 1, 'Cultivador deve custar 1 feijão.');
+
+  const buyRes = buyTitle('beans-user', 'cultivador');
+  assert.equal(buyRes.success, true, 'Compra de título deve ser bem-sucedida.');
+  assert.equal(getUserAccount('beans-user').equippedTitle, 'cultivador', 'Título recém-adquirido deve ser equipado.');
+  assert.equal(getUserTitles('beans-user').includes('cultivador'), true, 'Título deve constar na lista de possuídos.');
+  assert.equal(getMagicBeans('beans-user'), 2, 'Deve debitar 1 feijão (3 - 1 = 2).');
+
+  unequipTitle('beans-user');
+  assert.equal(getUserAccount('beans-user').equippedTitle, null, 'Desequipar título deve limpar o campo.');
+  equipTitle('beans-user', 'cultivador');
+  assert.equal(getUserAccount('beans-user').equippedTitle, 'cultivador', 'Equipar título possuído deve funcionar.');
 
   const firstProfession = setProfession('worker', 'agricultor');
   assert.equal(firstProfession.changed, true, 'A primeira profissão deve ser gratuita.');
   setUserBalance('worker', 60);
   const changedProfession = setProfession('worker', 'programador');
   assert.equal(changedProfession.charged, 50, 'A troca de profissão deve custar 50 Moedinhas.');
-  const work = startWork('worker', ['codigo', 'api', 'bug', 'git', 'teste'], Date.parse('2026-01-03T00:00:00.000Z'));
+  const work = startWork('worker', { profession: 'programador' }, Date.parse('2026-01-03T00:00:00.000Z'));
   assert.equal(work.started, true, 'O trabalho deve iniciar quando o cooldown estiver disponível.');
   assert.equal(work.workCount, 1, 'O trabalho deve incrementar o contador.');
   assert.equal(getWorkStatus('worker', Date.parse('2026-01-03T01:00:00.000Z')).available, false, 'O trabalho deve ter cooldown de 3 horas.');
-  assert.equal(finishWork('worker', true, 25).amount, 25, 'O trabalho concluído deve pagar o salário.');
 
-  console.log('Verificação da economia, cooldown e ranking: OK');
+  const workFinish = finishWork('worker', true, 35, true);
+  assert.equal(workFinish.amount, 35, 'O trabalho concluído deve pagar o salário.');
+  assert.equal(workFinish.bonusBean, true, 'O bônus de feijão mágico deve ser registrado.');
+  assert.equal(getMagicBeans('worker'), 1, 'Trabalhador deve ter recebido 1 feijão de bônus.');
+
+  console.log('Verificação da economia, cooldown, ranking, Feijões Mágicos e Títulos: OK');
 } finally {
   fs.writeFileSync(economyFile, originalEconomy, 'utf8');
   fs.writeFileSync(settingsFile, originalSettings, 'utf8');

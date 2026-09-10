@@ -2,7 +2,8 @@ const { EmbedBuilder } = require('discord.js');
 const { KUROMI_COLORS } = require('../utils/kuromiVoice');
 
 function formatCoins(coins) {
-  return `${coins.toLocaleString('pt-BR')} Moedinhas`;
+  const val = Number(coins) || 0;
+  return `${val.toLocaleString('pt-BR')} Moedinhas`;
 }
 
 function formatRemaining(remainingMs) {
@@ -14,7 +15,7 @@ function formatRemaining(remainingMs) {
 function buildCurrencyFields(currencies) {
   return currencies.map((currency) => ({
     name: `${currency.emoji} ${currency.label}`,
-    value: currency.amount.toLocaleString('pt-BR'),
+    value: (Number(currency.amount) || 0).toLocaleString('pt-BR'),
     inline: true,
   }));
 }
@@ -23,30 +24,80 @@ function buildWalletEmbed(user, currencies, position) {
   return new EmbedBuilder()
     .setColor(KUROMI_COLORS.gold)
     .setTitle(`🪙  ✦  Carteira de ${user.displayName || user.username}`)
-    .setDescription('Seus saldos atuais. Não gaste tudo de uma vez; eu não vou fingir que não avisei.')
+    .setDescription('Seus saldos e patrimônio acumulado.')
     .addFields(...buildCurrencyFields(currencies), {
-      name: 'Colocação em Moedinhas',
+      name: '🏆 Colocação em Moedinhas',
       value: position ? `#${position}` : 'Ainda sem colocação',
+      inline: true,
     })
     .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
+    .setFooter({ text: 'Economia Global • Use /diario e /trabalho para ganhar moedas' })
     .setTimestamp();
 }
 
-function buildProfileEmbed(user, currencies, spouse, position, profession, workCount = 0, pet, totalAventuras = 0) {
-  const petLabel = pet ? `${pet.shiny ? '✨ ' : ''}${pet.label}${pet.shiny ? ' (Shiny)' : ''}` : 'Nenhum pet adotado';
+/**
+ * Constrói o Embed de perfil com layout exuberante e dados integrados de Pymons e Dex.
+ */
+function buildProfileEmbed({ user, account, spouse, rankPosition, professionLabel, activePet, dexStats, equippedTitle }) {
+  const titlePrefix = equippedTitle ? `[${equippedTitle.emoji} ${equippedTitle.name}] ` : '';
+  const coinsVal = Number(account?.coins) || 0;
+  const magicBeansVal = Number(account?.magicBeans) || 0;
+  const workVal = Number(account?.workCount) || 0;
+
+  const petDisplay = activePet
+    ? `${activePet.emoji || '🐾'} **${activePet.name}** (Nv. ${activePet.level || 1}) ${activePet.shiny ? '✨ *(Shiny Raro)*' : ''}\n> ❤️ HP: **${activePet.stats?.hp || 55}/${activePet.stats?.maxHp || 55}**  •  ⚡ Energia: **${activePet.energy || 100}%**  •  🍖 Fome: **${activePet.hunger || 100}%**`
+    : '*Nenhum Pymon ativo. Use `/pymons` para iniciar sua jornada!*';
+
+  const dexDisplay = dexStats
+    ? `📖 **${dexStats.totalUnlocked}/${dexStats.totalSpecies}** Espécies  •  ✨ **${dexStats.totalShinies}** Shinies`
+    : '📖 **0/10** Espécies';
+
+  const adventuresDisplay = activePet
+    ? `🧭 **${activePet.totalExploracoes || 0}** Expedições  •  ⚔️ **${activePet.duelosVencidos || 0}V / ${activePet.duelosPerdidos || 0}D**`
+    : '🧭 **0** Expedições';
+
   return new EmbedBuilder()
-    .setColor(KUROMI_COLORS.pink)
-    .setTitle(`👤  ✦  Perfil de ${user.displayName || user.username}`)
+    .setColor(KUROMI_COLORS.violet || '#c084fc')
+    .setTitle(`👤  ✦  ${titlePrefix}${user.displayName || user.username}`)
+    .setDescription(
+      equippedTitle
+        ? `> *« ${equippedTitle.desc} »*`
+        : '> *Aventureiro destemido explorando o universo de Pymons.*'
+    )
     .addFields(
-      { name: '💍 Cônjuge', value: spouse ? `${spouse}` : 'Solteiro(a), por enquanto. Não faça drama.' },
-      { name: 'Colocação em Moedinhas', value: position ? `#${position}` : 'Ainda sem colocação' },
-      { name: '💼 Profissão', value: profession || 'Nenhuma. Decidir é aparentemente difícil.' },
-      { name: '📈 Trabalhos realizados', value: String(workCount) },
-      { name: '🐾 Pet atual', value: petLabel },
-      { name: '🧭 Aventuras concluídas', value: String(totalAventuras) },
-      ...buildCurrencyFields(currencies)
+      {
+        name: '💎 Tesouro & Economia',
+        value: `🪙 **Moedinhas:** ${coinsVal.toLocaleString('pt-BR')}\n🌱 **Feijões Mágicos:** ${magicBeansVal.toLocaleString('pt-BR')} 🌱\n🏆 **Ranking:** ${rankPosition ? `#${rankPosition} Global` : 'Não ranqueado'}`,
+        inline: true,
+      },
+      {
+        name: '💼 Carreira & Vocação',
+        value: `🔨 **Profissão:** ${professionLabel || 'Nenhuma'}\n📈 **Expedientes:** ${workVal} trabalhos\n⭐ **Dedicação:** ${workVal >= 50 ? 'Mestre' : (workVal >= 20 ? 'Veterano' : (workVal >= 5 ? 'Praticante' : 'Iniciante'))}`,
+        inline: true,
+      },
+      {
+        name: '💍 Vínculo Social',
+        value: spouse ? `💍 Casado(a) com ${spouse}` : '🕊️ Solteiro(a) • Coração Livre',
+        inline: false,
+      },
+      {
+        name: '🐾 Companheiro Pymon',
+        value: petDisplay,
+        inline: false,
+      },
+      {
+        name: '📖 Compêndio da Dex',
+        value: dexDisplay,
+        inline: true,
+      },
+      {
+        name: '🧭 Aventuras & Duelos',
+        value: adventuresDisplay,
+        inline: true,
+      }
     )
     .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
+    .setFooter({ text: 'Perfil de Aventureiro • Use os botões abaixo para gerenciar títulos' })
     .setTimestamp();
 }
 
@@ -55,20 +106,22 @@ function buildRankingEmbed(entries, memberMap, viewerRank) {
     ? entries.map((entry, index) => {
         const member = memberMap.get(entry.userId);
         const name = member?.displayName || `Usuário ${entry.userId}`;
-        return `**${index + 1}.** ${name} — ${formatCoins(entry.coins)}`;
+        const beans = Number(entry.magicBeans) || 0;
+        const beansText = beans > 0 ? ` • ${beans} 🌱` : '';
+        return `**${index + 1}.** ${name} — ${formatCoins(entry.coins)}${beansText}`;
       })
-    : ['Ainda não há usuários no ranking. Que falta de ambição.'];
+    : ['Ainda não há usuários no ranking.'];
 
   const embed = new EmbedBuilder()
     .setColor(KUROMI_COLORS.pink)
-    .setTitle('🏆  ✦  Ranking de Moedinhas')
+    .setTitle('🏆  ✦  Ranking Global de Economia')
     .setDescription(lines.join('\n'))
     .setTimestamp();
 
   if (viewerRank) {
     const viewer = memberMap.get(viewerRank.userId);
     if (viewer) embed.setThumbnail(viewer.user.displayAvatarURL({ dynamic: true, size: 256 }));
-    embed.addFields({ name: 'Sua colocação', value: `#${viewerRank.position} — ${formatCoins(viewerRank.coins)}. Não se acostume.` });
+    embed.addFields({ name: 'Sua colocação', value: `#${viewerRank.position} — ${formatCoins(viewerRank.coins)}` });
   }
 
   return embed;

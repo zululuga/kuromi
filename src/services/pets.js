@@ -529,6 +529,14 @@ function awardPetXp(userId, petId, xpAmount) {
     pet.stats = calculateStats(baseStats, pet.level);
   }
 
+  let wonMaxLevelBean = false;
+  if (pet.level >= 100 && !pet.rewardedMaxLevel) {
+    pet.rewardedMaxLevel = true;
+    const { addMagicBeans } = require('./economy');
+    addMagicBeans(userId, 1);
+    wonMaxLevelBean = true;
+  }
+
   schedulePetsSave();
 
   return {
@@ -538,6 +546,7 @@ function awardPetXp(userId, petId, xpAmount) {
     leveledUp,
     oldLevel: startingLevel,
     newLevel: pet.level,
+    wonMaxLevelBean,
   };
 }
 
