@@ -99,6 +99,7 @@ function normalizeAccount(account) {
     lastDailyAt: acc.lastDailyAt || null,
     titles: Array.isArray(acc.titles) ? acc.titles : [],
     equippedTitle: acc.equippedTitle || null,
+    bio: typeof acc.bio === 'string' ? acc.bio.trim().slice(0, 150) : null,
   };
 }
 
@@ -260,6 +261,14 @@ function unequipTitle(userId) {
   return equipTitle(userId, null);
 }
 
+function setUserBio(userId, bioText) {
+  const cleanBio = typeof bioText === 'string' ? bioText.trim().slice(0, 150) : '';
+  const updated = updateUserAccount(userId, (acc) => {
+    acc.bio = cleanBio || null;
+  });
+  return { success: true, bio: updated.bio };
+}
+
 function getWorkStatus(userId, now = Date.now()) {
   const account = getUserAccount(userId);
   const lastWorkAt = account.lastWorkAt ? new Date(account.lastWorkAt).getTime() : 0;
@@ -404,6 +413,7 @@ module.exports = {
   buyTitle,
   equipTitle,
   unequipTitle,
+  setUserBio,
   getWorkStatus,
   setProfession,
   startWork,

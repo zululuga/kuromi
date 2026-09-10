@@ -71,12 +71,17 @@ function buildProfileEmbed({ user, account, spouse, rankPosition, professionLabe
     ? `> 💍 **Casado(a) com:** ${spouse}`
     : '> 🕊️ *Solteiro(a) • Coração Livre*';
 
-  const titleQuote = equippedTitle
-    ? `> *« ${equippedTitle.desc} »*`
-    : '> *Aventureiro destemido explorando o universo de Pymons.*';
+  let bioText = 'Aventureiro destemido explorando o universo de Pymons.';
+  if (account?.bio && account.bio.trim()) {
+    bioText = account.bio.trim();
+  } else if (equippedTitle?.desc) {
+    bioText = equippedTitle.desc;
+  }
+
+  const bioQuote = `> *« ${bioText} »*`;
 
   const description = [
-    titleQuote,
+    bioQuote,
     '',
     '💎 **TESOURO & ECONOMIA**',
     `> 🪙 **Moedinhas:** ${coinsVal.toLocaleString('pt-BR')}`,

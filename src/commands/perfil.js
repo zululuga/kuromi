@@ -3,9 +3,12 @@ const {
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
+  ModalBuilder,
   PermissionFlagsBits,
   SlashCommandBuilder,
   StringSelectMenuBuilder,
+  TextInputBuilder,
+  TextInputStyle,
 } = require('discord.js');
 const {
   getUserAccount,
@@ -15,6 +18,7 @@ const {
   buyTitle,
   equipTitle,
   unequipTitle,
+  setUserBio,
 } = require('../services/economy');
 const { getSpouseId } = require('../services/marriage');
 const { getActivePet, getUserDex } = require('../services/pets');
@@ -65,9 +69,9 @@ function buildProfileView(targetUser, viewerId) {
       .setEmoji('👑')
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
-      .setCustomId(`profile_refresh:${targetUser.id}:${viewerId}`)
-      .setLabel('Atualizar')
-      .setEmoji('🔄')
+      .setCustomId(`profile_open_bio:${targetUser.id}:${viewerId}`)
+      .setLabel('Editar Bio')
+      .setEmoji('✏️')
       .setStyle(ButtonStyle.Secondary)
   );
 
@@ -173,7 +177,56 @@ async function handleProfileInteraction(interaction) {
   const targetId = parts[1];
   const ownerId = parts[2] || targetId;
 
-  // 1. Validar autoridade da interação
+  // 1. Abrir Modal de Edição de Bio
+  if (action === 'profile_open_bio') {
+    if (interaction.user.id !== targetId) {
+      return interaction.reply({
+        content: '❌ Você só pode editar a biografia do seu próprio perfil!',
+        flags: 64,
+      });
+    }
+
+    const account = getUserAccount(targetId);
+    const modal = new ModalBuilder()
+      .setCustomId(`profile_bio_modal:${targetId}:${ownerId}`)
+      .setTitle('✏️ Personalizar Biografia');
+
+    const bioInput = new TextInputBuilder()
+      .setCustomId('profile_bio_input')
+      .setLabel('Biografia (frase de destaque no perfil)')
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder('Escreva algo sobre você ou suas aventuras...')
+      .setMaxLength(120)
+      .setRequired(false);
+
+    if (account.bio) {
+      bioInput.setValue(account.bio);
+    }
+
+    const modalRow = new ActionRowBuilder().addComponents(bioInput);
+    modal.addComponents(modalRow);
+
+    return interaction.showModal(modal);
+  }
+
+  // 2. Submissão do Modal de Bio
+  if (action === 'profile_bio_modal') {
+    if (interaction.user.id !== targetId) {
+      return interaction.reply({
+        content: '❌ Você só pode editar a biografia do seu próprio perfil!',
+        flags: 64,
+      });
+    }
+
+    const newBio = interaction.fields.getTextInputValue('profile_bio_input');
+    setUserBio(targetId, newBio);
+
+    const targetUser = await interaction.client.users.fetch(targetId).catch(() => interaction.user);
+    const view = buildProfileView(targetUser, interaction.user.id);
+    return interaction.update(view);
+  }
+
+  // 3. Validar autoridade da interação para outras ações
   if (interaction.user.id !== ownerId && interaction.user.id !== targetId) {
     return interaction.reply({
       content: '❌ Apenas o dono deste perfil pode alterar seus títulos ou configurações.',
@@ -181,21 +234,21 @@ async function handleProfileInteraction(interaction) {
     });
   }
 
-  // 2. Voltar para o Perfil Principal / Atualizar
-  if (action === 'profile_view_main' || action === 'profile_refresh') {
+  // 4. Voltar para o Perfil Principal
+  if (action === 'profile_view_main') {
     const targetUser = await interaction.client.users.fetch(targetId).catch(() => interaction.user);
     const view = buildProfileView(targetUser, interaction.user.id);
     return interaction.update(view);
   }
 
-  // 3. Abrir Galeria de Títulos
+  // 5. Abrir Galeria de Títulos
   if (action === 'profile_open_titles') {
     const targetUser = await interaction.client.users.fetch(targetId).catch(() => interaction.user);
     const view = buildTitlesView(targetUser, interaction.user.id);
     return interaction.update(view);
   }
 
-  // 4. Desequipar Título
+  // 6. Desequipar Título
   if (action === 'profile_unequip') {
     unequipTitle(targetId);
     const targetUser = await interaction.client.users.fetch(targetId).catch(() => interaction.user);
@@ -203,13 +256,12 @@ async function handleProfileInteraction(interaction) {
     return interaction.update(view);
   }
 
-  // 5. Seleção de Título no Dropdown (Comprar / Equipar)
+  // 7. Seleção de Título no Dropdown (Comprar / Equipar)
   if (action === 'profile_select_title') {
     const selectedVal = interaction.values[0];
     const [operation, titleId] = selectedVal.split(':');
 
     if (operation === 'equipped') {
-      // Já está equipado, não faz nada ou informa
       return interaction.reply({ content: '👑 Este título já está equipado no seu perfil!', flags: 64 });
     }
 

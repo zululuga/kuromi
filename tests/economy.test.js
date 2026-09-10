@@ -31,6 +31,7 @@ const {
   buyTitle,
   equipTitle,
   unequipTitle,
+  setUserBio,
   getUserAccount,
 } = require('../src/services/economy');
 const { createMarriageRequest, endMarriage, getSpouseId, resolveMarriageRequest } = require('../src/services/marriage');
@@ -107,6 +108,11 @@ try {
   assert.equal(getUserAccount('beans-user').equippedTitle, null, 'Desequipar título deve limpar o campo.');
   equipTitle('beans-user', 'cultivador');
   assert.equal(getUserAccount('beans-user').equippedTitle, 'cultivador', 'Equipar título possuído deve funcionar.');
+
+  setUserBio('beans-user', 'Colecionador de Pymons e mestre das masmorras.');
+  assert.equal(getUserAccount('beans-user').bio, 'Colecionador de Pymons e mestre das masmorras.', 'Biografia deve ser salva corretamente.');
+  setUserBio('beans-user', '   ');
+  assert.equal(getUserAccount('beans-user').bio, null, 'Biografia vazia deve ser redefinida para null.');
 
   const firstProfession = setProfession('worker', 'agricultor');
   assert.equal(firstProfession.changed, true, 'A primeira profissão deve ser gratuita.');
