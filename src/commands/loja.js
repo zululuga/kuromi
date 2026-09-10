@@ -7,7 +7,7 @@ const {
   ButtonStyle,
 } = require('discord.js');
 const { getItemsByCategory, getItemDefinition, buyItem, formatItemEffects } = require('../services/inventory');
-const { PYXIE_COLORS, pyxieFooter } = require('../utils/pyxieVoice');
+const { PYXIE_COLORS } = require('../utils/pyxieVoice');
 const { formatCoins } = require('./economyHelpers');
 const { SHOP } = require('./commandNames');
 
@@ -31,7 +31,7 @@ function buildShopEmbed(category = 'comida') {
       'Escolha a categoria no menu abaixo ou compre usando o menu de compra rápida.\n' +
       'Pyxie não dá fiado nem aceita choro.'
     )
-    .setFooter({ text: pyxieFooter('Preços Oficiais • 1-Clique Acessível') })
+    .setFooter({ text: 'Lojinha • Preços Oficiais' })
     .setTimestamp();
 
   if (items.length === 0) {

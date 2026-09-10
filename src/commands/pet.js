@@ -46,7 +46,7 @@ const {
   openChest,
 } = require('../services/inventory');
 const { getUserAccount } = require('../services/economy');
-const { PYXIE_COLORS, pyxieFooter, getRandomPhrase } = require('../utils/pyxieVoice');
+const { PYXIE_COLORS } = require('../utils/pyxieVoice');
 const { formatCoins, formatRemaining } = require('./economyHelpers');
 const { PYMONS, PIXELMONSTERS, PET } = require('./commandNames');
 
@@ -99,11 +99,10 @@ function buildPetTab(userId, userTag) {
       `**Treinador:** ${userTag}\n` +
       `**Espécie:** ${activePet.species} • **Elemento:** \`${activePet.element}\` • **Nível:** **${activePet.level}**\n\n` +
       `💖 **Vida:** ${activePet.stats.hp}/${activePet.stats.maxHp}  |  🍖 **Fome:** ${activePet.hunger}%  |  😊 **Humor:** ${activePet.happiness}%  |  ⚡ **Energia:** ${activePet.energy}%\n` +
-      `⭐ **XP:** ${activePet.xp}/${activePet.xpToNext}  |  🏆 **Duelos:** ${activePet.duelosVencidos || 0}V - ${activePet.duelosPerdidos || 0}D\n\n` +
-      `> *"${getRandomPhrase('feed')}"*`
+      `⭐ **XP:** ${activePet.xp}/${activePet.xpToNext}  |  🏆 **Duelos:** ${activePet.duelosVencidos || 0}V - ${activePet.duelosPerdidos || 0}D`
     )
     .setImage('attachment://pet_card.png')
-    .setFooter({ text: pyxieFooter('Pymons • 100% Interativo') })
+    .setFooter({ text: 'Pymons • Painel de Controle' })
     .setTimestamp();
 
   const components = [buildHubHeaderRow(userId, 'pet')];
@@ -192,7 +191,7 @@ function buildIncubatorTab(userId, userTag) {
         })
         .join('\n')
     )
-    .setFooter({ text: pyxieFooter('Delta-Time Arcana • Zero CPU em Repouso') })
+    .setFooter({ text: 'Chocadeira • Incubação em tempo real' })
     .setTimestamp();
 
   const components = [buildHubHeaderRow(userId, 'incubator')];
@@ -277,7 +276,7 @@ function buildDungeonTab(userId, userTag) {
           .map((z) => `${z.emoji} **${z.name}** (Nv. Mín: ${z.minLevel})\n> *${z.desc}*`)
           .join('\n\n')
       )
-      .setFooter({ text: pyxieFooter('Passos consom estamina • Fome 0% ou 0 HP impedem exploração') })
+      .setFooter({ text: 'Dungeons • Passos consom estamina • Fome 0% ou 0 HP impedem exploração' })
       .setTimestamp();
 
     const zoneOptions = zones.map((z) => ({
@@ -326,7 +325,7 @@ function buildDungeonTab(userId, userTag) {
       `📜 **Diário da Expedição:**\n` +
       run.logs.map((l) => `> ${l}`).join('\n')
     )
-    .setFooter({ text: pyxieFooter('Resgate voluntário salva 100% • Exaustão penaliza carga • 0 HP causa KO') })
+    .setFooter({ text: 'Expedição • Resgate voluntário salva 100% dos espólios' })
     .setTimestamp();
 
   const runActions = new ActionRowBuilder().addComponents(
@@ -375,7 +374,7 @@ function buildInventoryTab(userId, userTag) {
             })
             .join('\n\n'))
     )
-    .setFooter({ text: pyxieFooter('Selecione um item no menu para usá-lo imediatamente') })
+    .setFooter({ text: 'Mochila • Selecione um item no menu para usá-lo' })
     .setTimestamp();
 
   const components = [buildHubHeaderRow(userId, 'inventory')];
@@ -395,7 +394,7 @@ function buildInventoryTab(userId, userTag) {
       new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
           .setCustomId(`hub_inventory_use_item:${userId}`)
-          .setPlaceholder('✨ Selecione um item da mochila para usar...')
+          .setPlaceholder('🎒 Escolha um item para usar no seu pet ativo...')
           .addOptions(itemOptions)
       )
     );
@@ -416,17 +415,17 @@ function buildInventoryTab(userId, userTag) {
   return { embeds: [embed], components, files: [] };
 }
 
-// 5. Tab Lojinha
-function buildShopTab(userId, userTag, category = 'comida') {
-  const items = getItemsByCategory(category);
+// 5. Tab Loja
+function buildShopTab(userId, category = 'comida') {
   const account = getUserAccount(userId);
+  const items = getItemsByCategory(category);
 
   const catNames = {
-    comida: 'Comidas & Nutrição 🍖',
-    cura: 'Cura & Estamina 🩹',
-    utilitario: 'Utilitários & Ampulhetas ⏳',
-    bau: 'Baús Misteriosos 📦',
-    melhoria: 'Melhorias & Ninhos 🪺',
+    comida: 'Comidas & Nutrição',
+    cura: 'Cura & Estamina',
+    utilitario: 'Utilitários & Aceleração',
+    bau: 'Baús Misteriosos',
+    melhoria: 'Melhorias & Ninhos',
   };
 
   const embed = new EmbedBuilder()
@@ -442,7 +441,7 @@ function buildShopTab(userId, userTag, category = 'comida') {
         })
         .join('\n\n')
     )
-    .setFooter({ text: pyxieFooter('Clique nos itens do menu para comprar com 1 clique') })
+    .setFooter({ text: 'Lojinha • Selecione um item no menu para comprar' })
     .setTimestamp();
 
   const components = [buildHubHeaderRow(userId, 'shop')];
@@ -495,7 +494,7 @@ function buildOnboardingView(userId, userDisplayName) {
     .setTitle('✨ ✦ Boas-vindas ao Reino dos Pymons! ✦ ✨')
     .setDescription(
       `Ora, ora, **${userDisplayName}**! Você ainda não possui nenhum Pymon ao seu lado.\n\n` +
-      `Visite a nossa **Dex de Adoção** com \`/adocao\` para escolher seu parceiro inicial:\n` +
+      `Clique no botão **Adotar Meu Starter** abaixo para abrir a Dex e escolher seu parceiro inicial:\n` +
       `• 🧁 **Cinna** (Charme) — Doçura radiante e astúcia\n` +
       `• 💧 **Bonorka** (Orvalho) — Serenidade aquática e resistência\n` +
       `• 🍃 **Pomcorin** (Silvestre) — Agilidade pura e vigor natural\n\n` +
@@ -503,7 +502,7 @@ function buildOnboardingView(userId, userDisplayName) {
       `🎁 Pyxie também preparou um **Kit Inicial Gratuito**:\n` +
       `• 🪙 **+150 Moedas** • 🥣 **2x Rações** • 🩹 **1x Curativo** • 📦 **1x Baú Rústico**`
     )
-    .setFooter({ text: pyxieFooter('Pymons • Escolha seu inicial em /adocao') })
+    .setFooter({ text: 'Pymons • Inicie sua jornada pelo botão abaixo' })
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(

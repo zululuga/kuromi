@@ -13,7 +13,7 @@ const {
   getActivePet,
 } = require('../services/pets');
 const { createPetAttachment, createDexAttachment } = require('../services/petRenderer');
-const { PYXIE_COLORS, pyxieFooter } = require('../utils/pyxieVoice');
+const { PYXIE_COLORS } = require('../utils/pyxieVoice');
 
 const STARTER_KEYS = ['cinna', 'bonorka', 'pomcorin'];
 
@@ -41,7 +41,7 @@ function buildDexEmbed(selectedKey = 'cinna') {
       `💖 HP: **${starter.baseStats.hp}**  •  ⚔️ ATK: **${starter.baseStats.atk}**  •  🛡️ DEF: **${starter.baseStats.def}**  •  💨 SPD: **${starter.baseStats.spd}**`
     )
     .setImage('attachment://dex_entry.png')
-    .setFooter({ text: pyxieFooter('Dex de Pymons • Escolha seu companheiro inicial') })
+    .setFooter({ text: 'Dex de Pymons • Escolha seu companheiro inicial' })
     .setTimestamp();
 
   return embed;
@@ -93,7 +93,7 @@ function buildAdoptedLockedView(userId, userPets) {
       `2. 🥚 Coloque os ovos na sua **Chocadeira** e acelere o tempo de choco;\n` +
       `3. 🐣 Quebre a casca para despertar novos Pymons autorais com **até 20% de chance Shiny**!`
     )
-    .setFooter({ text: pyxieFooter('Adoção Bloqueada • Obtenha mais Pymons via Dungeons') })
+    .setFooter({ text: 'Adoção Concluída • Obtenha mais Pymons via Dungeons' })
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(
@@ -133,7 +133,7 @@ async function handleAdoptionInteraction(interaction) {
 
   if (targetUserId && targetUserId !== interaction.user.id) {
     return interaction.reply({
-      content: '❌ Esta Dex pertence a outro aventureiro. Use `/adocao` para abrir a sua!',
+      content: '❌ Esta Dex pertence a outro aventureiro. Use `/pymons` para abrir a sua!',
       flags: 64,
     });
   }
@@ -194,7 +194,7 @@ async function handleAdoptionInteraction(interaction) {
         `*Acesse o painel principal com \`/pymons\` para alimentá-lo, treinar e desbravar as Dungeons!*`
       )
       .setImage('attachment://pet_card.png')
-      .setFooter({ text: pyxieFooter('Pymon Adotado • Centro de Adoção Trancado') })
+      .setFooter({ text: 'Pymon Adotado • Centro de Adoção Trancado' })
       .setTimestamp();
 
     const actionRow = new ActionRowBuilder().addComponents(

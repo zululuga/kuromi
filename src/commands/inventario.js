@@ -8,7 +8,7 @@ const {
 } = require('discord.js');
 const { getUserInventory, getItemDefinition, sellItem, openChest, formatItemEffects } = require('../services/inventory');
 const { useItemOnActivePet, getActivePet, hasClaimedStarterKit, claimStarterKit, putEggInIncubator, getIncubator } = require('../services/pets');
-const { PYXIE_COLORS, pyxieFooter } = require('../utils/pyxieVoice');
+const { PYXIE_COLORS } = require('../utils/pyxieVoice');
 const { formatCoins } = require('./economyHelpers');
 const { INVENTORY } = require('./commandNames');
 
@@ -24,7 +24,7 @@ function buildInventoryEmbed(userId, userTag, selectedItemId = null) {
       `**Pet Ativo:** ${activePet ? `${activePet.emoji} **${activePet.name}** (Nv. ${activePet.level})` : '*Nenhum pet ativo*'}\n\n` +
       'Selecione um item no menu abaixo para usar no seu pet, chocar ou abrir.'
     )
-    .setFooter({ text: pyxieFooter('Inventário Pessoal • 1-Clique Acessível') })
+    .setFooter({ text: 'Mochila • Inventário Pessoal' })
     .setTimestamp();
 
   if (entries.length === 0) {
