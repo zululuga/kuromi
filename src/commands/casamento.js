@@ -36,12 +36,23 @@ function buildButtons(requestId) {
 }
 
 function buildRequestEmbed(requester, target) {
+  const desc = [
+    `💍 ${target}, você recebeu um pedido oficial de matrimônio!`,
+    '',
+    `**${requester.displayName || requester.username}** deseja unir seus laços com você no servidor.`,
+    '',
+    '💎 **TAXA DO MATRIMÔNIO**',
+    `> 🪙 **Investimento:** **${formatCoins(MARRIAGE_COST)}**`,
+    '',
+    '💌 *Clique em um dos botões abaixo para responder ao pedido:*',
+  ].join('\n');
+
   return new EmbedBuilder()
     .setColor('#e60067')
-    .setTitle('💍  ✦  Pedido de casamento')
-    .setDescription(`${target}, **${requester.displayName || requester.username}** quer se casar com você. Que escândalo romântico.`)
-    .addFields({ name: 'Investimento no drama', value: formatCoins(MARRIAGE_COST) })
+    .setTitle('💍  ✦  Pedido de Casamento')
+    .setDescription(desc)
     .setThumbnail(requester.displayAvatarURL({ dynamic: true, size: 256 }))
+    .setFooter({ text: 'Casamentos • União oficial de membros' })
     .setTimestamp();
 }
 

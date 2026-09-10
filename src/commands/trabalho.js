@@ -366,34 +366,49 @@ async function handleWorkInteraction(interaction) {
   const result = finishWork(sessionUserId, isCorrect, session.salary, isCriticalBonus);
 
   if (!isCorrect) {
+    const desc = [
+      'Você cometeu um equívoco na sua tomada de decisão profissional!',
+      '',
+      '💡 **DECISÃO TÉCNICA CORRETA**',
+      `> *${session.correctText}*`,
+      '',
+      '⏳ **PRÓXIMO EXPEDIENTE**',
+      '> Você não recebeu salário desta vez. Descanse e tente novamente em **3 horas**!',
+    ].join('\n');
+
     const errorEmbed = new EmbedBuilder()
       .setColor(KUROMI_COLORS.crimson || '#ef4444')
       .setTitle(`❌  ✦  Expediente de ${session.professionLabel} Falhou`)
-      .setDescription(
-        `Você cometeu um equívoco na sua tomada de decisão profissional!\n\n` +
-        `💡 **Decisão Correta:**\n> *${session.correctText}*\n\n` +
-        `Você não recebeu salário desta vez. Descanse e tente novamente em 3 horas!`
-      )
+      .setDescription(desc)
       .setFooter({ text: 'Trabalho • Revise seus conhecimentos e volte mais forte!' })
       .setTimestamp();
 
     return interaction.update({ embeds: [errorEmbed], components: [] });
   }
 
-  let desc =
-    `🎉 **Excelente Trabalho!**\n` +
-    `Você resolveu o desafio com maestria técnica e recebeu **${formatCoins(result.amount)}**!\n` +
-    `💰 **Saldo Atual:** **${formatCoins(result.balance)}**\n` +
-    `📈 **Total de Trabalhos Concluídos:** **${getUserAccount(sessionUserId).workCount}**`;
+  const desc = [
+    'Você resolveu o desafio com maestria técnica e dedicação!',
+    '',
+    '💰 **REMUNERAÇÃO DO EXPEDIENTE**',
+    `> 🪙 **Salário Recebido:** **+${formatCoins(result.amount)}**`,
+    `> 💳 **Novo Saldo:** **${formatCoins(result.balance)}**`,
+    '',
+    '📈 **CARREIRA**',
+    `> 🔨 **Total Concluído:** **${getUserAccount(sessionUserId).workCount}** trabalhos`,
+  ];
 
   if (result.bonusBean) {
-    desc += `\n\n✨ **BÔNUS ÉPICO DE DESEMPENHO (2% de Chance)!** 🌱 Você recebeu **+1 Feijão Mágico** pelo serviço impecável! (Total: **${result.magicBeans} 🌱**)`;
+    desc.push(
+      '',
+      '✨ **BÔNUS ÉPICO DE DESEMPENHO (2% de Chance)!**',
+      `> 🌱 Você recebeu **+1 Feijão Mágico** pelo serviço impecável! (Saldo: **${result.magicBeans} 🌱**)`
+    );
   }
 
   const successEmbed = new EmbedBuilder()
     .setColor(KUROMI_COLORS.emerald || '#10b981')
     .setTitle(`✅  ✦  Expediente de ${session.professionLabel} Concluído!`)
-    .setDescription(desc)
+    .setDescription(desc.join('\n'))
     .setFooter({ text: 'Trabalho • Volte em 3 horas para um novo expediente' })
     .setTimestamp();
 
@@ -455,13 +470,17 @@ async function runWork(source, reply) {
     }
   }, WORK_TIMEOUT_MS);
 
+  const questionDesc = [
+    chosenGame.scenario,
+    '',
+    '⏱️ **TEMPO DE RESPOSTA: 45 SEGUNDOS**',
+    'Escolha a melhor alternativa nos botões abaixo:',
+  ].join('\n');
+
   const embed = new EmbedBuilder()
     .setColor(KUROMI_COLORS.violet || '#a855f7')
     .setTitle(`💼  ✦  Expediente de ${profDef.label} — Minigame`)
-    .setDescription(
-      `${chosenGame.scenario}\n\n` +
-      `⏱️ *Escolha a melhor alternativa abaixo em até 45 segundos:*`
-    )
+    .setDescription(questionDesc)
     .setFooter({ text: 'Minigame de Trabalho • Escolha a opção correta para receber seu salário' })
     .setTimestamp();
 

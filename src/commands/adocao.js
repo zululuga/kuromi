@@ -26,24 +26,28 @@ function buildDexEmbed(selectedKey = 'cinna') {
     SILVESTRE: PYXIE_COLORS.emerald,
   };
 
+  const desc = [
+    'Escolha o seu companheiro para iniciar sua jornada no Universo Pymon!',
+    '',
+    '✨ **PROBABILIDADE SHINY**',
+    '> Há **5% de chance** do seu inicial despertar em sua variante **Shiny Rara**!',
+    '',
+    '🔒 **REGRA DE ADOÇÃO INICIAL**',
+    '> Você pode escolher apenas **1 Pymon inicial**. Para expandir sua equipe, explore **Dungeons** para encontrar ovos e choque-os na **Chocadeira**!',
+    '',
+    `🐾 **INICIAL SELECIONADO: ${starter.name.toUpperCase()}**`,
+    `> ${starter.emoji} **${starter.name}** (\`${starter.element}\`)`,
+    `> *"${starter.description}"*`,
+    '',
+    '📊 **ATRIBUTOS BÁSICOS**',
+    `> ❤️ **HP:** ${starter.baseStats.hp}  •  ⚔️ **ATK:** ${starter.baseStats.atk}`,
+    `> 🛡️ **DEF:** ${starter.baseStats.def}  •  💨 **SPD:** ${starter.baseStats.spd}`,
+  ].join('\n');
+
   const embed = new EmbedBuilder()
     .setColor(colorMap[starter.element] || PYXIE_COLORS.lilac)
     .setTitle(`📖  ✦  Dex de Pymons — Escolha seu Inicial!`)
-    .setDescription(
-      `Escolha o seu companheiro para iniciar sua jornada no Reino de Pyxie!\n\n` +
-      `✨ **PROBABILIDADE SHINY**\n` +
-      `Há **5% de chance** do seu Pymon inicial nascer em sua forma **Shiny Rara**!\n\n` +
-      `🔒 **REGRA DE ADOÇÃO**\n` +
-      `Você só pode escolher **1 Pymon inicial**. Após a escolha, novos Pymons só poderão ser obtidos encontrando ovos em **Dungeons** e chocando na **Chocadeira**!\n\n` +
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-      `🐾 **Pymon Selecionado:** ${starter.emoji} **${starter.name}** (\`${starter.element}\`)\n` +
-      `> *"${starter.description}"*\n\n` +
-      `💖 HP: **${starter.baseStats.hp}**  •  ⚔️ ATK: **${starter.baseStats.atk}**  •  🛡️ DEF: **${starter.baseStats.def}**  •  💨 SPD: **${starter.baseStats.spd}**`
-      `• 💖 **HP:** ${starter.baseStats.hp}  •  ⚔️ **ATK:** ${starter.baseStats.atk}\n` +
-      `• 🛡️ **DEF:** ${starter.baseStats.def}  •  💨 **SPD:** ${starter.baseStats.spd}`
-      `• 💖 **HP:** **${starter.baseStats.hp}**  •  ⚔️ **ATK:** **${starter.baseStats.atk}**\n` +
-      `• 🛡️ **DEF:** **${starter.baseStats.def}**  •  💨 **SPD:** **${starter.baseStats.spd}**`
-    )
+    .setDescription(desc)
     .setImage('attachment://dex_entry.png')
     .setFooter({ text: 'Dex de Pymons • Escolha seu companheiro inicial' })
     .setTimestamp();
@@ -86,19 +90,21 @@ const buildPokedexComponents = buildDexComponents;
 
 function buildAdoptedLockedView(userId, userPets) {
   const active = userPets[0];
+  const desc = [
+    `Olá, aventureiro! Você já escolheu seu Pymon inicial (**${active ? active.name : 'Seu Inicial'}**).`,
+    '',
+    '🌟 **COMO CONSEGUIR MAIS PYMONS?**',
+    'O Centro de Adoção é exclusivo para tutores iniciantes. Para expandir sua coleção com novas espécies e variantes raras:',
+    '',
+    '> 1. 🗺️ Aventure-se nas **Dungeons** com `/pymons` para encontrar **Ovos Misteriosos**;',
+    '> 2. 🥚 Coloque os ovos na sua **Chocadeira** e acompanhe o tempo de choco;',
+    '> 3. 🐣 Quebre a casca para despertar novos Pymons com **até 20% de chance Shiny**!',
+  ].join('\n');
+
   const embed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.lilac)
     .setTitle('🔒  ✦  Centro de Adoção de Pymons — Adoção Concluída')
-    .setDescription(
-      `Olá, aventureiro! Você já escolheu seu Pymon inicial (**${active ? active.name : 'Seu Inicial'}**).\n\n` +
-      `🌟 **Como conseguir mais Pymons?**\n` +
-      `O Centro de Adoção é exclusivo para tutores iniciantes. Para expandir sua coleção com novas espécies e variantes raras:\n\n` +
-      `1. 🗺️ Aventure-se nas **Dungeons** com \`/pymons\` para encontrar **Ovos Misteriosos**;\n` +
-      `2. 🥚 Coloque os ovos na sua **Chocadeira** e acelere o tempo de choco;\n` +
-      `1. 🗺️ Aventure-se nas **Dungeons** com \`/pymons\` para encontrar **Ovos Misteriosos**;\n\n` +
-      `2. 🥚 Coloque os ovos na sua **Chocadeira** e acompanhe o tempo de choco;\n\n` +
-      `3. 🐣 Quebre a casca para despertar novos Pymons autorais com **até 20% de chance Shiny**!`
-    )
+    .setDescription(desc)
     .setFooter({ text: 'Adoção Concluída • Obtenha mais Pymons via Dungeons' })
     .setTimestamp();
 
@@ -183,29 +189,27 @@ async function handleAdoptionInteraction(interaction) {
     }
 
     const adopted = result.pet;
-    const shinyBanner = adopted.shiny
-      ? '✨✨ **PARABÉNS! SEU INICIAL NASCEU SHINY (5% DE CHANCE)!** ✨✨\n\n'
-      : '';
+    const desc = [
+      adopted.shiny ? '✨✨ **PARABÉNS! SEU INICIAL NASCEU SHINY (5% DE CHANCE)!** ✨✨\n' : '',
+      `O seu companheiro **${adopted.name}** ${adopted.emoji} já está aos seus cuidados!`,
+      '',
+      '🐾 **FICHA DO INICIAL**',
+      `> 🔮 **Elemento:** \`${adopted.element}\`  •  ⭐ **Nível:** **1**`,
+      `> ❤️ **Vida:** **${adopted.stats.hp}/${adopted.stats.maxHp}**  •  ⚡ **Energia:** **${adopted.energy}%**`,
+      '',
+      '🎁 **KIT DE SOBREVIVÊNCIA ENTREGUE NA MOCHILA**',
+      '> 🪙 **+150 Moedinhas**',
+      '> 🥣 **2x Ração da Floresta**',
+      '> 🩹 **1x Curativo**',
+      '> 📦 **1x Baú Rústico**',
+      '',
+      '*Acesse o painel principal com `/pymons` para alimentá-lo, treinar e desbravar as Dungeons!*',
+    ].filter(Boolean).join('\n');
 
     const embed = new EmbedBuilder()
       .setColor(adopted.shiny ? '#facc15' : PYXIE_COLORS.emerald)
       .setTitle(`🎉  ✦  Você escolheu ${adopted.name} como seu Pymon!`)
-      .setDescription(
-        `${shinyBanner}` +
-        `O seu companheiro **${adopted.name}** ${adopted.emoji} já está aos seus cuidados!\n\n` +
-        `• **Elemento:** \`${adopted.element}\`\n` +
-        `• **Nível Inicial:** **1**\n` +
-        `• **Vida:** **${adopted.stats.hp}/${adopted.stats.maxHp}**  |  ⚡ **Energia:** **${adopted.energy}%**\n\n` +
-        `🎁 **Kit de Sobrevivência Entregue:** Você recebeu 2x Ração da Floresta, 1x Curativo e 1x Baú Rústico na Mochila!\n\n` +
-        `• **Vida:** **${adopted.stats.hp}/${adopted.stats.maxHp}**\n` +
-        `• **Energia:** **${adopted.energy}%**\n\n` +
-        `🎁 **Kit de Sobrevivência Entregue na Mochila:**\n` +
-        `• 🪙 **+150 Moedas**\n` +
-        `• 🥣 **2x Ração da Floresta**\n` +
-        `• 🩹 **1x Curativo**\n` +
-        `• 📦 **1x Baú Rústico**\n\n` +
-        `*Acesse o painel principal com \`/pymons\` para alimentá-lo, treinar e desbravar as Dungeons!*`
-      )
+      .setDescription(desc)
       .setImage('attachment://pet_card.png')
       .setFooter({ text: 'Pymon Adotado • Centro de Adoção Trancado' })
       .setTimestamp();

@@ -23,33 +23,31 @@ function buildShopEmbed(category = 'comida') {
   const items = getItemsByCategory(category);
   const catInfo = CATEGORIES.find((c) => c.value === category) || CATEGORIES[0];
 
-  const embed = new EmbedBuilder()
-    .setColor(PYXIE_COLORS.gold)
-    .setTitle(`${catInfo.emoji}  ✦  Lojinha da Pyxie — ${catInfo.label}`)
-    .setDescription(
-      `*${catInfo.desc}*\n\n` +
-      'Escolha a categoria no menu abaixo ou compre usando o menu de compra rápida.\n' +
-      'Pyxie não dá fiado nem aceita choro.'
-    )
-    .setFooter({ text: 'Lojinha • Preços Oficiais' })
-    .setTimestamp();
-
-  if (items.length === 0) {
-    embed.addFields({ name: 'Vazio', value: 'Nenhum item disponível nesta categoria no momento.' });
-  } else {
-    items.forEach((item) => {
-      const priceTag = item.buyPrice ? `**${formatCoins(item.buyPrice)}**` : '*Item raro de dungeon*';
-      const fxText = formatItemEffects(item);
-      const fxLine = fxText ? `\n> 📊 **Efeito:** ${fxText}` : '';
-      embed.addFields({
-        name: `${item.emoji} ${item.name} — ${priceTag}`,
-        value: `> ${item.description}${fxLine}\n> *ID para compra:* \`${item.id}\``,
-        inline: false,
+  const itemLines = items.length === 0
+    ? ['> *Nenhum item disponível nesta categoria no momento.*']
+    : items.map((item) => {
+        const priceTag = item.buyPrice ? `🪙 **${formatCoins(item.buyPrice)}**` : '*Item raro de dungeon*';
+        const fxText = formatItemEffects(item);
+        const fxLine = fxText ? `\n> 📊 **Efeito:** ${fxText}` : '';
+        return `**${item.emoji} ${item.name}** — ${priceTag}\n> *${item.description}*${fxLine}\n> 🏷️ *ID:* \`${item.id}\``;
       });
-    });
-  }
 
-  return embed;
+  const desc = [
+    `*« ${catInfo.desc} »*`,
+    '',
+    '🛒 **CATÁLOGO DE ITENS**',
+    '',
+    itemLines.join('\n\n'),
+    '',
+    '💡 *Escolha a categoria ou compre diretamente nos menus abaixo:*',
+  ].join('\n');
+
+  return new EmbedBuilder()
+    .setColor(PYXIE_COLORS.gold)
+    .setTitle(`${catInfo.emoji}  ✦  Lojinha — ${catInfo.label}`)
+    .setDescription(desc)
+    .setFooter({ text: 'Lojinha • Catálogo Oficial de Itens' })
+    .setTimestamp();
 }
 
 function buildShopComponents(currentCategory = 'comida', userId = '') {

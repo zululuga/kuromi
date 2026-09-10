@@ -98,22 +98,34 @@ function buildModularHelpEmbed(moduleId = 'todos', guildName = '') {
     .setTimestamp();
 
   if (mod.id === 'todos') {
-    embed.setDescription(
-      `Bem-vindo à Central de Ajuda${guildName ? ` de **${guildName}**` : ''}!\n\n` +
-      'Selecione um **módulo no menu suspenso abaixo** para ver os comandos detalhados:\n\n' +
-      HELP_MODULES.filter((m) => m.id !== 'todos')
-        .map((m) => `> ${m.emoji} **${m.label}**\n> *${m.desc}*`)
-        .join('\n\n')
-    );
+    const moduleLines = HELP_MODULES.filter((m) => m.id !== 'todos')
+      .map((m) => `**${m.emoji} ${m.label}**\n> *${m.desc}*`);
+
+    const desc = [
+      `Bem-vindo à Central de Ajuda${guildName ? ` de **${guildName}**` : ''}!`,
+      '',
+      '📖 **MÓDULOS E RECURSOS DO BOT**',
+      '',
+      moduleLines.join('\n\n'),
+      '',
+      '💡 *Selecione um módulo no menu suspenso abaixo para ver os comandos:*',
+    ].join('\n');
+
+    embed.setDescription(desc);
   } else {
-    embed.setDescription(`*${mod.desc}*\n\n**Comandos Disponíveis:**`);
-    (mod.commands || []).forEach((cmd) => {
-      embed.addFields({
-        name: cmd.name,
-        value: `> ${cmd.desc}`,
-        inline: false,
-      });
-    });
+    const cmdLines = (mod.commands || []).map((cmd) => `**\`${cmd.name}\`**\n> *${cmd.desc}*`);
+
+    const desc = [
+      `*« ${mod.desc} »*`,
+      '',
+      '📋 **COMANDOS DESTE MÓDULO**',
+      '',
+      cmdLines.join('\n\n'),
+      '',
+      '💡 *Use o menu abaixo para navegar entre outros módulos de ajuda:*',
+    ].join('\n');
+
+    embed.setDescription(desc);
   }
 
   return embed;

@@ -50,23 +50,59 @@ async function handleDuelInteraction(interaction) {
     return;
   }
 
-  const betText = result.betAmount > 0 ? `\n💰 **Aposta em Jogo:** ${formatCoins(result.betAmount)}` : '';
+  const betText = result.betAmount > 0 ? `💰 **Aposta Disputada:** **${formatCoins(result.betAmount)}**` : '🕊️ *Duelo Amigável*';
   const narrative = result.battleLogs.join('\n\n');
+
+  const desc = [
+    `🥊 **LUTADORES:** <@${result.winnerUserId === result.winnerPet.id ? result.winnerUserId : result.loserUserId}> vs <@${targetId}>`,
+    betText,
+    '',
+    '📜 **RELATÓRIO DO COMBATE**',
+    narrative,
+    '',
+    '🏆 **VENCEDOR DO COMBATE**',
+    `> 👑 <@${result.winnerUserId}> com **${result.winnerPet.name}**!`,
+    '',
+    '🎁 **RECOMPENSAS**',
+    `> ⭐ **+100 XP** para o vencedor`,
+    `> ⭐ **+25 XP** para o perdedor`,
+    result.betAmount > 0 ? `> 🪙 **+${formatCoins(result.betAmount)}** transferidos!` : '',
+  ].filter(Boolean).join('\n');
 
   const duelEmbed = new EmbedBuilder()
     .setColor('#f43f5e')
     .setTitle('⚔️  ✦  Coliseu de Pymons — Resultado do Combate')
-    .setDescription(
-      `**Desafiante:** <@${result.winnerUserId === result.winnerPet.id ? result.winnerUserId : result.loserUserId}> vs **Desafiado:** <@${targetId}>\n` +
-      `${betText}\n\n` +
-      `**📜 Relatório da Batalha:**\n\n${narrative}\n\n` +
-      `🏆 **Vencedor:** <@${result.winnerUserId}> com **${result.winnerPet.name}**!\n` +
-      `🎉 **Recompensas:** +100 XP para o vencedor, +25 XP para o perdedor${result.betAmount > 0 ? ` e **+${formatCoins(result.betAmount)}** transferidos!` : '.'}`
-    )
+    .setDescription(desc)
     .setFooter({ text: `${interaction.guild?.name || 'Servidor'} • Arena de Duelos de Pymons` })
     .setTimestamp();
 
   await interaction.update({ embeds: [duelEmbed], components: [] });
+}
+
+function buildChallengeEmbed(challengerId, targetId, petA, petB, betAmount, guildName) {
+  const betText = betAmount > 0
+    ? `> 💰 **Aposta em Jogo:** **${formatCoins(betAmount)}**`
+    : '> 🕊️ *Duelo Amigável (Sem apostas)*';
+
+  const desc = [
+    `<@${challengerId}> lançou uma luva de desafio para <@${targetId}>!`,
+    '',
+    '🥊 **CONFRONTO DE PYMONS**',
+    `> 🔵 **${petA.emoji} ${petA.name}** (Nv. ${petA.level} • \`${petA.element}\`)`,
+    `> 🔴 **${petB.emoji} ${petB.name}** (Nv. ${petB.level} • \`${petB.element}\`)`,
+    '',
+    '💎 **TERMOS DO COMBATE**',
+    betText,
+    '',
+    `⏳ <@${targetId}>, responda ao desafio nos botões abaixo em até **60 segundos**:`,
+  ].join('\n');
+
+  return new EmbedBuilder()
+    .setColor('#f43f5e')
+    .setTitle('⚔️  ✦  Desafio de Duelo no Coliseu!')
+    .setDescription(desc)
+    .setFooter({ text: `${guildName || 'Servidor'} • Arena de Duelos de Pymons` })
+    .setTimestamp();
 }
 
 module.exports = {
@@ -123,18 +159,14 @@ module.exports = {
     }
 
     const { challenge, petA, petB } = challengeRes;
-    const betMsg = challenge.betAmount > 0 ? `\n💰 **Aposta:** **${formatCoins(challenge.betAmount)}**` : '\n*Duelo Amigável (Sem aposta de moedas)*';
-
-    const challengeEmbed = new EmbedBuilder()
-      .setColor('#f43f5e')
-      .setTitle('⚔️  ✦  Desafio de Duelo no Coliseu!')
-      .setDescription(
-        `<@${message.author.id}> está desafiando <@${target.id}> para uma batalha de Pymons!\n\n` +
-        `🥊 **${petA.emoji} ${petA.name}** (Lv ${petA.level}, ${petA.element}) **VS** **${petB.emoji} ${petB.name}** (Lv ${petB.level}, ${petB.element})\n` +
-        `${betMsg}\n\n` +
-        `<@${target.id}>, clique no botão abaixo em até 60 segundos para aceitar ou recusar:`
-      )
-      .setFooter({ text: `${message.guild?.name || 'Servidor'} • Arena de Duelos de Pymons` });
+    const challengeEmbed = buildChallengeEmbed(
+      message.author.id,
+      target.id,
+      petA,
+      petB,
+      challenge.betAmount,
+      message.guild?.name
+    );
 
     const buttons = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -185,18 +217,14 @@ module.exports = {
     }
 
     const { challenge, petA, petB } = challengeRes;
-    const betMsg = challenge.betAmount > 0 ? `\n💰 **Aposta:** **${formatCoins(challenge.betAmount)}**` : '\n*Duelo Amigável (Sem aposta de moedas)*';
-
-    const challengeEmbed = new EmbedBuilder()
-      .setColor('#f43f5e')
-      .setTitle('⚔️  ✦  Desafio de Duelo no Coliseu!')
-      .setDescription(
-        `<@${interaction.user.id}> está desafiando <@${target.id}> para uma batalha de Pymons!\n\n` +
-        `🥊 **${petA.emoji} ${petA.name}** (Lv ${petA.level}, ${petA.element}) **VS** **${petB.emoji} ${petB.name}** (Lv ${petB.level}, ${petB.element})\n` +
-        `${betMsg}\n\n` +
-        `<@${target.id}>, clique no botão abaixo em até 60 segundos para aceitar ou recusar:`
-      )
-      .setFooter({ text: `${interaction.guild?.name || 'Servidor'} • Arena de Duelos de Pymons` });
+    const challengeEmbed = buildChallengeEmbed(
+      interaction.user.id,
+      target.id,
+      petA,
+      petB,
+      challenge.betAmount,
+      interaction.guild?.name
+    );
 
     const buttons = new ActionRowBuilder().addComponents(
       new ButtonBuilder()

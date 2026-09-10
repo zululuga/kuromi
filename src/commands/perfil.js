@@ -82,15 +82,27 @@ function buildTitlesView(targetUser, viewerId) {
   const ownedTitles = account.titles || [];
   const equippedId = account.equippedTitle;
 
+  const equippedDisplay = equippedId && titlesCatalog[equippedId]
+    ? `> ${titlesCatalog[equippedId].emoji} **${titlesCatalog[equippedId].name}**\n> *« ${titlesCatalog[equippedId].desc} »*`
+    : '> 🕊️ *Nenhum título equipado (Exibição padrão)*';
+
+  const desc = [
+    'Personalize o cabeçalho do seu perfil com títulos de prestígio!',
+    '',
+    '🌱 **SEU SALDO**',
+    `> 🌱 **Feijões Mágicos:** **${account.magicBeans || 0} 🌱**`,
+    '',
+    '👑 **TÍTULO ATUALMENTE EQUIPADO**',
+    equippedDisplay,
+    '',
+    '✨ **CATÁLOGO & AQUISIÇÕES**',
+    'Escolha um título no menu suspenso abaixo para **comprar** ou **equipar**:',
+  ].join('\n');
+
   const embed = new EmbedBuilder()
     .setColor(KUROMI_COLORS.gold || '#facc15')
     .setTitle(`👑  ✦  Galeria de Títulos — ${targetUser.displayName || targetUser.username}`)
-    .setDescription(
-      `Personalize o cabeçalho do seu perfil com títulos de prestígio!\n` +
-      `🌱 **Seu Saldo de Feijões Mágicos:** **${account.magicBeans || 0} 🌱**\n\n` +
-      `**Título Equipado:** ${equippedId && titlesCatalog[equippedId] ? `${titlesCatalog[equippedId].emoji} **${titlesCatalog[equippedId].name}**` : '*Nenhum (Padrão)*'}\n\n` +
-      `*Selecione um título no menu abaixo para comprar ou equipar:*`
-    )
+    .setDescription(desc)
     .setThumbnail(targetUser.displayAvatarURL({ dynamic: true, size: 256 }))
     .setFooter({ text: 'Títulos de Prestígio • Adquira com Feijões Mágicos (/diario ou Pymon Nv. 100)' })
     .setTimestamp();

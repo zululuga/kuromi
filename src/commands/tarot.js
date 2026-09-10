@@ -43,14 +43,20 @@ function buildTarotEmbed(result, guild) {
   const isReversed = orientation === 'REVERSED';
   const guildName = guild?.name || '';
 
+  const desc = [
+    `🔮 **CARTA:** **${card.num ? `${card.num}. ` : ''}${card.name}**  (\`${getDisplayOrientation(orientation)}\`)`,
+    '',
+    '✨ **PALAVRAS-CHAVE**',
+    `> *${card.keywords.join('  •  ')}*`,
+    '',
+    '📜 **MENSAGEM DO DESTINO**',
+    `> "${isReversed ? card.reversed : card.upright}"`,
+  ].join('\n');
+
   const embed = new EmbedBuilder()
     .setColor(isReversed ? '#f43f5e' : '#c084fc')
-    .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Tarot${guildName ? ` — ${guildName}` : ''}  ✦  ${getDisplayOrientation(orientation)}`)
-    .setDescription(
-      `### **${card.num ? `${card.num}. ` : ''}${card.name}**\n\n` +
-      `*${card.keywords.join(' • ')}*\n\n` +
-      `> "${isReversed ? card.reversed : card.upright}"`
-    )
+    .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Tarot${guildName ? ` — ${guildName}` : ''}`)
+    .setDescription(desc)
     .setImage('attachment://tarot_cringelandia.png')
     .setFooter({
       text: paid
@@ -64,14 +70,20 @@ function buildTarotEmbed(result, guild) {
 
 function buildAlreadyDrawnEmbed(remainingTime, guild) {
   const guildName = guild?.name || '';
+  const desc = [
+    '🔮 **Você já tirou sua carta de hoje!**',
+    '',
+    '⏳ **PRÓXIMA TIRAGEM GRATUITA**',
+    `> Disponível em **${remainingTime.formatted}** (às 00:00 BRT).`,
+    '',
+    '✨ **SUBORNO DO DESTINO**',
+    '> Não quer esperar ou quer tentar uma nova sorte? Você pode forçar uma nova leitura no botão abaixo por **350 Moedinhas**.',
+  ].join('\n');
+
   return new EmbedBuilder()
     .setColor('#a855f7')
     .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Tarot${guildName ? ` — ${guildName}` : ''}`)
-    .setDescription(
-      `🔮 Você já tirou sua carta de hoje!\n\n` +
-      `Sua próxima tiragem gratuita estará disponível em **${remainingTime.formatted}** (às 00:00 BRT).\n\n` +
-      `Se não quiser esperar ou quiser tentar uma nova sorte, você pode subornar a leitura clicando no botão abaixo.`
-    )
+    .setDescription(desc)
     .setFooter({ text: 'Tarot • Descubra o que as cartas reservam para você' })
     .setTimestamp();
 }

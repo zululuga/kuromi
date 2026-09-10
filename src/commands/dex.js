@@ -101,28 +101,43 @@ function buildDexView(userId, userTag, selectedKey = 'cinna', viewShiny = false)
       ? (currentViewShiny ? '🌟 **Exibindo Versão Shiny**' : '✨ **Shiny Desbloqueado!** *(Clique em Alternar Shiny)*')
       : '🔒 *Shiny ainda não descoberto*';
 
-    embed.setDescription(
-      `📖 **Compêndio Oficial de Pymons** • Explorador: **${userTag}**\n` +
-      `📊 **Progresso:** **${discoveredCount}/${totalCount} Descobertos** • **${discoveredShinyCount} Shinies**\n\n` +
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-      `🐾 **Espécie:** **${monsterDef.name}**\n` +
-      `✨ **Raridade:** \`${monsterDef.rarity || 'COMUM'}\` • **Elemento:** \`${monsterDef.element}\`\n` +
-      `> *"${monsterDef.description}"*\n\n` +
-      `💖 **HP Base:** ${monsterDef.baseStats?.hp || 55}  •  ⚔️ **ATK:** ${monsterDef.baseStats?.atk || 12}\n` +
-      `🛡️ **DEF:** ${monsterDef.baseStats?.def || 12}  •  💨 **SPD:** ${monsterDef.baseStats?.spd || 12}\n\n` +
-      `🌟 **Variante Shiny:** ${shinyStatusText}`
-    );
+    const desc = [
+      `📖 **COMPÊNDIO OFICIAL DE PYMONS**`,
+      `> 👤 **Explorador:** ${userTag}`,
+      `> 📊 **Progresso Geral:** **${discoveredCount}/${totalCount} Descobertos**  •  ✨ **${discoveredShinyCount} Shinies**`,
+      '',
+      `🐾 **ESPÉCIE #${currentIndex + 1}: ${monsterDef.name.toUpperCase()}**`,
+      `> ✨ **Raridade:** \`${monsterDef.rarity || 'COMUM'}\`  •  🔮 **Elemento:** \`${monsterDef.element}\``,
+      `> *"${monsterDef.description}"*`,
+      '',
+      '📊 **ATRIBUTOS DE COMBATE BASE**',
+      `> ❤️ **HP:** ${monsterDef.baseStats?.hp || 55}  •  ⚔️ **ATK:** ${monsterDef.baseStats?.atk || 12}`,
+      `> 🛡️ **DEF:** ${monsterDef.baseStats?.def || 12}  •  💨 **SPD:** ${monsterDef.baseStats?.spd || 12}`,
+      '',
+      '✨ **VARIANTE SHINY**',
+      `> ${shinyStatusText}`,
+    ].join('\n');
+
+    embed.setDescription(desc);
   } else {
-    embed.setDescription(
-      `📖 **Compêndio Oficial de Pymons** • Explorador: **${userTag}**\n` +
-      `📊 **Progresso:** **${discoveredCount}/${totalCount} Descobertos** • **${discoveredShinyCount} Shinies**\n\n` +
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-      `🐾 **Espécie:** \`??? (${monsterDef.name[0]}???)\`\n` +
-      `✨ **Raridade:** \`???\` • **Elemento:** \`???\`\n` +
-      `> *"Esta criatura misteriosa ainda não foi registrada em sua jornada. Explore Dungeons ou choque ovos na Chocadeira para desvendar este Pymon!"*\n\n` +
-      `💖 **HP Base:** \`???\`  •  ⚔️ **ATK:** \`???\`\n` +
-      `🛡️ **DEF:** \`???\`  •  💨 **SPD:** \`???\``
-    );
+    const desc = [
+      `📖 **COMPÊNDIO OFICIAL DE PYMONS**`,
+      `> 👤 **Explorador:** ${userTag}`,
+      `> 📊 **Progresso Geral:** **${discoveredCount}/${totalCount} Descobertos**  •  ✨ **${discoveredShinyCount} Shinies**`,
+      '',
+      `🐾 **ESPÉCIE #${currentIndex + 1}: ??? (${monsterDef.name[0]}???)**`,
+      `> ✨ **Raridade:** \`???\`  •  🔮 **Elemento:** \`???\``,
+      `> *"Esta criatura misteriosa ainda não foi registrada em sua jornada. Explore Dungeons ou choque ovos na Chocadeira para desvendar este Pymon!"*`,
+      '',
+      '📊 **ATRIBUTOS DE COMBATE BASE**',
+      `> ❤️ **HP:** \`???\`  •  ⚔️ **ATK:** \`???\``,
+      `> 🛡️ **DEF:** \`???\`  •  💨 **SPD:** \`???\``,
+      '',
+      '✨ **VARIANTE SHINY**',
+      '> 🔒 *Espécie não descoberta*',
+    ].join('\n');
+
+    embed.setDescription(desc);
   }
 
   // Row 1: Menu Dropdown de Seleção de Pymon

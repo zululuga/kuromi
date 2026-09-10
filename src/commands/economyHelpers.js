@@ -21,81 +21,87 @@ function buildCurrencyFields(currencies) {
 }
 
 function buildWalletEmbed(user, currencies, position) {
+  const currencyLines = currencies.map((currency) =>
+    `> ${currency.emoji} **${currency.label}:** ${(Number(currency.amount) || 0).toLocaleString('pt-BR')}`
+  );
+
+  const desc = [
+    'Patrimônio e recursos acumulados em sua jornada:',
+    '',
+    '💎 **SALDOS DISPONÍVEIS**',
+    ...currencyLines,
+    '',
+    '🏆 **POSIÇÃO NO RANKING**',
+    `> 🏅 **Colocação:** ${position ? `#${position}` : 'Ainda sem colocação'}`,
+  ].join('\n');
+
   return new EmbedBuilder()
     .setColor(KUROMI_COLORS.gold)
     .setTitle(`🪙  ✦  Carteira de ${user.displayName || user.username}`)
-    .setDescription('Seus saldos e patrimônio acumulado.')
-    .addFields(...buildCurrencyFields(currencies), {
-      name: '🏆 Colocação em Moedinhas',
-      value: position ? `#${position}` : 'Ainda sem colocação',
-      inline: true,
-    })
+    .setDescription(desc)
     .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
-    .setFooter({ text: 'Economia Global • Use /diario e /trabalho para ganhar moedas' })
+    .setFooter({ text: 'Economia Global • Ganhe moedas em /diario, /trabalho e Dungeons' })
     .setTimestamp();
 }
 
 /**
- * Constrói o Embed de perfil com layout exuberante e dados integrados de Pymons e Dex.
+ * Constrói o Embed de perfil com layout exuberante, espaçamento generoso e dados integrados.
  */
 function buildProfileEmbed({ user, account, spouse, rankPosition, professionLabel, activePet, dexStats, equippedTitle }) {
   const titlePrefix = equippedTitle ? `[${equippedTitle.emoji} ${equippedTitle.name}] ` : '';
   const coinsVal = Number(account?.coins) || 0;
   const magicBeansVal = Number(account?.magicBeans) || 0;
   const workVal = Number(account?.workCount) || 0;
+  const rankStr = rankPosition ? `#${rankPosition} Global` : 'Ainda sem colocação';
+
+  const dedicationLevel =
+    workVal >= 50 ? 'Mestre' : (workVal >= 20 ? 'Veterano' : (workVal >= 5 ? 'Praticante' : 'Iniciante'));
 
   const petDisplay = activePet
-    ? `${activePet.emoji || '🐾'} **${activePet.name}** (Nv. ${activePet.level || 1}) ${activePet.shiny ? '✨ *(Shiny Raro)*' : ''}\n> ❤️ HP: **${activePet.stats?.hp || 55}/${activePet.stats?.maxHp || 55}**  •  ⚡ Energia: **${activePet.energy || 100}%**  •  🍖 Fome: **${activePet.hunger || 100}%**`
-    : '*Nenhum Pymon ativo. Use `/pymons` para iniciar sua jornada!*';
+    ? `> ${activePet.emoji || '🐾'} **${activePet.name}** (Nv. ${activePet.level || 1}) ${activePet.shiny ? '✨ *(Shiny Raro)*' : ''}\n` +
+      `> ❤️ **HP:** ${activePet.stats?.hp || 55}/${activePet.stats?.maxHp || 55}  •  ⚡ **Energia:** ${activePet.energy || 100}%  •  🍖 **Fome:** ${activePet.hunger || 100}%\n` +
+      `> 🧭 **Expedições:** ${activePet.totalExploracoes || 0}  •  ⚔️ **Duelos:** ${activePet.duelosVencidos || 0}V / ${activePet.duelosPerdidos || 0}D`
+    : '> *Nenhum Pymon ativo no momento. Use `/pymons` para adotar seu companheiro!*';
 
   const dexDisplay = dexStats
-    ? `📖 **${dexStats.totalUnlocked}/${dexStats.totalSpecies}** Espécies  •  ✨ **${dexStats.totalShinies}** Shinies`
-    : '📖 **0/10** Espécies';
+    ? `> 📖 **Descobertos:** ${dexStats.totalUnlocked}/${dexStats.totalSpecies} Espécies\n> ✨ **Shinies:** ${dexStats.totalShinies} Desbloqueados`
+    : '> 📖 **0/10** Espécies';
 
-  const adventuresDisplay = activePet
-    ? `🧭 **${activePet.totalExploracoes || 0}** Expedições  •  ⚔️ **${activePet.duelosVencidos || 0}V / ${activePet.duelosPerdidos || 0}D**`
-    : '🧭 **0** Expedições';
+  const marriageDisplay = spouse
+    ? `> 💍 **Casado(a) com:** ${spouse}`
+    : '> 🕊️ *Solteiro(a) • Coração Livre*';
+
+  const titleQuote = equippedTitle
+    ? `> *« ${equippedTitle.desc} »*`
+    : '> *Aventureiro destemido explorando o universo de Pymons.*';
+
+  const description = [
+    titleQuote,
+    '',
+    '💎 **TESOURO & ECONOMIA**',
+    `> 🪙 **Moedinhas:** ${coinsVal.toLocaleString('pt-BR')}`,
+    `> 🌱 **Feijões Mágicos:** ${magicBeansVal.toLocaleString('pt-BR')} 🌱`,
+    `> 🏆 **Ranking:** ${rankStr}`,
+    '',
+    '💼 **CARREIRA & VOCAÇÃO**',
+    `> 🔨 **Profissão:** ${professionLabel || 'Nenhuma (Use `/profissao`)'}`,
+    `> 📈 **Expedientes:** ${workVal} trabalhos concluídos`,
+    `> ⭐ **Dedicação:** ${dedicationLevel}`,
+    '',
+    '🐾 **COMPANHEIRO PYMON**',
+    petDisplay,
+    '',
+    '📖 **COMPÊNDIO DA DEX**',
+    dexDisplay,
+    '',
+    '💍 **VÍNCULO SOCIAL**',
+    marriageDisplay,
+  ].join('\n');
 
   return new EmbedBuilder()
     .setColor(KUROMI_COLORS.violet || '#c084fc')
     .setTitle(`👤  ✦  ${titlePrefix}${user.displayName || user.username}`)
-    .setDescription(
-      equippedTitle
-        ? `> *« ${equippedTitle.desc} »*`
-        : '> *Aventureiro destemido explorando o universo de Pymons.*'
-    )
-    .addFields(
-      {
-        name: '💎 Tesouro & Economia',
-        value: `🪙 **Moedinhas:** ${coinsVal.toLocaleString('pt-BR')}\n🌱 **Feijões Mágicos:** ${magicBeansVal.toLocaleString('pt-BR')} 🌱\n🏆 **Ranking:** ${rankPosition ? `#${rankPosition} Global` : 'Não ranqueado'}`,
-        inline: true,
-      },
-      {
-        name: '💼 Carreira & Vocação',
-        value: `🔨 **Profissão:** ${professionLabel || 'Nenhuma'}\n📈 **Expedientes:** ${workVal} trabalhos\n⭐ **Dedicação:** ${workVal >= 50 ? 'Mestre' : (workVal >= 20 ? 'Veterano' : (workVal >= 5 ? 'Praticante' : 'Iniciante'))}`,
-        inline: true,
-      },
-      {
-        name: '💍 Vínculo Social',
-        value: spouse ? `💍 Casado(a) com ${spouse}` : '🕊️ Solteiro(a) • Coração Livre',
-        inline: false,
-      },
-      {
-        name: '🐾 Companheiro Pymon',
-        value: petDisplay,
-        inline: false,
-      },
-      {
-        name: '📖 Compêndio da Dex',
-        value: dexDisplay,
-        inline: true,
-      },
-      {
-        name: '🧭 Aventuras & Duelos',
-        value: adventuresDisplay,
-        inline: true,
-      }
-    )
+    .setDescription(description)
     .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
     .setFooter({ text: 'Perfil de Aventureiro • Use os botões abaixo para gerenciar títulos' })
     .setTimestamp();
@@ -107,21 +113,32 @@ function buildRankingEmbed(entries, memberMap, viewerRank) {
         const member = memberMap.get(entry.userId);
         const name = member?.displayName || `Usuário ${entry.userId}`;
         const beans = Number(entry.magicBeans) || 0;
-        const beansText = beans > 0 ? ` • ${beans} 🌱` : '';
-        return `**${index + 1}.** ${name} — ${formatCoins(entry.coins)}${beansText}`;
+        const beansText = beans > 0 ? `  •  🌱 **${beans} Feijões**` : '';
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `**#${index + 1}**`;
+        return `${medal} **${name}**\n> 🪙 **${formatCoins(entry.coins)}**${beansText}`;
       })
-    : ['Ainda não há usuários no ranking.'];
+    : ['*Ainda não há usuários no ranking.*'];
+
+  const desc = [
+    'Os maiores magnatas e aventureiros mais prósperos:',
+    '',
+    lines.join('\n\n'),
+  ].join('\n');
 
   const embed = new EmbedBuilder()
     .setColor(KUROMI_COLORS.pink)
     .setTitle('🏆  ✦  Ranking Global de Economia')
-    .setDescription(lines.join('\n'))
+    .setDescription(desc)
+    .setFooter({ text: 'Ranking Global • Atualizado em tempo real' })
     .setTimestamp();
 
   if (viewerRank) {
     const viewer = memberMap.get(viewerRank.userId);
     if (viewer) embed.setThumbnail(viewer.user.displayAvatarURL({ dynamic: true, size: 256 }));
-    embed.addFields({ name: 'Sua colocação', value: `#${viewerRank.position} — ${formatCoins(viewerRank.coins)}` });
+    embed.addFields({
+      name: '👤 Sua Colocação Atual',
+      value: `> 🏅 **Posição #${viewerRank.position}** com **${formatCoins(viewerRank.coins)}**`,
+    });
   }
 
   return embed;

@@ -25,15 +25,21 @@ function buildFile(guild) {
 
 function buildSummary(guild, count, animated) {
   const guildName = guild?.name || 'Servidor';
+  const desc = [
+    `Catálogo completo de emojis customizados do servidor **${guildName}**:`,
+    '',
+    '📊 **ESTATÍSTICAS DOS EMOJIS**',
+    `> 🎀 **Total de Emojis:** **${count}**`,
+    `> ✨ **Emojis Animados:** **${animated}**`,
+    `> 📄 **Arquivo Anexo:** \`emojis-do-servidor.json\``,
+    '',
+    '📥 *O arquivo JSON com a lista completa foi anexado a esta mensagem.*',
+  ].join('\n');
+
   return new EmbedBuilder()
     .setColor('#e60067')
-    .setTitle(`🎀  ✦  Lista de emojis de ${guildName}`)
-    .setDescription(`Pronto. Eu organizei os emojis de **${guildName}** porque aparentemente alguém precisava fazer isso.`)
-    .addFields(
-      { name: 'Total', value: String(count), inline: true },
-      { name: 'Animados', value: String(animated), inline: true },
-      { name: 'Arquivo', value: '`emojis-do-servidor.json`', inline: true }
-    )
+    .setTitle(`🎀  ✦  Lista de Emojis — ${guildName}`)
+    .setDescription(desc)
     .setFooter({ text: `${guildName} • Catálogo baixável de emojis` })
     .setTimestamp();
 }

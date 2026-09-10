@@ -74,24 +74,34 @@ function buildShipEmbed(memberA, memberB, percent) {
     .setTimestamp();
 
   if (isSpecial) {
+    const desc = [
+      `**${nameA}**  ✦  **${nameB}**`,
+      '',
+      '💍 **NOME DO CASAL**',
+      `> 💖 **${shipName}**`,
+      '',
+      '✨ **COMPATIBILIDADE: 100% DE AMOR ABSOLUTO**',
+      `> ✧ ✦ 💖 **${verdict.message}** 💖 ✦ ✧`,
+    ].join('\n');
+
     embed
       .setTitle(`💖  ✦  Ship Eterno — ${guildName}  ✦  💖`)
-      .setDescription(
-        `**${nameA}**  ✦  **${nameB}**\n\n` +
-        `💍 Nome do casal: **${shipName}**\n\n` +
-        `✨ **100% de amor absoluto** ✨\n\n` +
-        `> ✧ ✦ 💖 **${verdict.message}** 💖 ✦ ✧`
-      )
+      .setDescription(desc)
       .setFooter({ text: `${guildName} • Conexão predestinada e inabalável` });
   } else {
+    const desc = [
+      `**${nameA}**  x  **${nameB}**`,
+      '',
+      '💑 **NOME DO CASAL**',
+      `> 🌸 **${shipName}**`,
+      '',
+      `📊 **COMPATIBILIDADE: ${percent}% DE AFINIDADE**`,
+      `> *${verdict.message}*`,
+    ].join('\n');
+
     embed
       .setTitle(`${verdict.emoji}  ✦  Ship — ${guildName}`)
-      .setDescription(
-        `**${nameA}** x **${nameB}**\n\n` +
-        `💑 Nome do casal: **${shipName}**\n\n` +
-        `**${percent}% de amor**\n\n` +
-        `> *${verdict.message}*`
-      )
+      .setDescription(desc)
       .setFooter({ text: `${guildName} • Compatibilidade de Membros` });
   }
 

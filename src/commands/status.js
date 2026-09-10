@@ -3,15 +3,21 @@ const { STATUS_IMAGE_URL } = require('../config');
 const { STATUS } = require('./commandNames');
 
 function buildStatusEmbed(serverName, userTag) {
+  const desc = [
+    'Sistema operacional e serviços ativos em perfeita execução.',
+    '',
+    '📡 **DADOS DA SESSÃO**',
+    `> 🏠 **Servidor:** ${serverName || 'Privado / DM'}`,
+    `> 👤 **Operador:** ${userTag}`,
+    `> 🟢 **Status:** 100% Online & Monitorando`,
+  ].join('\n');
+
   return new EmbedBuilder()
     .setColor('#22c55e')
-    .setTitle('✅  ✦  Kuromi online')
-    .setDescription('Estou monitorando o servidor e pronta para ajudar. Não que eu estivesse esperando por você.')
-    .addFields(
-      { name: 'Servidor', value: serverName || 'N/A' },
-      { name: 'Usuário', value: userTag }
-    )
+    .setTitle('✅  ✦  Status do Sistema — Online')
+    .setDescription(desc)
     .setImage(STATUS_IMAGE_URL)
+    .setFooter({ text: 'Status • Monitoramento Operacional' })
     .setTimestamp();
 }
 

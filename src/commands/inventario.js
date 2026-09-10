@@ -17,39 +17,39 @@ function buildInventoryEmbed(userId, userTag, selectedItemId = null) {
   const entries = Object.entries(inv).filter(([, count]) => count > 0);
   const activePet = getActivePet(userId);
 
-  const embed = new EmbedBuilder()
-    .setColor(PYXIE_COLORS.magenta)
-    .setTitle(`🎒  ✦  Mochila de ${userTag}`)
-    .setDescription(
-      `**Pet Ativo:** ${activePet ? `${activePet.emoji} **${activePet.name}** (Nv. ${activePet.level})` : '*Nenhum pet ativo*'}\n\n` +
-      'Selecione um item no menu abaixo para usar no seu pet, chocar ou abrir.'
-    )
-    .setFooter({ text: 'Mochila • Inventário Pessoal' })
-    .setTimestamp();
+  const petLine = activePet
+    ? `> ${activePet.emoji} **${activePet.name}** (Nv. ${activePet.level})`
+    : '> *Nenhum Pymon ativo no momento*';
 
-  if (entries.length === 0) {
-    embed.addFields({
-      name: 'Mochila Vazia',
-      value: 'Você ainda não possui nenhum item. Visite a `/loja` ou explore as dungeons com seu pet!',
-    });
-  } else {
-    entries.forEach(([itemId, count]) => {
-      const item = getItemDefinition(itemId);
-      if (item) {
+  const itemLines = entries.length === 0
+    ? ['> *Sua mochila está vazia! Visite a `/loja` ou explore as dungeons com seu pet.*']
+    : entries.map(([itemId, count]) => {
+        const item = getItemDefinition(itemId);
+        if (!item) return `> • \`${itemId}\`: **${count}x**`;
         const isSelected = item.id === selectedItemId;
         const pointer = isSelected ? '👉 ' : '';
         const fxText = formatItemEffects(item);
         const fxLine = fxText ? `\n> 📊 **Efeito:** ${fxText}` : '';
-        embed.addFields({
-          name: `${pointer}${item.emoji} ${item.name} (x${count})`,
-          value: `> *${item.description}*${fxLine}\n> Categoria: \`${item.category}\` • Venda: **${formatCoins(item.sellPrice || 0)}**`,
-          inline: false,
-        });
-      }
-    });
-  }
+        return `**${pointer}${item.emoji} ${item.name}** (x${count})\n> *${item.description}*${fxLine}\n> 🏷️ Categoria: \`${item.category}\`  •  🪙 Venda: **${formatCoins(item.sellPrice || 0)}**`;
+      });
 
-  return embed;
+  const desc = [
+    '🐾 **COMPANHEIRO ATIVO**',
+    petLine,
+    '',
+    '📦 **ITENS GUARDADOS NA MOCHILA**',
+    '',
+    itemLines.join('\n\n'),
+    '',
+    '💡 *Selecione um item no menu suspenso abaixo para usá-lo ou vendê-lo:*',
+  ].join('\n');
+
+  return new EmbedBuilder()
+    .setColor(PYXIE_COLORS.magenta)
+    .setTitle(`🎒  ✦  Mochila de ${userTag}`)
+    .setDescription(desc)
+    .setFooter({ text: 'Mochila • Inventário Pessoal' })
+    .setTimestamp();
 }
 
 function buildInventoryComponents(userId, selectedItemId = null) {

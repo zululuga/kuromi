@@ -26,24 +26,32 @@ function formatRemaining(remainingMs) {
 
 function buildAgendaEmbed(guild, now = Date.now()) {
   const schedule = getAutomationSchedule(now);
-  const fields = schedule.length
-    ? schedule.map((automation) => ({
-        name: `${getAnimatedEmoji(guild, [automation.id, 'calendar', 'clock'], automation.emoji)} ${automation.name}`,
-        value: `**Próxima ${automation.action}:** <t:${Math.floor(automation.nextAt / 1000)}:F>\n` +
-          `**Em:** ${formatDate(automation.nextAt)} (Brasília)\n` +
-          `**Falta:** ${formatRemaining(automation.remainingMs)}\n` +
-          `**Canal:** <#${automation.channelId}>\n` +
-          `**Frequência:** ${automation.frequency}`,
-        inline: false,
-      }))
-    : [{ name: 'Nenhuma automação registrada', value: 'Nenhuma automação programada no momento. Tente novamente em alguns segundos.' }];
-
   const guildName = guild?.name || '';
+
+  const autoLines = schedule.length
+    ? schedule.map((automation) => {
+        const emoji = getAnimatedEmoji(guild, [automation.id, 'calendar', 'clock'], automation.emoji);
+        return [
+          `**${emoji} ${automation.name}**`,
+          `> ⏰ **Próxima ${automation.action}:** <t:${Math.floor(automation.nextAt / 1000)}:F>`,
+          `> 📅 **Horário:** ${formatDate(automation.nextAt)} (Brasília)`,
+          `> ⏳ **Tempo Restante:** ${formatRemaining(automation.remainingMs)}`,
+          `> 📢 **Canal:** <#${automation.channelId}>`,
+          `> 🔁 **Frequência:** ${automation.frequency}`,
+        ].join('\n');
+      })
+    : ['> *Nenhuma automação programada no momento.*'];
+
+  const desc = [
+    'Próximas tarefas automáticas e verificações agendadas:',
+    '',
+    autoLines.join('\n\n'),
+  ].join('\n');
+
   return new EmbedBuilder()
     .setColor('#8b5cf6')
     .setTitle(`📅  ✦  Agenda de Automações${guildName ? ` — ${guildName}` : ''}`)
-    .setDescription('Próximas chamadas automáticas conhecidas. O bump é uma verificação; ele só publica se o canal precisar.')
-    .addFields(fields)
+    .setDescription(desc)
     .setFooter({ text: `${guildName ? `${guildName} • ` : ''}Cronograma e Lembretes` })
     .setTimestamp();
 }

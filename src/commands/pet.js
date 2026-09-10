@@ -94,17 +94,23 @@ function buildPetTab(userId, userTag, subMode = null) {
   }
 
   const shinyTag = activePet.shiny ? ' ✨ **Shiny**' : '';
+  const desc = [
+    `👤 **Treinador:** ${userTag}`,
+    `🐾 **Espécie:** ${activePet.species}  •  🔮 **Elemento:** \`${activePet.element}\`  •  ⭐ **Nível:** **${activePet.level}**`,
+    '',
+    '💖 **VITAIS & BEM-ESTAR**',
+    `> ❤️ **Vida:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  •  🍖 **Fome:** **${activePet.hunger}%**`,
+    `> ⚡ **Energia:** **${activePet.energy}%**  •  😊 **Humor:** **${activePet.happiness}%**`,
+    '',
+    '📈 **PROGRESSO & COMBATE**',
+    `> ⭐ **XP:** **${activePet.xp}/${activePet.xpToNext}**`,
+    `> 🏆 **Duelos:** **${activePet.duelosVencidos || 0}V - ${activePet.duelosPerdidos || 0}D**`,
+  ].join('\n');
+
   const embed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.lilac)
     .setTitle(`${activePet.emoji}  ✦  ${activePet.name}${shinyTag}`)
-    .setDescription(
-      `**Treinador:** ${userTag}\n` +
-      `**Espécie:** ${activePet.species} • **Elemento:** \`${activePet.element}\` • **Nível:** **${activePet.level}**\n\n` +
-      `💖 **Vida:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  •  🍖 **Fome:** **${activePet.hunger}%**\n` +
-      `⚡ **Energia:** **${activePet.energy}%**  •  😊 **Humor:** **${activePet.happiness}%**\n\n` +
-      `⭐ **XP:** **${activePet.xp}/${activePet.xpToNext}**\n` +
-      `🏆 **Duelos:** **${activePet.duelosVencidos || 0}V - ${activePet.duelosPerdidos || 0}D**`
-    )
+    .setDescription(desc)
     .setImage('attachment://pet_card.png')
     .setFooter({ text: 'Pymons • Painel Tamagotchi' })
     .setTimestamp();
@@ -230,28 +236,33 @@ function buildIncubatorTab(userId, userTag) {
     return def && def.effects && def.effects.isEgg && count > 0;
   });
 
+  const slotLines = incubator.slots.map((s) => {
+    if (s.empty) {
+      return `🪺 **Ninho #${s.slotIndex + 1}**\n> *Ninho Vazio (Coloque um ovo para chocar)*`;
+    }
+    if (s.ready) {
+      return `✨ **Ninho #${s.slotIndex + 1}:** ${s.emoji} **${s.eggName}**\n> 🐣 **PRONTO PARA CHOCAR!** *(Clique em Quebrar Casca)*`;
+    }
+    const mins = Math.ceil(s.tempoRestanteMs / 60000);
+    const hrs = Math.floor(mins / 60);
+    const remMins = mins % 60;
+    const timeStr = hrs > 0 ? `${hrs}h ${remMins}m` : `${remMins}m`;
+    return `🪺 **Ninho #${s.slotIndex + 1}:** ${s.emoji} **${s.eggName}**\n> ⏳ **Faltam:** ${timeStr}  •  📊 **Progresso:** ${s.progressPercent}% chocado`;
+  });
+
+  const desc = [
+    `*Chocadeira mágica com taxa elevada de criaturas **SHINY (15% a 20%)**!*`,
+    '',
+    `🏡 **Capacidade:** **${incubator.activeCount}/${incubator.maxSlots} ninhos ocupados**`,
+    '',
+    '🪺 **STATUS DOS NINHOS**',
+    slotLines.join('\n\n'),
+  ].join('\n');
+
   const embed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.emerald)
     .setTitle(`🥚  ✦  Chocadeira Encantada de Pyxie — ${userTag}`)
-    .setDescription(
-      `*Chocadeira mágica com taxa elevada de criaturas **SHINY (15% a 20%)**!*\n` +
-      `Capacidade: **${incubator.activeCount}/${incubator.maxSlots} ninhos ocupados**.\n\n` +
-      incubator.slots
-        .map((s) => {
-          if (s.empty) {
-            return `🪺 **Slot #${s.slotIndex + 1}:** *Ninho Vazio (Coloque um ovo para chocar)*`;
-          }
-          if (s.ready) {
-            return `✨ **Slot #${s.slotIndex + 1}:** ${s.emoji} **${s.eggName}** — 🐣 **PRONTO PARA CHOCAR!**`;
-          }
-          const mins = Math.ceil(s.tempoRestanteMs / 60000);
-          const hrs = Math.floor(mins / 60);
-          const remMins = mins % 60;
-          const timeStr = hrs > 0 ? `${hrs}h ${remMins}m` : `${remMins}m`;
-          return `🪺 **Slot #${s.slotIndex + 1}:** ${s.emoji} **${s.eggName}** — ⏳ Faltam **${timeStr}** (${s.progressPercent}% chocado)`;
-        })
-        .join('\n')
-    )
+    .setDescription(desc)
     .setFooter({ text: 'Chocadeira • Incubação em tempo real' })
     .setTimestamp();
 
@@ -323,18 +334,23 @@ function buildDungeonTab(userId, userTag) {
 
   if (!run) {
     const zones = getDungeonZones();
+    const desc = [
+      `Prepare **${activePet.name}** (${activePet.emoji} Nv. ${activePet.level}) para explorar labirintos misteriosos em grade 2D com névoa de guerra!`,
+      '',
+      '⚡ **CONDIÇÃO DO EXPLORADOR**',
+      `> ⚡ **Energia:** **${activePet.energy}/100 ⚡** (Custo: **~10 ⚡/movimento**)`,
+      `> ❤️ **HP:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  •  🍖 **Fome:** **${activePet.hunger}%**`,
+      '',
+      '🌲 **ZONAS DE EXPEDIÇÃO DISPONÍVEIS**',
+      zones
+        .map((z) => `${z.emoji} **${z.name}** (Nv. Mín: ${z.minLevel})\n> *${z.desc}*`)
+        .join('\n\n'),
+    ].join('\n');
+
     const embed = new EmbedBuilder()
       .setColor(PYXIE_COLORS.cyan)
       .setTitle(`🗺️  ✦  Masmorras & Dungeons Procedurais 2D — ${userTag}`)
-      .setDescription(
-        `Prepare **${activePet.name}** (${activePet.emoji} Nv. ${activePet.level}) para explorar labirintos misteriosos em grade 2D com névoa de guerra!\n\n` +
-        `⚡ **Energia:** **${activePet.energy}/100 ⚡** (Custo: **~10 ⚡/movimento**)\n` +
-        `💖 **HP:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  •  🍖 **Fome:** **${activePet.hunger}%**\n\n` +
-        `**Zonas Disponíveis:**\n\n` +
-        zones
-          .map((z) => `${z.emoji} **${z.name}** (Nv. Mín: ${z.minLevel})\n> *${z.desc}*`)
-          .join('\n\n')
-      )
+      .setDescription(desc)
       .setFooter({ text: 'Dungeons • Movimente-se em grade • Fome 0% ou 0 HP impedem exploração' })
       .setTimestamp();
 
@@ -374,17 +390,24 @@ function buildDungeonTab(userId, userTag) {
   }
 
   const isExhausted = activePet.energy < 8 || run.isExhausted;
+  const desc = [
+    `🐾 **Explorador:** **${activePet.name}** (${activePet.emoji} Nv. ${activePet.level})`,
+    `📍 **Posição:** Quadrante **(${run.playerPos.x + 1}, ${run.playerPos.y + 1})**  •  🏞️ **Terreno:** ${run.currentTerrain?.emoji || '🌿'} **${run.currentTerrain?.name || 'Trilha'}**`,
+    '',
+    '💖 **STATUS DO EXPLORADOR**',
+    `> ❤️ **HP:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  •  ⚡ **Energia:** **${activePet.energy} ⚡**  •  🍖 **Fome:** **${activePet.hunger}%**`,
+    '',
+    '💰 **ESPÓLIOS ACUMULADOS**',
+    `> 🪙 **Moedas:** **+${run.coinsAccumulated}**  •  📦 **Baús:** **${(run.chestsFound || []).length}**  •  🥚 **Ovos:** **${(run.eggsFound || []).length}**`,
+    '',
+    '📜 **DIÁRIO DE BORDO**',
+    run.logs.map((l) => `> ${l}`).join('\n'),
+  ].join('\n');
+
   const embed = new EmbedBuilder()
     .setColor(isExhausted ? PYXIE_COLORS.crimson : PYXIE_COLORS.violet)
     .setTitle(`🧭  ✦  ${run.zone.emoji} ${run.zone.name} — Mapa 2D`)
-    .setDescription(
-      `**Explorador:** **${activePet.name}** (${activePet.emoji} Nv. ${activePet.level})\n` +
-      `📍 **Posição:** Quadrante **(${run.playerPos.x + 1}, ${run.playerPos.y + 1})**  •  🏞️ **Terreno:** ${run.currentTerrain?.emoji || '🌿'} **${run.currentTerrain?.name || 'Trilha'}**\n` +
-      `💖 **HP:** **${activePet.stats.hp}/${activePet.stats.maxHp}**  •  ⚡ **Energia:** **${activePet.energy} ⚡**  •  🍖 **Fome:** **${activePet.hunger}%**\n\n` +
-      `💰 **Moedas:** **+${run.coinsAccumulated}**  •  📦 **Baús:** **${(run.chestsFound || []).length}**  •  🥚 **Ovos:** **${(run.eggsFound || []).length}**\n\n` +
-      `📜 **Diário de Bordo:**\n` +
-      run.logs.map((l) => `> ${l}`).join('\n')
-    )
+    .setDescription(desc)
     .setImage('attachment://dungeon_map.png')
     .setFooter({ text: 'Dungeon 2D • Use o D-Pad para navegar • Resgate voluntário salva 100% dos espólios' })
     .setTimestamp();
@@ -446,22 +469,26 @@ function buildInventoryTab(userId, userTag) {
   const activePet = getActivePet(userId);
   const entries = Object.entries(inventory).filter(([_, count]) => count > 0);
 
+  const desc = [
+    `💰 **Saldo em Carteira:** **${formatCoins(account.coins)}**`,
+    `🐾 **Pymon Ativo:** ${activePet ? `${activePet.emoji} **${activePet.name}** (Nv. ${activePet.level})` : '*Nenhum ativo*'}`,
+    '',
+    '📦 **ITENS NA MOCHILA**',
+    entries.length === 0
+      ? '> *Sua mochila está completamente vazia! Visite a Lojinha ou resgate o Kit Inicial.*'
+      : entries
+          .map(([id, count]) => {
+            const def = getItemDefinition(id);
+            if (!def) return `> • \`${id}\`: **${count}x**`;
+            return `> ${def.emoji} **${def.name}** (x${count})\n> *${def.description}*`;
+          })
+          .join('\n\n'),
+  ].join('\n');
+
   const embed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.magenta)
     .setTitle(`🎒  ✦  Mochila Encantada — ${userTag}`)
-    .setDescription(
-      `💰 **Saldo:** **${formatCoins(account.coins)}**\n` +
-      `🐾 **Pet Ativo:** ${activePet ? `${activePet.emoji} ${activePet.name}` : '*Nenhum*'}\n\n` +
-      (entries.length === 0
-        ? '*Sua mochila está completamente vazia! Visite a Lojinha ou resgate o Kit Inicial.*'
-        : entries
-            .map(([id, count]) => {
-              const def = getItemDefinition(id);
-              if (!def) return `• \`${id}\`: **${count}x**`;
-              return `${def.emoji} **${def.name}** (x${count})\n> *${def.description}*`;
-            })
-            .join('\n\n'))
-    )
+    .setDescription(desc)
     .setFooter({ text: 'Mochila • Selecione um item no menu para usá-lo' })
     .setTimestamp();
 
@@ -529,19 +556,23 @@ function buildShopTab(userId, categoryOrTag = 'comida', maybeCategory = null) {
     melhoria: 'Melhorias & Ninhos',
   };
 
+  const desc = [
+    `💰 **Seu Saldo:** **${formatCoins(account.coins)}**`,
+    `📂 **Categoria:** **${catNames[category] || category}**`,
+    '',
+    '🛍️ **CATÁLOGO DISPONÍVEL**',
+    items
+      .map((item) => {
+        const buyText = item.buyPrice ? `— 🪙 **${formatCoins(item.buyPrice)}**` : '— *(Indisponível)*';
+        return `${item.emoji} **${item.name}** ${buyText}\n> *${item.description}*`;
+      })
+      .join('\n\n'),
+  ].join('\n');
+
   const embed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.gold)
     .setTitle(`🛒  ✦  Lojinha da Pyxie — ${catNames[category] || category}`)
-    .setDescription(
-      `💰 **Seu Saldo:** **${formatCoins(account.coins)}**\n` +
-      `*Itens frescos e trapaças mágicas garantidas.*\n\n` +
-      items
-        .map((item) => {
-          const buyText = item.buyPrice ? `• 🪙 **${formatCoins(item.buyPrice)}**` : '*(Indisponível)*';
-          return `${item.emoji} **${item.name}** ${buyText}\n> *${item.description}*`;
-        })
-        .join('\n\n')
-    )
+    .setDescription(desc)
     .setFooter({ text: 'Lojinha • Selecione uma categoria ou compre pelo menu abaixo' })
     .setTimestamp();
 
@@ -590,22 +621,30 @@ function buildShopTab(userId, categoryOrTag = 'comida', maybeCategory = null) {
 
 // Onboarding View para novos usuários
 function buildOnboardingView(userId, userDisplayName) {
+  const desc = [
+    `Boas-vindas, **${userDisplayName}**! Você ainda não possui nenhum Pymon ao seu lado.`,
+    '',
+    '🐾 **ESCOLHA SEU STARTER**',
+    'Clique no botão **Adotar Meu Starter** abaixo para abrir a Dex e escolher seu parceiro inicial:',
+    '',
+    '> 🧁 **Cinna** (`Charme`) — Doçura radiante e astúcia natural',
+    '> 💧 **Bonorka** (`Orvalho`) — Serenidade aquática e grande resistência',
+    '> 🍃 **Pomcorin** (`Silvestre`) — Agilidade pura e vigor das florestas',
+    '',
+    '✨ **PROBABILIDADE SHINY**',
+    '> Todo inicial possui **5% de chance** de nascer em sua forma **Shiny Rara**!',
+    '',
+    '🎁 **KIT INICIAL GRATUITO**',
+    '> 🪙 **+150 Moedinhas**',
+    '> 🥣 **2x Rações da Floresta**',
+    '> 🩹 **1x Curativo**',
+    '> 📦 **1x Baú Rústico**',
+  ].join('\n');
+
   const embed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.lilac)
     .setTitle('✨ ✦ Boas-vindas ao Reino dos Pymons! ✦ ✨')
-    .setDescription(
-      `Ora, ora, **${userDisplayName}**! Você ainda não possui nenhum Pymon ao seu lado.\n\n` +
-      `Clique no botão **Adotar Meu Starter** abaixo para abrir a Dex e escolher seu parceiro inicial:\n\n` +
-      `• 🧁 **Cinna** (\`Charme\`) — Doçura radiante e astúcia\n` +
-      `• 💧 **Bonorka** (\`Orvalho\`) — Serenidade aquática e resistência\n` +
-      `• 🍃 **Pomcorin** (\`Silvestre\`) — Agilidade pura e vigor natural\n\n` +
-      `✨ **Probabilidade Shiny:** Todo inicial tem **5% de chance** de nascer Shiny Raro!\n\n` +
-      `🎁 **Kit Inicial Gratuito incluso:**\n` +
-      `• 🪙 **+150 Moedas**\n` +
-      `• 🥣 **2x Rações da Floresta**\n` +
-      `• 🩹 **1x Curativo**\n` +
-      `• 📦 **1x Baú Rústico**`
-    )
+    .setDescription(desc)
     .setFooter({ text: 'Pymons • Inicie sua jornada pelo botão abaixo' })
     .setTimestamp();
 
@@ -983,7 +1022,7 @@ async function handleHubInteraction(interaction) {
   // 17. Apoiar
   if (action === 'hub_support_info') {
     return interaction.reply({
-      content: '💖 **Apoie a Cringelândia & Pyxie!** Use `/diario` para coletar moedas diárias e explore dungeons para subir de nível!',
+      content: '💖 **Apoie o Universo Pymon!** Use `/diario` para coletar moedas diárias e explore dungeons para subir de nível!',
       flags: 64,
     });
   }
