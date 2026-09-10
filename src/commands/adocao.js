@@ -1,5 +1,4 @@
 const {
-  SlashCommandBuilder,
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
@@ -13,9 +12,8 @@ const {
   getUserPets,
   getActivePet,
 } = require('../services/pets');
-const { createPetAttachment, createPokedexAttachment } = require('../services/petRenderer');
+const { createPetAttachment, createDexAttachment } = require('../services/petRenderer');
 const { PYXIE_COLORS, pyxieFooter } = require('../utils/pyxieVoice');
-const { ADOPTION } = require('./commandNames');
 
 const STARTER_KEYS = ['cinna', 'bonorka', 'pomcorin'];
 
@@ -231,58 +229,11 @@ async function handleAdoptionInteraction(interaction) {
 }
 
 module.exports = {
-  name: ADOPTION,
-  data: new SlashCommandBuilder()
-    .setName(ADOPTION)
-    .setDescription('Abre a Dex de escolha do seu Pymon Inicial (Cinna, Bonorka ou Pomcorin).'),
-  aliases: ['adotar', 'adote', 'inicial', 'starters', 'starter', 'dex'],
   isAdoptionInteraction,
   handleAdoptionInteraction,
   buildDexEmbed,
   buildDexComponents,
-  buildPokedexEmbed,
-  buildPokedexComponents,
+  buildPokedexEmbed: buildDexEmbed,
+  buildPokedexComponents: buildDexComponents,
   buildAdoptedLockedView,
-  async executeSlash({ interaction }) {
-    const userId = interaction.user.id;
-    const userPets = getUserPets(userId);
-
-    if (userPets.length > 0) {
-      const lockedView = buildAdoptedLockedView(userId, userPets);
-      return interaction.editReply(lockedView);
-    }
-
-    const defaultKey = 'cinna';
-    const monster = PETS_CATALOG[defaultKey];
-    const embed = buildDexEmbed(defaultKey);
-    const components = buildDexComponents(userId, defaultKey);
-    const attachment = createDexAttachment(monster, false);
-
-    await interaction.editReply({
-      embeds: [embed],
-      components,
-      files: [attachment],
-    });
-  },
-  async executePrefix({ message }) {
-    const userId = message.author.id;
-    const userPets = getUserPets(userId);
-
-    if (userPets.length > 0) {
-      const lockedView = buildAdoptedLockedView(userId, userPets);
-      return message.reply(lockedView);
-    }
-
-    const defaultKey = 'cinna';
-    const monster = PETS_CATALOG[defaultKey];
-    const embed = buildDexEmbed(defaultKey);
-    const components = buildDexComponents(userId, defaultKey);
-    const attachment = createDexAttachment(monster, false);
-
-    await message.reply({
-      embeds: [embed],
-      components,
-      files: [attachment],
-    });
-  },
 };
