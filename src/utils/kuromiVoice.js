@@ -9,7 +9,7 @@ const KUROMI_COLORS = {
   ink: '#1a1a1a',
 };
 
-const KUROMI_FOOTER = 'Kuromi • drama, carinho e uma memória impecável para rancores';
+const KUROMI_FOOTER = 'Pyxie • O Universo Encantado de Pymons';
 
 function kuromiFooter(extra = '') {
   return extra ? `${KUROMI_FOOTER} • ${extra}` : KUROMI_FOOTER;

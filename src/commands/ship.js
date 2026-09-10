@@ -128,11 +128,11 @@ async function resolveSelectedMembers(source) {
 }
 
 function getSelectionError(error) {
-  if (error.message === 'selection_count') return '❌ Escolha exatamente duas pessoas ou deixe o comando sem menções para eu sortear. Não complique o romance.';
-  if (error.message === 'bot') return '❌ Bots não entram no casal. Até a Kuromi tem algum critério.';
-  if (error.message === 'same_user') return '❌ A mesma pessoa duas vezes não é casal. Isso é um monólogo romântico.';
-  if (error.message === 'not_member') return '❌ Só posso juntar pessoas que estejam neste servidor. A Kuromi ainda não domina dimensões.';
-  return '❌ Não consegui preparar esse casal agora. O drama técnico venceu por alguns segundos.';
+  if (error.message === 'selection_count') return '❌ Escolha exatamente duas pessoas ou deixe o comando sem menções para sortear.';
+  if (error.message === 'bot') return '❌ Bots não podem entrar no sorteio de casal.';
+  if (error.message === 'same_user') return '❌ A mesma pessoa duas vezes não forma um casal.';
+  if (error.message === 'not_member') return '❌ Só é possível juntar pessoas que estejam neste servidor.';
+  return '❌ Não foi possível preparar esse casal agora. Tente novamente.';
 }
 
 // Executa o comando ship a partir de uma mensagem de texto (prefixo).
@@ -149,13 +149,13 @@ async function runShip(source, reply) {
   if (!pair) {
     const members = await source.guild.members.fetch().catch(() => null);
     if (!members) {
-      await reply('❌ Não consegui buscar os membros do servidor. Até a Kuromi tem limites, aparentemente.');
+      await reply('❌ Não foi possível buscar os membros do servidor no momento.');
       return;
     }
     pair = pickTwoRandom(members);
   }
   if (!pair) {
-    await reply('❌ Precisamos de pelo menos 2 humanos no servidor para isso. Romance solitário é outro comando.');
+    await reply('❌ São necessários pelo menos 2 membros no servidor para realizar o sorteio.');
     return;
   }
 

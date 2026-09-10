@@ -5,11 +5,11 @@ module.exports = {
   name: PING,
   data: new SlashCommandBuilder()
     .setName(PING)
-    .setDescription('Confirma que a Kuromi está viva, alerta e julgando tudo.'),
+    .setDescription('Verifica a latência e o status do bot.'),
   async executePrefix({ message }) {
-    await message.reply('pong. 🏓 Eu estou viva. Tente não parecer tão surpreso.');
+    await message.reply('🏓 Pong! Bot online e operacional.');
   },
   async executeSlash({ interaction }) {
-    await interaction.editReply({ content: 'pong. 🏓 Eu estou viva. Tente não parecer tão surpreso.' });
+    await interaction.editReply({ content: '🏓 Pong! Bot online e operacional.' });
   },
 };

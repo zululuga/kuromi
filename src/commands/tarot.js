@@ -32,9 +32,9 @@ function buildBribeRow() {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId('tarot_subornar')
-      .setLabel('Não gostou? Suborne a Kuromi! (350 🪙)')
+      .setLabel('Tentar Nova Tiragem (350 🪙)')
       .setStyle(ButtonStyle.Secondary)
-      .setEmoji('💜')
+      .setEmoji('🔮')
   );
 }
 
@@ -133,21 +133,21 @@ function isTarotButton(interaction) {
 async function executeButton({ interaction, logTarotResult }) {
   const customId = interaction.customId;
 
-  // 1. Botão de Suborno
+  // 1. Botão de Suborno / Nova Tiragem
   if (customId === 'tarot_subornar' || customId.startsWith('tarot:bribe')) {
     const result = bribeKuromi(interaction.user.id);
 
     if (!result.bribed) {
       if (result.reason === 'insufficient_funds') {
         await interaction.reply({
-          content: `❌ A Kuromi consultou seu saldo e fez uma carinha triste. Ela exige **${formatCoins(BRIBE_COST)}** por um suborno, mas você possui apenas **${formatCoins(result.balance)}**.`,
-          ephemeral: true,
+          content: `❌ Saldo insuficiente. É necessário **${formatCoins(BRIBE_COST)}** para tentar uma nova tiragem, mas você possui **${formatCoins(result.balance)}**.`,
+          flags: 64,
         });
         return;
       }
       await interaction.reply({
-        content: '❌ Não foi possível realizar o suborno no momento. Tente novamente mais tarde.',
-        ephemeral: true,
+        content: '❌ Não foi possível realizar uma nova leitura no momento. Tente novamente mais tarde.',
+        flags: 64,
       });
       return;
     }
@@ -159,7 +159,7 @@ async function executeButton({ interaction, logTarotResult }) {
       embeds: [embed],
       files: [attachment],
       components: [buildBribeRow()],
-      ephemeral: true,
+      flags: 64,
     });
 
     await logTarotToPublicChannel(interaction.client, { user: interaction.user, result });

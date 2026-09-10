@@ -149,6 +149,8 @@ module.exports = {
   BRIBE_COST,
   cards,
   bribeKuromi,
+  bribeDestiny: bribeKuromi,
+  bribePyxie: bribeKuromi,
   drawTarot,
   drawCard,
   getBrasiliaDate,

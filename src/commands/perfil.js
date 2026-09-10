@@ -25,7 +25,7 @@ const { getActivePet, getUserDex } = require('../services/pets');
 const professions = require('../services/professions');
 const { buildProfileEmbed } = require('./economyHelpers');
 const { PROFILE } = require('./commandNames');
-const { KUROMI_COLORS } = require('../utils/kuromiVoice');
+const { PYXIE_COLORS } = require('../utils/pyxieVoice');
 
 function getTargetUser(source) {
   return source.options?.getUser('usuario') || source.user || source.author;
@@ -104,7 +104,7 @@ function buildTitlesView(targetUser, viewerId) {
   ].join('\n');
 
   const embed = new EmbedBuilder()
-    .setColor(KUROMI_COLORS.gold || '#facc15')
+    .setColor(PYXIE_COLORS.gold || '#facc15')
     .setTitle(`👑  ✦  Galeria de Títulos — ${targetUser.displayName || targetUser.username}`)
     .setDescription(desc)
     .setThumbnail(targetUser.displayAvatarURL({ dynamic: true, size: 256 }))

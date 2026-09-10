@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const { KUROMI_COLORS } = require('../utils/kuromiVoice');
+const { PYXIE_COLORS } = require('../utils/pyxieVoice');
 
 function formatCoins(coins) {
   const val = Number(coins) || 0;
@@ -36,7 +36,7 @@ function buildWalletEmbed(user, currencies, position) {
   ].join('\n');
 
   return new EmbedBuilder()
-    .setColor(KUROMI_COLORS.gold)
+    .setColor(PYXIE_COLORS.gold)
     .setTitle(`🪙  ✦  Carteira de ${user.displayName || user.username}`)
     .setDescription(desc)
     .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
@@ -104,7 +104,7 @@ function buildProfileEmbed({ user, account, spouse, rankPosition, professionLabe
   ].join('\n');
 
   return new EmbedBuilder()
-    .setColor(KUROMI_COLORS.violet || '#c084fc')
+    .setColor(PYXIE_COLORS.violet || '#c084fc')
     .setTitle(`👤  ✦  ${titlePrefix}${user.displayName || user.username}`)
     .setDescription(description)
     .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
@@ -131,7 +131,7 @@ function buildRankingEmbed(entries, memberMap, viewerRank) {
   ].join('\n');
 
   const embed = new EmbedBuilder()
-    .setColor(KUROMI_COLORS.pink)
+    .setColor(PYXIE_COLORS.magenta || '#e60067')
     .setTitle('🏆  ✦  Ranking Global de Economia')
     .setDescription(desc)
     .setFooter({ text: 'Ranking Global • Atualizado em tempo real' })

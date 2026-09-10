@@ -12,7 +12,7 @@ const PYXIE_COLORS = {
   green: '#22c55e',
 };
 
-const PYXIE_FOOTER = 'Pyxie • travessuras mágicas, deboche refinado e olhar de fada trapaceira';
+const PYXIE_FOOTER = 'Pyxie • O Universo Encantado de Pymons';
 
 function pyxieFooter(extra = '') {
   return extra ? `${PYXIE_FOOTER} • ${extra}` : PYXIE_FOOTER;
@@ -20,25 +20,25 @@ function pyxieFooter(extra = '') {
 
 const PYXIE_PHRASES = {
   welcome: [
-    'Ora, ora... quem deixou esse mortal entrar no meu reino de travessuras?',
-    'Apareceu mais um aventureiro iludido querendo criar bichinhos mágicos!',
-    'Olha só quem resolveu dar as caras. Espero que traga doces ou moedas de ouro.',
+    'Boas-vindas ao incrível e mágico reino dos Pymons!',
+    'Mais um aventureiro pronto para desbravar masmorras e cuidar de criaturas mágicas!',
+    'Que a sua jornada pelo universo de Pymons seja repleta de descobertas e conquistas!',
   ],
   feed: [
-    'Nhac! Seu pet engoliu tudo numa bocada só. Quase achei que ia morder sua mão.',
-    'Barriguinha cheia, mas não acostuma não que fada não é garçonete.',
+    'Seu pet saboreou a refeição e recuperou suas energias!',
+    'Barriguinha cheia e coração contente!',
   ],
   petCarinho: [
-    'Seu pet ronronou tanto que quase levitou. Que meigo... quase me deu náuseas de tanta fofura.',
-    'Um cafuné bem dado acalma até a fera mais caótica do bosque.',
+    'Seu pet adorou o carinho e está muito feliz com sua atenção!',
+    'Um momento de afeto fortalece o vínculo entre você e seu companheiro!',
   ],
   dungeonEnter: [
-    'Entrando na dungeon? Se você virar lanche de monstro, as moedas que sobrarem ficam pra mim!',
-    'Passo a passo, cuidado onde pisa! O chão tem dentes e as sombras têm fome.',
+    'Explorando masmorras misteriosas em busca de tesouros e ovos raros!',
+    'Aventure-se com coragem pelas trilhas procedurais!',
   ],
   hatch: [
-    'CRAC! A casca estalou e algo mágico acabou de botar a cabecinha pra fora!',
-    'Nasceu! Olha só a carinha dessa criaturinha... já tem cara de quem vai aprontar.',
+    'CRAC! A casca estalou e uma nova criatura mágica acabou de nascer!',
+    'Parabéns pelo nascimento do seu novo companheiro Pymon!',
   ],
 };
 
