@@ -17,7 +17,6 @@ module.exports = {
   RESET_ECONOMY: 'resetareconomia',
   PROFESSION: 'profissao',
   WORK: 'trabalho',
-  ADOPTION: 'adocao',
   PET_EXPLORE: 'petexplorar',
   PYMONS: 'pymons',
   PIXELMONSTERS: 'pymons',

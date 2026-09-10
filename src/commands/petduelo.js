@@ -99,11 +99,11 @@ module.exports = {
         return;
       }
       if (challengeRes.reason === 'challenger_no_pet') {
-        await message.reply('❌ Você precisa ter um pet ativo para duelar! Adote com `ku!adocao`.');
+        await message.reply('❌ Você precisa ter um Pymon ativo para duelar! Inicie sua jornada com `/pymons`.');
         return;
       }
       if (challengeRes.reason === 'target_no_pet') {
-        await message.reply(`❌ ${target} ainda não possui nenhum pet ativo.`);
+        await message.reply(`❌ ${target} ainda não possui nenhum Pymon ativo.`);
         return;
       }
       if (challengeRes.reason === 'challenger_insufficient_funds') {
@@ -115,7 +115,7 @@ module.exports = {
         return;
       }
       if (challengeRes.reason === 'challenger_hungry') {
-        await message.reply('❌ Seu pet está com muita fome (< 15%) para lutar! Alimente-o antes.');
+        await message.reply('❌ Seu Pymon está com muita fome (< 15%) para lutar! Alimente-o antes.');
         return;
       }
       await message.reply('❌ Não foi possível criar o duelo.');
@@ -129,7 +129,7 @@ module.exports = {
       .setColor('#f43f5e')
       .setTitle('⚔️  ✦  Desafio de Duelo no Coliseu!')
       .setDescription(
-        `<@${message.author.id}> está desafiando <@${target.id}> para uma batalha de pets!\n\n` +
+        `<@${message.author.id}> está desafiando <@${target.id}> para uma batalha de Pymons!\n\n` +
         `🥊 **${petA.emoji} ${petA.name}** (Lv ${petA.level}, ${petA.element}) **VS** **${petB.emoji} ${petB.name}** (Lv ${petB.level}, ${petB.element})\n` +
         `${betMsg}\n\n` +
         `<@${target.id}>, clique no botão abaixo em até 60 segundos para aceitar ou recusar:`
@@ -161,11 +161,11 @@ module.exports = {
         return;
       }
       if (challengeRes.reason === 'challenger_no_pet') {
-        await interaction.editReply({ content: '❌ Você precisa ter um pet ativo para duelar! Adote com `/adocao`.' });
+        await interaction.editReply({ content: '❌ Você precisa ter um Pymon ativo para duelar! Inicie sua jornada com `/pymons`.' });
         return;
       }
       if (challengeRes.reason === 'target_no_pet') {
-        await interaction.editReply({ content: `❌ ${target} ainda não possui nenhum pet ativo.` });
+        await interaction.editReply({ content: `❌ ${target} ainda não possui nenhum Pymon ativo.` });
         return;
       }
       if (challengeRes.reason === 'challenger_insufficient_funds') {

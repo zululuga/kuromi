@@ -19,8 +19,7 @@ const HELP_MODULES = [
     emoji: '🐾',
     desc: 'Dex inicial, cuidados, chocadeira, dungeons e duelos PvP',
     commands: [
-      { name: '/pymons (ou /pet)', desc: 'Dashboard do Pymon ativo com cartão visual em Canvas e botões.' },
-      { name: '/adocao', desc: 'Dex interativa para escolher seu Pymon inicial (Cinna, Bonorka ou Pomcorin com 5% Shiny).' },
+      { name: '/pymons (ou /pet)', desc: 'Dashboard do Pymon ativo, botões de ação e escolha de starter para iniciantes.' },
       { name: '/petexplorar [zona]', desc: 'Envia seu Pymon para explorar dungeons em busca de ovos e moedas.' },
       { name: '/petduelo @usuario [aposta]', desc: 'Desafia outro jogador para um combate por turnos no Coliseu.' },
     ],

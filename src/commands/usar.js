@@ -15,7 +15,7 @@ function getItemChoices() {
 function buildReply(result) {
   if (!result.success) {
     if (result.reason === 'no_pet') {
-      return '❌ Você não possui nenhum pet ativo para receber este item! Adote um usando `/adocao`.';
+      return '❌ Você não possui nenhum Pymon ativo para receber este item! Inicie sua jornada usando `/pymons`.';
     }
     if (result.reason === 'no_item') {
       return '❌ Você não possui este item na sua mochila. Compre na `/loja` ou obtenha em `/petexplorar`.';
@@ -25,17 +25,17 @@ function buildReply(result) {
 
   let levelMsg = '';
   if (result.leveledUp) {
-    levelMsg = `\n🎉 **LEVEL UP!** Seu pet subiu para o **Nível ${result.newLevel}**!`;
+    levelMsg = `\n🎉 **LEVEL UP!** Seu Pymon subiu para o **Nível ${result.newLevel}**!`;
   }
 
   if (result.applied === 'expansion') {
-    return `🏠 Você usou **${result.item.name}**! Seu limite de pets na mochila agora é de **${result.newMaxSlots} slots**!`;
+    return `🏠 Você usou **${result.item.name}**! Seu limite de Pymons na mochila agora é de **${result.newMaxSlots} slots**!`;
   }
 
   const effectsText = result.effectsSummary ? `\n📊 **Efeitos:** ${result.effectsSummary}` : '';
   const statusText = result.statusSummary ? `\n🐾 **Status atual de ${result.pet?.name}:** ${result.statusSummary}` : '';
 
-  return `✨ Você utilizou **${result.item ? result.item.emoji : '📦'} ${result.item ? result.item.name : 'item'}** no seu pet **${result.pet?.name}**!${effectsText}${statusText}${levelMsg}\nUse \`/pet\` para conferir o cartão atualizado.`;
+  return `✨ Você utilizou **${result.item ? result.item.emoji : '📦'} ${result.item ? result.item.name : 'item'}** no seu Pymon **${result.pet?.name}**!${effectsText}${statusText}${levelMsg}\nUse \`/pymons\` para conferir o cartão atualizado.`;
 }
 
 module.exports = {

@@ -16,7 +16,6 @@ const commands = [
   require('./resetareconomia'),
   require('./profissao'),
   require('./trabalho'),
-  require('./adocao'),
   require('./pet'),
   require('./petexplorar'),
   require('./petduelo'),
