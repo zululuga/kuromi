@@ -1,7 +1,8 @@
 const { AttachmentBuilder, PermissionFlagsBits, EmbedBuilder, SlashCommandBuilder } = require('discord.js');
 const { serializeGuildEmojis } = require('../utils/serverEmojis');
+const { EMOJIS } = require('./commandNames');
 
-const name = 'emojis';
+const name = EMOJIS || 'py-emojis';
 
 function isManager(source) {
   return source.member?.permissions?.has(PermissionFlagsBits.ManageGuild);

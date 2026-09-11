@@ -792,6 +792,57 @@ function getTopDexUsers(limit = 10) {
     .slice(0, limit);
 }
 
+/**
+ * Libera um Pymon para a natureza.
+ * - Não permite liberar o único Pymon (deve manter ao menos 1).
+ * - Não permite liberar se o pet estiver em expedição.
+ * - Concede recompensa de gratidão (+50 Moedinhas).
+ */
+function releasePet(userId, petId) {
+  const record = getUserPetRecord(userId);
+  if (!Array.isArray(record.pets) || record.pets.length <= 1) {
+    return {
+      success: false,
+      reason: 'only_one_pet',
+      message: 'Você não pode se despedir do seu único companheiro Pymon! Mantenha pelo menos 1 pet na sua equipe.',
+    };
+  }
+
+  const petIndex = record.pets.findIndex((p) => p.id === petId);
+  if (petIndex === -1) {
+    return {
+      success: false,
+      reason: 'pet_not_found',
+      message: 'Pymon não encontrado na sua equipe.',
+    };
+  }
+
+  const { isPetOnExpedition } = require('./petExpedition');
+  if (isPetOnExpedition(userId, petId)) {
+    return {
+      success: false,
+      reason: 'pet_on_expedition',
+      message: 'Este Pymon está atualmente em uma expedição e não pode ser liberado!',
+    };
+  }
+
+  const [releasedPet] = record.pets.splice(petIndex, 1);
+
+  if (record.activePetId === petId) {
+    record.activePetId = record.pets[0]?.id || null;
+  }
+
+  const { addCoins } = require('./economy');
+  addCoins(userId, 50);
+
+  schedulePetsSave();
+  return {
+    success: true,
+    pet: releasedPet,
+    message: `🍃 Você se despediu carinhosamente de **${releasedPet.emoji} ${releasedPet.name}**, que retornou feliz para a natureza! Você recebeu **+50 Moedinhas** como gratidão da floresta.`,
+  };
+}
+
 module.exports = {
   PETS_CATALOG: petsCatalog,
   getPetsCatalog: () => petsCatalog,
@@ -821,6 +872,7 @@ module.exports = {
   getUserDex,
   recordDexEntry,
   transferPet,
+  releasePet,
   getTopPets,
   getTopDexUsers,
   schedulePetsSave,

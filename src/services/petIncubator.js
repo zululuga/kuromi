@@ -152,6 +152,14 @@ function hatchSlotEgg(userId, userRecord, slotIndex, scheduleSaveFn) {
     };
   }
 
+  if (Array.isArray(userRecord.pets) && userRecord.pets.length >= (userRecord.maxPets || 3)) {
+    return {
+      success: false,
+      reason: 'max_pets_reached',
+      message: '❌ Sua equipe já possui o limite máximo de **3 Pymons**! Liberte um Pymon para a natureza antes de quebrar a casca deste ovo.',
+    };
+  }
+
   // Filtra pets do elemento do ovo
   const availableSpecies = Object.values(petsCatalog).filter(
     (p) => !egg.element || p.element === egg.element

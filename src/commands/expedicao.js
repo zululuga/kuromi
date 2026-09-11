@@ -196,14 +196,16 @@ async function handleExpeditionInteraction(interaction) {
   }
 }
 
+const { EXPEDITION } = require('./commandNames');
+
 module.exports = {
-  name: 'expedicao',
-  aliases: ['expedition', 'afk', 'exploracaoafk'],
+  name: EXPEDITION,
+  aliases: ['expedicao', 'expedition', 'afk', 'exploracaoafk'],
   buildExpeditionView,
   isExpeditionInteraction,
   handleExpeditionInteraction,
   data: new SlashCommandBuilder()
-    .setName('expedicao')
+    .setName(EXPEDITION)
     .setDescription('Envia seu Pymon em uma expedição passiva (AFK) de 2h, 4h ou 8h para coletar recursos.')
     .addIntegerOption((opt) =>
       opt

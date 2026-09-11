@@ -218,10 +218,15 @@ async function postBumpGuide() {
   const lastGuide = recentMessages?.find(
     (message) =>
       message.author.id === client.user.id &&
-      message.embeds.some((embed) => embed.title?.includes('Como ajudar'))
+      message.embeds.some(
+        (embed) =>
+          embed.title?.includes('Como apoiar') ||
+          embed.title?.includes('Como ajudar')
+      )
   );
 
   if (lastGuide && Date.now() - lastGuide.createdTimestamp < BUMP_GUIDE_INTERVAL_MS) {
+    console.log('Guia de bump já foi publicado recentemente. Ignorando reenvio na inicialização.');
     return;
   }
 

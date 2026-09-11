@@ -108,13 +108,15 @@ function buildOfferDescription(offer) {
   return '🎁 Item Indefinido';
 }
 
+const { TRADE } = require('./commandNames');
+
 module.exports = {
-  name: 'trocar',
-  aliases: ['trade', 'troca'],
+  name: TRADE,
+  aliases: ['trocar', 'trade', 'troca'],
   isTradeInteraction,
   handleTradeInteraction,
   data: new SlashCommandBuilder()
-    .setName('trocar')
+    .setName(TRADE)
     .setDescription('Inicia uma proposta de troca segura de Pymon, Item ou Moedas com outro jogador (Cooldown: 30m).')
     .addUserOption((opt) => opt.setName('usuario').setDescription('Usuário com quem deseja negociar').setRequired(true))
     .addStringOption((opt) =>

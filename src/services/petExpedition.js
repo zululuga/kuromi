@@ -56,7 +56,7 @@ function startExpedition(userId, durationHours = 2) {
     return {
       success: false,
       reason: 'already_on_expedition',
-      message: `Seu Pymon já está explorando! Retorno previsto em **${remainingMins} minuto(s)**.`,
+      message: `Seu Pymon **${current.petEmoji || '🐾'} ${current.petName || 'companheiro'}** já está em expedição! Retorne para coletar os tesouros em **${remainingMins} minuto(s)**.`,
       expedition: current,
     };
   }
@@ -167,9 +167,14 @@ function claimExpedition(userId) {
   };
 }
 
-function isPetOnExpedition(userId) {
+function isPetOnExpedition(userId, targetPetId = null) {
   const exp = getActiveExpedition(userId);
-  return Boolean(exp && !exp.completed);
+  if (!exp || exp.completed) return false;
+  if (!targetPetId) {
+    const activePet = getActivePet(userId);
+    return Boolean(activePet && exp.petId === activePet.id);
+  }
+  return exp.petId === targetPetId;
 }
 
 module.exports = {

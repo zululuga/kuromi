@@ -161,13 +161,25 @@ async function handleBossInteraction(interaction) {
   }
 }
 
+const { BOSS } = require('./commandNames');
+
+function buildBossView(userId) {
+  const boss = getWorldBoss();
+  const embed = buildBossStatusEmbed(boss);
+  const components = buildBossComponents(boss);
+  return { embeds: [embed], components, files: [] };
+}
+
 module.exports = {
-  name: 'boss',
-  aliases: ['worldboss', 'tita', 'chefe'],
+  name: BOSS,
+  aliases: ['boss', 'worldboss', 'tita', 'chefe'],
   isBossInteraction,
   handleBossInteraction,
+  buildBossView,
+  buildBossStatusEmbed,
+  buildBossComponents,
   data: new SlashCommandBuilder()
-    .setName('boss')
+    .setName(BOSS)
     .setDescription('Enfrente o World Boss Semanal ALPHA junto com todos os servidores!')
     .addSubcommand((sub) => sub.setName('status').setDescription('Exibe o status do World Boss ALPHA atual e placar'))
     .addSubcommand((sub) => sub.setName('atacar').setDescription('Desfere um ataque no World Boss com seu Pymon ativo'))

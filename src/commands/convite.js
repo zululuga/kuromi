@@ -58,11 +58,13 @@ function buildInviteEmbed(client) {
   return { embeds: [embed], components: [buttonRow] };
 }
 
+const { INVITE } = require('./commandNames');
+
 module.exports = {
-  name: 'convite',
-  aliases: ['invite', 'addbot', 'adicionar'],
+  name: INVITE,
+  aliases: ['convite', 'invite', 'addbot', 'adicionar'],
   data: new SlashCommandBuilder()
-    .setName('convite')
+    .setName(INVITE)
     .setDescription('Receba o link oficial de convite para adicionar a Pyxie ao seu servidor.'),
   async executePrefix({ message }) {
     const view = buildInviteEmbed(message.client);

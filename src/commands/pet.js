@@ -95,8 +95,6 @@ function buildPetTab(userId, userTag, subMode = null) {
 
   const shinyTag = activePet.shiny ? ' ✨ **Shiny**' : '';
   const desc = [
-    `👤 **Treinador:** ${userTag}`,
-    `🐾 **Espécie:** ${activePet.species}  •  🔮 **Elemento:** \`${activePet.element}\`  •  ⭐ **Nível:** **${activePet.level}**`,
     '✨ **TREINADOR & ESPÉCIE**',
     `> 👤 **Treinador:** ${userTag}`,
     `> 🐾 **Espécie:** ${activePet.species}  •  🔮 **Elemento:** \`${activePet.element}\`  •  ⭐ **Nível:** **${activePet.level}**`,
@@ -119,6 +117,23 @@ function buildPetTab(userId, userTag, subMode = null) {
     .setTimestamp();
 
   const components = [buildHubHeaderRow(userId, 'pet', subMode)];
+
+  const petSelectRow = userPets.length > 1
+    ? new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId(`hub_select_pet:${userId}`)
+          .setPlaceholder('🔄 Alternar Pet Ativo...')
+          .addOptions(
+            userPets.slice(0, 25).map((p) => ({
+              label: `${p.name}${p.shiny ? ' ✨ Shiny' : ''} (Nv. ${p.level} ${p.species})`,
+              description: `${p.shiny ? '✨ Shiny • ' : ''}HP: ${p.stats.hp}/${p.stats.maxHp} • Energia: ${p.energy}% • ${p.element}`,
+              value: p.id,
+              emoji: p.emoji || '🐾',
+              default: p.id === activePet.id,
+            }))
+          )
+      )
+    : null;
 
   if (subMode === 'care') {
     // Submenu Cuidar
@@ -150,6 +165,7 @@ function buildPetTab(userId, userTag, subMode = null) {
         .setStyle(ButtonStyle.Secondary)
     );
     components.push(careRow);
+    if (petSelectRow) components.push(petSelectRow);
 
   } else if (subMode === 'more') {
     // Submenu Mais Recursos & Ações
@@ -192,27 +208,22 @@ function buildPetTab(userId, userTag, subMode = null) {
         .setEmoji('🐉')
         .setStyle(ButtonStyle.Danger)
     );
+    if (userPets.length > 1) {
+      moreRow2.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`hub_release_menu:${userId}`)
+          .setLabel('Liberar Pet')
+          .setEmoji('🍃')
+          .setStyle(ButtonStyle.Secondary)
+      );
+    }
     components.push(moreRow1, moreRow2);
+    if (petSelectRow) components.push(petSelectRow);
 
   } else {
     // Menu padrão rápido
-    if (userPets.length > 1) {
-      const petOptions = userPets.map((p) => ({
-        label: `${p.name} (Nv. ${p.level} ${p.species})`,
-        description: `HP: ${p.stats.hp}/${p.stats.maxHp} • Energia: ${p.energy}% • ${p.element}`,
-        value: p.id,
-        emoji: p.emoji || '🐾',
-        default: p.id === activePet.id,
-      }));
-
-      components.push(
-        new ActionRowBuilder().addComponents(
-          new StringSelectMenuBuilder()
-            .setCustomId(`hub_select_pet:${userId}`)
-            .setPlaceholder('🔄 Alternar Pet Ativo...')
-            .addOptions(petOptions.slice(0, 25))
-        )
-      );
+    if (petSelectRow) {
+      components.push(petSelectRow);
     }
 
     const quickActionsRow = new ActionRowBuilder().addComponents(
@@ -230,11 +241,6 @@ function buildPetTab(userId, userTag, subMode = null) {
         .setCustomId(`hub_pet_sleep:${userId}`)
         .setLabel('Dormir')
         .setEmoji('💤')
-        .setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder()
-        .setCustomId(`hub_support_info:${userId}`)
-        .setLabel('Apoiar')
-        .setEmoji('✨')
         .setStyle(ButtonStyle.Secondary)
     );
     components.push(quickActionsRow);
@@ -733,6 +739,8 @@ function isHubInteraction(interaction) {
     interaction.customId.startsWith('hub_pet_carinho:') ||
     interaction.customId.startsWith('hub_pet_sleep:') ||
     interaction.customId.startsWith('hub_pet_heal:') ||
+    interaction.customId.startsWith('hub_release_menu:') ||
+    interaction.customId.startsWith('hub_release_select:') ||
     interaction.customId.startsWith('hub_support_info:') ||
     interaction.customId.startsWith('hub_incubator_place_egg:') ||
     interaction.customId.startsWith('hub_hatch_egg:') ||
@@ -810,16 +818,14 @@ async function handleHubInteraction(interaction) {
       return interaction.update(view);
     }
     if (tabName === 'boss') {
-      const { buildBossEmbed, buildBossComponents } = require('./boss');
-      const embed = buildBossEmbed(userId);
-      const components = buildBossComponents(userId);
-      return interaction.update({ embeds: [embed], components, files: [] });
+      const { buildBossView } = require('./boss');
+      const view = buildBossView(userId);
+      return interaction.update(view);
     }
     if (tabName === 'expedition') {
-      const { buildExpeditionEmbed, buildExpeditionComponents } = require('./expedicao');
-      const embed = buildExpeditionEmbed(userId);
-      const components = buildExpeditionComponents(userId);
-      return interaction.update({ embeds: [embed], components, files: [] });
+      const { buildExpeditionView } = require('./expedicao');
+      const view = buildExpeditionView(userId);
+      return interaction.update(view);
     }
     if (tabName === 'element') {
       const { buildElementChartEmbed } = require('../utils/elementChart');
@@ -926,6 +932,59 @@ async function handleHubInteraction(interaction) {
     setActivePet(userId, selectedPetId);
     const view = buildPetTab(userId, userTag);
     return interaction.update(view);
+  }
+
+  // 5.1 Menu de Liberação de Pet
+  if (action === 'hub_release_menu') {
+    const userPets = getUserPets(userId);
+    if (userPets.length <= 1) {
+      return interaction.reply({
+        content: '❌ Você possui apenas 1 Pymon e não pode liberá-lo! Você deve manter ao menos 1 companheiro.',
+        flags: 64,
+      });
+    }
+    const petOptions = userPets.map((p) => ({
+      label: `${p.name}${p.shiny ? ' ✨ Shiny' : ''} (Nv. ${p.level} ${p.species})`,
+      description: `Liberar para a natureza (+50 Moedinhas de gratidão)`,
+      value: p.id,
+      emoji: p.emoji || '🐾',
+    }));
+    const releaseRow = new ActionRowBuilder().addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId(`hub_release_select:${userId}`)
+        .setPlaceholder('🍃 Escolha qual Pymon devolver à natureza...')
+        .addOptions(petOptions)
+    );
+    const backRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`hub_tab:pet:${userId}`)
+        .setLabel('Cancelar')
+        .setEmoji('◀')
+        .setStyle(ButtonStyle.Secondary)
+    );
+    return interaction.update({
+      content: '🍃 **Devolução à Natureza:** Selecione abaixo qual Pymon você deseja liberar da sua equipe. Ele viverá feliz nas florestas e você receberá +50 Moedinhas como recompensa de gratidão.',
+      components: [releaseRow, backRow],
+      embeds: [],
+      files: [],
+    });
+  }
+
+  if (action === 'hub_release_select') {
+    const selectedPetId = interaction.values[0];
+    const { releasePet } = require('../services/pets');
+    const res = releasePet(userId, selectedPetId);
+    if (!res.success) {
+      return interaction.reply({
+        content: `❌ ${res.message}`,
+        flags: 64,
+      });
+    }
+    const view = buildPetTab(userId, userTag);
+    return interaction.update({
+      content: res.message,
+      ...view,
+    });
   }
 
   // 6. Chocadeira: Colocar ovo

@@ -240,11 +240,19 @@ async function runPetTests() {
     const lockedDexBuffer = renderDexCard(catalog.rionator, false, false, false);
     assert.ok(Buffer.isBuffer(lockedDexBuffer), 'Renderizador deve gerar buffer PNG com silhueta misteriosa para Pymon não descoberto.');
 
-    // 10. Flush Síncrono
+    // 10. Teste de Release de Pet e Limite de 3 Pets
+    const { releasePet } = require('../src/services/pets');
+    // Usuário B tem 1 pet (Cinna), não pode soltar o único pet
+    const petB = getActivePet(USER_B);
+    const releaseOnly = releasePet(USER_B, petB.id);
+    assert.equal(releaseOnly.success, false, 'Não deve permitir soltar o único pet.');
+    assert.equal(releaseOnly.reason, 'only_one_pet');
+
+    // 11. Flush Síncrono
     flushPetsSync();
     assert.ok(fs.existsSync(petsFile), 'Arquivo pets.json deve existir.');
 
-    console.log('Verificação do Módulo Completo de Pyxie (10 Pymons Oficiais, Dex Dinâmica, Silhueta Sombreada, Mapa Procedural 2D, D-Pad, Duelos NPC, Chocadeira Delta-Time, Pixel Art Canvas): OK');
+    console.log('Verificação do Módulo Completo de Pyxie (10 Pymons Oficiais, Dex Dinâmica, Silhueta Sombreada, Mapa Procedural 2D, D-Pad, Duelos NPC, Chocadeira Delta-Time, Pixel Art Canvas, Soltar Pets): OK');
   } finally {
     fs.writeFileSync(petsFile, originalPets, 'utf8');
     fs.writeFileSync(inventoryFile, originalInventory, 'utf8');

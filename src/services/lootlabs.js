@@ -55,11 +55,15 @@ async function createDailyBonusLink(userId, bonusAmount = 5) {
   registerPendingBonus(userId, bonusAmount);
   const apiKey = process.env.LOOT_LABS_API_KEY;
 
+  const destUrl = process.env.BASE_URL 
+    ? `${process.env.BASE_URL.replace(/\/$/, '')}/bonus-concluido` 
+    : 'http://34.173.207.172:3000/bonus-concluido';
+
   if (!apiKey) {
     return {
       success: false,
       message: 'LOOT_LABS_API_KEY não configurada no servidor.',
-      fallbackUrl: `https://discord.com?puid=${userId}`,
+      fallbackUrl: `${destUrl}?puid=${userId}`,
     };
   }
 
@@ -72,7 +76,7 @@ async function createDailyBonusLink(userId, bonusAmount = 5) {
       },
       body: JSON.stringify({
         title: 'Bônus Diário Pyxie',
-        url: 'https://discord.com',
+        url: destUrl,
         tier_id: 1,
         number_of_tasks: 1,
         theme: 1,
@@ -108,13 +112,13 @@ async function createDailyBonusLink(userId, bonusAmount = 5) {
     return {
       success: false,
       message: data?.error || 'Erro ao gerar link no LootLabs.',
-      fallbackUrl: `https://discord.com?puid=${userId}`,
+      fallbackUrl: `${destUrl}?puid=${userId}`,
     };
   } catch (error) {
     return {
       success: false,
       message: error.message,
-      fallbackUrl: `https://discord.com?puid=${userId}`,
+      fallbackUrl: `${destUrl}?puid=${userId}`,
     };
   }
 }
