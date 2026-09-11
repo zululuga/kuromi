@@ -30,30 +30,53 @@ function buildBossStatusEmbed(boss) {
   const desc = [
     `Um titã colossal surgiu no reino emanando uma **${boss.aura}**!`,
     '',
-    '👑 **INFORMAÇÕES DO CHEFE MUNDIAL:**',
-    `> 👾 **Nome:** **${boss.emoji} ${boss.name}**`,
-    `> 🌀 **Elemento:** \`${boss.element}\``,
-    `> ⚡ **Nível:** \`${boss.level}\``,
-    `> ❤️ **Vida:** **${boss.currentHp.toLocaleString('pt-BR')} / ${boss.maxHp.toLocaleString('pt-BR')}** (${hpPercent}%)`,
-    `> [ \`${hpBar}\` ]`,
+    '👑 **INFORMAÇÕES DO CHEFE MUNDIAL**',
+    `> 👾 **Nome:** **${boss.emoji} ${boss.name}**\n> 🌀 **Elemento:** \`${boss.element}\`\n> ⚡ **Nível:** \`${boss.level}\`\n> ❤️ **Vida:** **${boss.currentHp.toLocaleString('pt-BR')} / ${boss.maxHp.toLocaleString('pt-BR')}** (${hpPercent}%)\n> [ \`${hpBar}\` ]`,
     '',
-    '🏆 **MAIORES CAUSADORES DE DANO (TOP 5):**',
+    '🏆 **MAIORES CAUSADORES DE DANO (TOP 5)**',
     rankingText,
     '',
-    '🎁 **RECOMPENSAS DE VITÓRIA:**',
-    '> 👑 **TOP 1 (MVP):** Recebe o próprio **Pymon versão ALPHA (🔴 Aura Avermelhada)** + 3 🌱 Feijões + 3.000 🪙',
-    '> ⚔️ **Todos os Participantes:** 1 🌱 Feijão Mágico + 1.000 🪙 + XP proporcional!',
+    '🎁 **RECOMPENSAS DE VITÓRIA**',
+    '> 👑 **TOP 1 (MVP):** Recebe o próprio **Pymon versão ALPHA (🔴 Aura Avermelhada)** + 3 🌱 Feijões + 3.000 🪙\n> ⚔️ **Todos os Participantes:** 1 🌱 Feijão Mágico + 1.000 🪙 + XP proporcional!',
     '',
     isDefeated
       ? '🎉 **ESTE CHEFE JÁ FOI DERROTADO!** O próximo titã despertará em breve.'
-      : 'Clique no botão vermelho abaixo para atacar com seu Pymon ativo (Cooldown: 10m):',
-  ].join('\n');
+      : '👉 *Clique no botão vermelho abaixo para atacar com seu Pymon ativo (Cooldown: 10m).*',
+  ].join('\n\n');
 
   return new EmbedBuilder()
     .setColor(isDefeated ? PYXIE_COLORS.green || '#22c55e' : '#dc2626')
     .setTitle(`🐉  ✦  World Boss Semanal — ${boss.name}`)
     .setDescription(desc)
     .setFooter({ text: pyxieFooter('Ataque conjunto por todos os servidores!') })
+    .setTimestamp();
+}
+
+function buildBossAttackEmbed(result) {
+  let effectMsg = '';
+  if (result.isSuperEffective) effectMsg = '✨ **SUPER EFICAZ (+35% de Dano Elemental)!**';
+  if (result.isWeak) effectMsg = '🛡️ *Pouco eficaz contra o elemento do Boss (-25% Dano).*';
+  if (result.isCrit) effectMsg += (effectMsg ? '\n' : '') + '💥 **GOLPE CRÍTICO (1.5x Dano)!**';
+
+  const desc = [
+    `Seu Pymon avançou com bravura e desferiu um golpe contra **${result.bossEmoji} ${result.bossName}**!`,
+    '',
+    '💥 **RELATÓRIO DO CONFRONTO**',
+    `> ⚔️ **Dano Causado:** **${result.damage.toLocaleString('pt-BR')}**` +
+      (effectMsg ? `\n> ${effectMsg}` : '') +
+      `\n> ❤️ **Vida Restante do Boss:** **${result.remainingHp.toLocaleString('pt-BR')} / ${result.maxHp.toLocaleString('pt-BR')}**`,
+    '',
+    '⏳ **STATUS DA BATALHA**',
+    result.bossDefeated
+      ? '> 🎉 **O TITÃ FOI DERROTADO!** O MVP recebeu a versão ALPHA exclusiva!'
+      : '> ⏱️ *Aguarde 10 minutos para atacar novamente.*',
+  ].join('\n\n');
+
+  return new EmbedBuilder()
+    .setColor(result.bossDefeated ? PYXIE_COLORS.green || '#22c55e' : '#dc2626')
+    .setTitle('⚔️  ✦  Ataque ao World Boss!')
+    .setDescription(desc)
+    .setFooter({ text: pyxieFooter('Dano contabilizado no ranking global') })
     .setTimestamp();
 }
 
@@ -119,29 +142,7 @@ async function handleBossInteraction(interaction) {
       return interaction.reply({ content: `❌ ${result.message}`, flags: 64 });
     }
 
-    let effectMsg = '';
-    if (result.isSuperEffective) effectMsg = '✨ **SUPER EFICAZ (+35% de Dano Elemental)!**';
-    if (result.isWeak) effectMsg = '🛡️ *Pouco eficaz contra o elemento do Boss (-25% Dano).*';
-    if (result.isCrit) effectMsg += ' 💥 **GOLPE CRÍTICO (1.5x)!**';
-
-    const desc = [
-      `Seu Pymon avançou com coragem e desferiu um ataque devastador contra **${result.bossEmoji} ${result.bossName}**!`,
-      '',
-      '💥 **RELATÓRIO DO GOLPE:**',
-      `> ⚔️ **Dano Causado:** **${result.damage.toLocaleString('pt-BR')}**`,
-      effectMsg ? `> ${effectMsg}` : '',
-      `> ❤️ **Vida Restante do Boss:** **${result.remainingHp.toLocaleString('pt-BR')} / ${result.maxHp.toLocaleString('pt-BR')}**`,
-      '',
-      result.bossDefeated ? `🎉 **O TITÃ FOI DERROTADO!** O maior causador de dano (<@${result.mvpUserId}>) recebeu o Pymon na versão ALPHA!` : '⏳ *Aguarde 10 minutos para atacar novamente.*',
-    ].filter(Boolean).join('\n');
-
-    const attackEmbed = new EmbedBuilder()
-      .setColor(result.bossDefeated ? PYXIE_COLORS.green || '#22c55e' : '#dc2626')
-      .setTitle('⚔️  ✦  Ataque Realizado no World Boss!')
-      .setDescription(desc)
-      .setFooter({ text: pyxieFooter('Dano contabilizado no placar global') })
-      .setTimestamp();
-
+    const attackEmbed = buildBossAttackEmbed(result);
     return interaction.reply({ embeds: [attackEmbed], flags: 64 });
   }
 }
@@ -166,29 +167,7 @@ module.exports = {
         return interaction.editReply({ content: `❌ ${result.message}` });
       }
 
-      let effectMsg = '';
-      if (result.isSuperEffective) effectMsg = '✨ **SUPER EFICAZ (+35% de Dano Elemental)!**';
-      if (result.isWeak) effectMsg = '🛡️ *Pouco eficaz contra o elemento do Boss (-25% Dano).*';
-      if (result.isCrit) effectMsg += ' 💥 **GOLPE CRÍTICO (1.5x)!**';
-
-      const desc = [
-        `Seu Pymon avançou com bravura e atacou **${result.bossEmoji} ${result.bossName}**!`,
-        '',
-        '💥 **RELATÓRIO DO GOLPE:**',
-        `> ⚔️ **Dano Causado:** **${result.damage.toLocaleString('pt-BR')}**`,
-        effectMsg ? `> ${effectMsg}` : '',
-        `> ❤️ **Vida Restante do Boss:** **${result.remainingHp.toLocaleString('pt-BR')} / ${result.maxHp.toLocaleString('pt-BR')}**`,
-        '',
-        result.bossDefeated ? `🎉 **O TITÃ FOI DERROTADO!** O maior causador de dano (<@${result.mvpUserId}>) recebeu o Pymon na versão ALPHA!` : '⏳ *Aguarde 10 minutos para atacar novamente.*',
-      ].filter(Boolean).join('\n');
-
-      const embed = new EmbedBuilder()
-        .setColor(result.bossDefeated ? PYXIE_COLORS.green || '#22c55e' : '#dc2626')
-        .setTitle('⚔️  ✦  Ataque ao World Boss!')
-        .setDescription(desc)
-        .setFooter({ text: pyxieFooter('Contabilizado no ranking') })
-        .setTimestamp();
-
+      const embed = buildBossAttackEmbed(result);
       return interaction.editReply({ embeds: [embed] });
     }
 
@@ -223,29 +202,7 @@ module.exports = {
         return message.reply(`❌ ${result.message}`);
       }
 
-      let effectMsg = '';
-      if (result.isSuperEffective) effectMsg = '✨ **SUPER EFICAZ (+35% de Dano Elemental)!**';
-      if (result.isWeak) effectMsg = '🛡️ *Pouco eficaz contra o elemento do Boss (-25% Dano).*';
-      if (result.isCrit) effectMsg += ' 💥 **GOLPE CRÍTICO (1.5x)!**';
-
-      const desc = [
-        `Seu Pymon avançou com bravura e atacou **${result.bossEmoji} ${result.bossName}**!`,
-        '',
-        '💥 **RELATÓRIO DO GOLPE:**',
-        `> ⚔️ **Dano Causado:** **${result.damage.toLocaleString('pt-BR')}**`,
-        effectMsg ? `> ${effectMsg}` : '',
-        `> ❤️ **Vida Restante do Boss:** **${result.remainingHp.toLocaleString('pt-BR')} / ${result.maxHp.toLocaleString('pt-BR')}**`,
-        '',
-        result.bossDefeated ? `🎉 **O TITÃ FOI DERROTADO!** O maior causador de dano (<@${result.mvpUserId}>) recebeu o Pymon na versão ALPHA!` : '⏳ *Aguarde 10 minutos para atacar novamente.*',
-      ].filter(Boolean).join('\n');
-
-      const embed = new EmbedBuilder()
-        .setColor(result.bossDefeated ? PYXIE_COLORS.green || '#22c55e' : '#dc2626')
-        .setTitle('⚔️  ✦  Ataque ao World Boss!')
-        .setDescription(desc)
-        .setFooter({ text: pyxieFooter('Contabilizado no ranking') })
-        .setTimestamp();
-
+      const embed = buildBossAttackEmbed(result);
       return message.reply({ embeds: [embed] });
     }
 

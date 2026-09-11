@@ -142,5 +142,36 @@
     ],
     "equippedTheme": "default",
     "bio": null
+  },
+  "user_test_a_1789092436284": {
+    "coins": 2180,
+    "magicBeans": 8,
+    "profession": null,
+    "workCount": 0,
+    "lastWorkAt": null,
+    "lastDailyAt": null,
+    "titles": [],
+    "equippedTitle": null,
+    "themes": [
+      "default",
+      "ouro"
+    ],
+    "equippedTheme": "ouro",
+    "bio": null
+  },
+  "user_test_b_1789092436284": {
+    "coins": 1900,
+    "magicBeans": 0,
+    "profession": null,
+    "workCount": 0,
+    "lastWorkAt": null,
+    "lastDailyAt": null,
+    "titles": [],
+    "equippedTitle": null,
+    "themes": [
+      "default"
+    ],
+    "equippedTheme": "default",
+    "bio": null
   }
 }

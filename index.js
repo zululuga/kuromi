@@ -114,22 +114,43 @@ async function sendStartupAnnouncement() {
     return;
   }
 
+  const panelUrl = process.env.PANEL_PUBLIC_URL || 'http://34.173.207.172:3000';
+
   const startupEmbed = new EmbedBuilder()
     .setColor('#5E2B8C')
-    .setTitle(`🧚  ✦  Pyxie entrou em cena`)
+    .setTitle(`🧚  ✦  Pyxie Entrou em Cena`)
     .setDescription('Estou online, monitorando o reino encantado de Pymons e pronta para novas aventuras!')
     .addFields(
-      { name: '🔗 Painel de Controle', value: 'Acesse: http://localhost:3000', inline: false },
-      { name: '📍 Servidor', value: channel.guild?.name || 'Desconhecido', inline: true },
-      { name: '✅ Status', value: 'Online e funcional', inline: true },
-      { name: '📚 Próximos passos', value: 'Use `/pet` ou `/ajuda` para ver os mascotes e comandos disponíveis.', inline: false }
+      { name: '📍 Servidor', value: channel.guild?.name || 'Comunidade', inline: true },
+      { name: '✅ Status', value: '100% Operacional', inline: true },
+      {
+        name: '📚 Comandos em Destaque',
+        value: [
+          '> 🐾 **/pymons** — Adote, alimente e evolua mascotes',
+          '> 👤 **/perfil** — Customize títulos, temas e biografia',
+          '> 🐉 **/boss** — Enfrente o World Boss Semanal ALPHA',
+          '> ⚔️ **/duelo** — Batalhe na arena com vantagens elementais',
+          '> 🪙 **/diario** — Resgate moedas diárias e bônus patrocinado',
+          '> 📖 **/ajuda** — Menu interativo com todos os comandos',
+        ].join('\n'),
+        inline: false,
+      }
     )
     .setImage(STATUS_IMAGE_URL)
     .setTimestamp()
     .setFooter({ text: 'Reino Encantado • Pyxie operacional' });
 
+  const actionRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setEmoji('🔗')
+      .setLabel('Painel Web de Controle')
+      .setURL(panelUrl)
+      .setStyle(ButtonStyle.Link)
+  );
+
   await channel.send({
     embeds: [startupEmbed],
+    components: [actionRow],
     flags: [MessageFlags.SuppressNotifications],
   }).catch((error) => {
     console.error('Erro ao enviar aviso de inicialização:', error);

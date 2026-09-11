@@ -34,5 +34,14 @@
     "durationHours": 2,
     "startedAt": 1789091847541,
     "finishAt": 1789099047541
+  },
+  "user_test_a_1789092436284": {
+    "userId": "user_test_a_1789092436284",
+    "petId": "pet_56f8280d",
+    "petName": "Cinna",
+    "petEmoji": "🌸",
+    "durationHours": 2,
+    "startedAt": 1789092436660,
+    "finishAt": 1789099636660
   }
 }

@@ -8,7 +8,7 @@
   "element": "SILVESTRE",
   "emoji": "🍀",
   "maxHp": 25000,
-  "currentHp": 24028,
+  "currentHp": 23825,
   "status": "active",
   "spawnedAt": 1789089762023,
   "defeatedAt": null,
@@ -36,6 +36,12 @@
       "hits": 1,
       "petName": "Cinna",
       "lastHitAt": 1789091847542
+    },
+    "user_test_a_1789092436284": {
+      "totalDamage": 203,
+      "hits": 1,
+      "petName": "Cinna",
+      "lastHitAt": 1789092436661
     }
   },
   "mvp": null
