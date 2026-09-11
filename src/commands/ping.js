@@ -12,4 +12,4 @@ module.exports = {
   async executeSlash({ interaction }) {
     await interaction.editReply({ content: '🏓 Pong! Pyxie está online e 100% operacional!' });
   },
-};
+};

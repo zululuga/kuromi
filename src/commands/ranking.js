@@ -5,17 +5,13 @@ const {
   EmbedBuilder,
   SlashCommandBuilder,
 } = require('discord.js');
-const { getRanking, getUserRank } = require('../services/economy');
+const { getRanking } = require('../services/economy');
 const { getTopPets, getTopDexUsers } = require('../services/pets');
 const { formatCoins } = require('./economyHelpers');
 const { RANKING } = require('./commandNames');
 const { PYXIE_COLORS, pyxieFooter } = require('../utils/pyxieVoice');
 
 async function buildRankingView(guild, viewerId, category = 'coins') {
-  const members = guild ? await guild.members.fetch().catch(() => null) : null;
-  const memberMap = new Map();
-  if (members) members.forEach((m) => memberMap.set(m.id, m));
-
   let title = '🏆  ✦  Ranking Oficial do Reino';
   let desc = '';
   let color = PYXIE_COLORS.gold || '#facc15';

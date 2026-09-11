@@ -147,6 +147,8 @@ function getUserPetRecord(userId) {
     };
   }
 
+  ensureUserIncubator(data[userId]);
+  return data[userId];
   const record = data[userId];
   if (!record.dex) {
     record.dex = {};
@@ -173,6 +175,9 @@ function getUserPetRecord(userId) {
   return record;
 }
 
+/**
+ * Transfere um Pymon entre dois jogadores.
+ */
 function transferPet(fromUserId, toUserId, petId) {
   const fromRecord = getUserPetRecord(fromUserId);
   const toRecord = getUserPetRecord(toUserId);

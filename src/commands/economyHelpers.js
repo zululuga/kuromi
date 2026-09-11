@@ -111,10 +111,13 @@ function buildProfileEmbed({ user, account, spouse, rankPosition, professionLabe
     : THEMES_CATALOG.default;
 
   return new EmbedBuilder()
+    .setColor(KUROMI_COLORS.violet || '#c084fc')
+    .setColor(PYXIE_COLORS.violet || '#c084fc')
     .setColor(equippedTheme?.color || PYXIE_COLORS.magenta || '#e60067')
     .setTitle(`👤  ✦  ${titlePrefix}${user.displayName || user.username}`)
     .setDescription(description)
     .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
+    .setFooter({ text: 'Perfil de Aventureiro • Use os botões abaixo para gerenciar títulos' })
     .setFooter({ text: `Perfil • Tema: ${equippedTheme?.emoji || '🌸'} ${equippedTheme?.name || 'Padrão'} • Gerencie títulos e temas abaixo` })
     .setTimestamp();
 }

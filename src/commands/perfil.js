@@ -29,6 +29,7 @@ const { getActivePet, getUserDex } = require('../services/pets');
 const professions = require('../services/professions');
 const { buildProfileEmbed } = require('./economyHelpers');
 const { PROFILE } = require('./commandNames');
+const { KUROMI_COLORS } = require('../utils/kuromiVoice');
 const { PYXIE_COLORS } = require('../utils/pyxieVoice');
 
 function getTargetUser(source) {
@@ -69,6 +70,7 @@ function buildProfileView(targetUser, viewerId) {
   const actionRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`profile_open_titles:${targetUser.id}:${viewerId}`)
+      .setLabel('Títulos & Cosméticos')
       .setLabel('Títulos')
       .setEmoji('👑')
       .setStyle(ButtonStyle.Primary),
@@ -113,6 +115,7 @@ function buildTitlesView(targetUser, viewerId) {
   ].join('\n');
 
   const embed = new EmbedBuilder()
+    .setColor(KUROMI_COLORS.gold || '#facc15')
     .setColor(PYXIE_COLORS.gold || '#facc15')
     .setTitle(`👑  ✦  Galeria de Títulos — ${targetUser.displayName || targetUser.username}`)
     .setDescription(desc)
@@ -334,6 +337,7 @@ async function handleProfileInteraction(interaction) {
     return interaction.update(view);
   }
 
+  // 6. Desequipar Título
   // 6. Abrir Galeria de Temas
   if (action === 'profile_open_themes') {
     const targetUser = await interaction.client.users.fetch(targetId).catch(() => interaction.user);
@@ -349,6 +353,7 @@ async function handleProfileInteraction(interaction) {
     return interaction.update(view);
   }
 
+  // 7. Seleção de Título no Dropdown (Comprar / Equipar)
   // 8. Seleção de Título no Dropdown
   if (action === 'profile_select_title') {
     const selectedVal = interaction.values[0];
@@ -413,6 +418,7 @@ module.exports = {
   handleProfileInteraction,
   data: new SlashCommandBuilder()
     .setName(PROFILE)
+    .setDescription('Exibe seu perfil com títulos customizáveis, Pymon ativo, moedas e Feijões Mágicos.')
     .setDescription('Exibe seu perfil com títulos e temas customizáveis, Pymon ativo, moedas e Feijões Mágicos.')
     .addUserOption((option) => option.setName('usuario').setDescription('Usuário para consultar').setRequired(false)),
   async executePrefix({ message }) {

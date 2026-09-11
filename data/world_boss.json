@@ -1,0 +1,36 @@
+{
+  "id": "boss_1789089762023",
+  "speciesKey": "clovis",
+  "name": "Clovis ALPHA",
+  "title": "ALPHA",
+  "aura": "🔴 Aura Avermelhada",
+  "level": "???",
+  "element": "SILVESTRE",
+  "emoji": "🍀",
+  "maxHp": 25000,
+  "currentHp": 24269,
+  "status": "active",
+  "spawnedAt": 1789089762023,
+  "defeatedAt": null,
+  "participants": {
+    "user_test_alpha_1": {
+      "totalDamage": 275,
+      "hits": 1,
+      "petName": "Cinna",
+      "lastHitAt": 1789089762024
+    },
+    "user_test_a_1789089836824": {
+      "totalDamage": 280,
+      "hits": 1,
+      "petName": "Cinna",
+      "lastHitAt": 1789089837175
+    },
+    "user_test_a_1789090394813": {
+      "totalDamage": 176,
+      "hits": 1,
+      "petName": "Cinna",
+      "lastHitAt": 1789090395170
+    }
+  },
+  "mvp": null
+}

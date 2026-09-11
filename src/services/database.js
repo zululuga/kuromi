@@ -129,6 +129,7 @@ function getGlobalPrefix() {
     // Ignora um arquivo de prefixo legado inválido.
   }
 
+  return 'ku!';
   return 'py!';
 }
 

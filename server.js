@@ -264,6 +264,8 @@ app.use((req, res) => {
 
 app.listen(PORT, HOST, () => {
   const publicUrl = `http://34.173.207.172:${PORT}`;
+  addLog(`Painel web do Kuromiga iniciado em ${publicUrl}`);
+  console.log(`Painel do Kuromiga rodando em ${publicUrl}`);
   addLog(`Painel web do Pyxie iniciado em ${publicUrl}`);
   console.log(`Painel do Pyxie rodando em ${publicUrl}`);
   startBot();
