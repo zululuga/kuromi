@@ -28,6 +28,10 @@ const commands = [
   require('./agenda'),
   require('./emojis'),
   require('./dex'),
+  require('./convite'),
+  require('./trocar'),
+  require('./expedicao'),
+  require('./boss'),
 ];
 
 const commandsByName = new Map(

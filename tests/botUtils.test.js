@@ -44,7 +44,7 @@ try {
   assert.ok(rawComponents.components[0].options.length >= 6, 'Deve conter opções para todos os 6 módulos temáticos.');
 
   const defaultPrefix = getPrefix();
-  assert.equal(defaultPrefix, 'ku!', 'O prefixo padrão deve ser ku!.');
+  assert.equal(defaultPrefix, 'py!', 'O prefixo padrão deve ser py!.');
 
   const configuredChannel = setWelcomeChannel('guild-123', '123456789');
   assert.equal(configuredChannel, '123456789', 'O canal de boas-vindas deve ser salvo corretamente.');

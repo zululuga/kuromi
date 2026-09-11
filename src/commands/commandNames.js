@@ -30,4 +30,8 @@ module.exports = {
   AGENDA: 'agenda',
   EMOJIS: 'emojis',
   DEX: 'dex',
+  INVITE: 'convite',
+  TRADE: 'trocar',
+  EXPEDITION: 'expedicao',
+  BOSS: 'boss',
 };

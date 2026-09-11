@@ -192,6 +192,7 @@ async function renderShipCard(memberA, memberB, percent) {
 
   ctx.fillStyle = '#e2e8f0';
   ctx.font = '17px sans-serif';
+  ctx.fillText('A Kuromi juntou os destinos. Não faça disso uma cerimônia.', WIDTH / 2, 118);
   ctx.fillText('Calculadora mágica de afinidade e romance.', WIDTH / 2, 118);
 
   // 4. Avatars & Bridge
@@ -277,6 +278,7 @@ async function renderShipCard(memberA, memberB, percent) {
   // 7. Footer
   ctx.fillStyle = palette.accent;
   ctx.font = 'bold 12px sans-serif';
+  ctx.fillText('✦ KUROMI SUPERVISIONA O ROMANCE ✦', WIDTH / 2, 658);
   ctx.fillText('✦ AFINIDADE & ROMANCE NO SERVIDOR ✦', WIDTH / 2, 658);
 
   return canvas.toBuffer('image/png');

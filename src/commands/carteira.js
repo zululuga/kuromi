@@ -11,6 +11,7 @@ module.exports = {
   name: WALLET,
   data: new SlashCommandBuilder()
     .setName(WALLET)
+    .setDescription('Exibe a quantidade de Moedinhas de um usuário. A Kuromi confere, sem tocar no seu dinheiro.')
     .setDescription('Exibe a quantidade de Moedinhas e Feijões Mágicos de um usuário.')
     .addUserOption((option) => option.setName('usuario').setDescription('Usuário para consultar').setRequired(false)),
   async executePrefix({ message }) {

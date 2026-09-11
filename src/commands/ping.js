@@ -5,11 +5,11 @@ module.exports = {
   name: PING,
   data: new SlashCommandBuilder()
     .setName(PING)
-    .setDescription('Verifica a latência e o status do bot.'),
+    .setDescription('Verifica a latência e o status da Pyxie.'),
   async executePrefix({ message }) {
-    await message.reply('🏓 Pong! Bot online e operacional.');
+    await message.reply('🏓 Pong! Pyxie está online e 100% operacional!');
   },
   async executeSlash({ interaction }) {
-    await interaction.editReply({ content: '🏓 Pong! Bot online e operacional.' });
+    await interaction.editReply({ content: '🏓 Pong! Pyxie está online e 100% operacional!' });
   },
 };

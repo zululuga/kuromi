@@ -1,6 +1,7 @@
 const crypto = require('node:crypto');
 const { getActivePet, awardPetXp } = require('./pets');
-const { spendCoins, updateUserAccount, getUserAccount } = require('./economy');
+const { spendCoins, updateUserAccount, getUserAccount, addCoins } = require('./economy');
+const { checkDailyLimit, incrementDailyCount } = require('../utils/cooldown');
 
 const ELEMENT_ADVANTAGES = {
   ORVALHO: 'SILVESTRE',
@@ -27,6 +28,16 @@ function getElementMultiplier(elemA, elemB) {
 function createDuelChallenge(challengerId, targetId, bet = 0) {
   if (challengerId === targetId) {
     return { success: false, reason: 'self_duel' };
+  }
+
+  const limitA = checkDailyLimit(challengerId, 'duel', 3);
+  if (!limitA.allowed) {
+    return { success: false, reason: 'challenger_daily_limit_reached', current: limitA.current, max: limitA.max };
+  }
+
+  const limitB = checkDailyLimit(targetId, 'duel', 3);
+  if (!limitB.allowed) {
+    return { success: false, reason: 'target_daily_limit_reached', current: limitB.current, max: limitB.max };
   }
 
   const petA = getActivePet(challengerId);
@@ -216,6 +227,10 @@ function resolveDuelChallenge(duelId, targetUserId, accepted) {
     });
   }
 
+  // Contabiliza limite diário de duelos para ambos os participantes
+  incrementDailyCount(challenge.challengerId, 'duel');
+  incrementDailyCount(challenge.targetId, 'duel');
+
   return {
     success: true,
     accepted: true,
@@ -228,9 +243,45 @@ function resolveDuelChallenge(duelId, targetUserId, accepted) {
   };
 }
 
+function buildDuelGuideEmbed() {
+  const { EmbedBuilder } = require('discord.js');
+  const { PYXIE_COLORS, pyxieFooter } = require('../utils/pyxieVoice');
+
+  const desc = [
+    'Entenda como funcionam os combates e vantagens estratégicas dos Pymons:',
+    '',
+    '📊 **COMO OS ATRIBUTOS INFLUENCIAM NO COMBATE**',
+    '> ⚔️ **ATK (Ataque):** Determina a força base dos seus golpes contra o adversário.',
+    '> 🛡️ **DEF (Defesa):** Reduz o dano bruto recebido dos ataques inimigos.',
+    '> 💨 **VEL (Velocidade):** Determina quem ataca primeiro na rodada e aumenta a chance de esquiva.',
+    '> ❤️ **HP (Vida):** A resistência total do seu Pymon antes de cair em combate.',
+    '',
+    '🌀 **TABELA DE VANTAGENS ELEMENTAIS**',
+    '> 💧 **ORVALHO** vence 🔥 **SILVESTRE** (+25% Dano / -20% Recebido)',
+    '> 🌿 **SILVESTRE** vence 💨 **BRISA** (+25% Dano / -20% Recebido)',
+    '> 💨 **BRISA** vence 💖 **CHARME** (+25% Dano / -20% Recebido)',
+    '> 💖 **CHARME** vence 🎭 **TRAVESSURA** (+25% Dano / -20% Recebido)',
+    '> 🎭 **TRAVESSURA** vence 💧 **ORVALHO** (+25% Dano / -20% Recebido)',
+    '',
+    '⏳ **LIMITES & REGRAS:**',
+    '> • Cada treinador pode realizar até **3 duelos por dia**.',
+    '> • O Pymon precisa ter no mínimo **15% de Fome e Energia** para lutar.',
+  ].join('\n');
+
+  return new EmbedBuilder()
+    .setColor(PYXIE_COLORS.lilac || '#5e2b8c')
+    .setTitle('📖  ✦  Guia de Atributos & Vantagens Elementais')
+    .setDescription(desc)
+    .setFooter({ text: pyxieFooter('Domine os elementos para se tornar o maior campeão!') })
+    .setTimestamp();
+}
+
 module.exports = {
   createDuelChallenge,
   getDuelChallenge,
   resolveDuelChallenge,
+  executeDuelSimulation,
+  getElementMultiplier,
+  buildDuelGuideEmbed,
+  ELEMENT_ADVANTAGES,
 };
-

@@ -25,6 +25,11 @@ const duelCommand = require('./src/commands/petduelo');
 const dexCommand = require('./src/commands/dex');
 const profileCommand = require('./src/commands/perfil');
 const workCommand = require('./src/commands/trabalho');
+const dailyCommand = require('./src/commands/daily');
+const tradeCommand = require('./src/commands/trocar');
+const expeditionCommand = require('./src/commands/expedicao');
+const bossCommand = require('./src/commands/boss');
+const rankingCommand = require('./src/commands/ranking');
 const { syncApplicationEmojis } = require('./src/utils/appEmojis');
 const { registerAutomation, updateAutomation } = require('./src/services/automationSchedule');
 const {
@@ -111,16 +116,20 @@ async function sendStartupAnnouncement() {
 
   const startupEmbed = new EmbedBuilder()
     .setColor('#5E2B8C')
+    .setTitle(`${KUROMI_STARTUP_EMOJI}  ✦  Pyxie entrou em cena`)
+    .setDescription('Estou online, monitorando o reino encantado e pronta para aprontar travessuras. Não faça essa cara; eu sei que você sentiu minha falta.')
     .setTitle(`🧚  ✦  Pyxie entrou em cena`)
     .setDescription('Estou online, monitorando o reino encantado de Pymons e pronta para novas aventuras!')
     .addFields(
       { name: '🔗 Painel de Controle', value: 'Acesse: http://localhost:3000', inline: false },
       { name: '📍 Servidor', value: channel.guild?.name || 'Desconhecido', inline: true },
       { name: '✅ Status', value: 'Online e funcional', inline: true },
+      { name: '📚 Próximos passos', value: 'Use `/pet` ou `/ajuda` para ver os mascotes e comandos disponíveis. Leia direito.', inline: false }
       { name: '📚 Próximos passos', value: 'Use `/pymons` ou `/ajuda` para ver os mascotes e comandos disponíveis.', inline: false }
     )
     .setImage(STATUS_IMAGE_URL)
     .setTimestamp()
+    .setFooter({ text: 'Reino Encantado • Pyxie supervisiona • Não transforme isso em bagunça' });
     .setFooter({ text: 'Reino Encantado • Pyxie operacional' });
 
   await channel.send({
@@ -135,32 +144,40 @@ function buildBumpGuideEmbed(guild) {
   const guildName = guild?.name || 'nosso servidor';
   return new EmbedBuilder()
     .setColor('#E60067')
+    .setTitle(`${getAnimatedEmoji(guild, ['rocket', 'boost', 'star'], '🚀')}  ✦  Como ajudar a Cringelândia`)
     .setTitle(`${getAnimatedEmoji(guild, ['rocket', 'boost', 'star'], '🚀')}  ✦  Como apoiar ${guildName}`)
     .setDescription(
+      'Cada interação aumenta a visibilidade do servidor e ajuda novas pessoas a encontrarem a nossa comunidade. Escolha uma forma de ajudar. Eu estou agradecendo em silêncio, então aproveite:'
       'Cada interação aumenta a visibilidade do servidor e ajuda novos membros a encontrarem nossa comunidade. Escolha uma forma de ajudar:'
     )
     .addFields(
       {
         name: '📌 DISBOARD — `/bump`',
+        value: 'Use **/bump** quando o DISBOARD permitir. Depois, aguarde o cooldown. Sim, até divulgar a casa exige paciência.',
         value: 'Use **/bump** quando o DISBOARD permitir para impulsionar o servidor na lista.',
       },
       {
         name: '🐢 Canudinho — `/bump`',
+        value: 'O Canudinho também pode registrar o bump do servidor. Execute **/bump** e siga a confirmação enviada pelo bot.',
         value: 'Execute **/bump** com o bot Canudinho para registrar o apoio da comunidade.',
       },
       {
         name: '💜 Discadia — `/bump`',
+        value: 'No Discadia, use **/bump** quando estiver disponível. Cada bump ajuda a Cringelândia a subir na lista pública de servidores.',
         value: 'No Discadia, execute **/bump** para manter o servidor em destaque.',
       },
       {
         name: '🗳️ Top.gg — `/votar`',
+        value: 'Use o comando **/votar** para receber o link oficial do Top.gg, abra a página e confirme seu voto. Normalmente, o voto pode ser repetido após o período indicado pela plataforma.',
         value: 'Use o comando **/votar** para abrir a página oficial e confirmar seu voto diário.',
       },
       {
         name: '⭐ Review no DISBOARD',
+        value: 'Uma avaliação sincera também ajuda muito. Diga como tem sido sua experiência na Cringelândia; elogios são aceitos, mas não subam à cabeça.',
         value: 'Deixe uma avaliação sincera contando como tem sido sua experiência conosco.',
       }
     )
+    .setFooter({ text: 'Cringelândia • Kuromi agradece, mas negará se você perguntar' })
     .setFooter({ text: `${guildName} • Obrigado pelo seu apoio!` })
     .setTimestamp();
 }
@@ -233,12 +250,16 @@ function startBumpGuideScheduler() {
 function buildTarotDailyEmbed(guild) {
   const guildName = guild?.name || '';
   return new EmbedBuilder()
+    .setColor('#e60067')
     .setColor('#c084fc')
+    .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Tarot da Cringelândia  ✦`)
+    .setDescription('Uma carta por dia para iluminar seus caminhos. A leitura é privada; escolha o botão ou use `/tarot`.')
     .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Tarot Diário${guildName ? ` — ${guildName}` : ''}  ✦`)
     .setDescription(
       'Uma carta por dia para iluminar seus caminhos. A leitura é privada e renderizada especialmente para você!\n\n' +
       'Clique no botão abaixo ou use `/tarot` para receber a sua tiragem de hoje.'
     )
+    .setFooter({ text: 'O Tarot embaralha • Kuromi supervisiona • O destino faz suspense.' })
     .setFooter({ text: 'Tarot Diário • Pyxie supervisiona • Conecte-se com as energias do dia' })
     .setTimestamp();
 }
@@ -247,6 +268,8 @@ function buildTarotDailyComponents() {
   return [
     new ActionRowBuilder().addComponents(
       new ButtonBuilder()
+        .setCustomId('tarot:draw')
+        .setLabel('Tirar Tarot do Dia')
         .setCustomId('tarot_tirar_dia')
         .setLabel('🔮 Tirar Tarot do Dia')
         .setStyle(ButtonStyle.Primary)
@@ -278,6 +301,7 @@ function startTarotScheduler() {
   registerAutomation({
     id: 'tarot-daily',
     emoji: '🌙',
+    name: 'Tarot da Cringelândia',
     name: 'Tarot Diário',
     action: 'disparo',
     nextAt: Date.now() + delay,
@@ -313,9 +337,11 @@ async function handleCringePhrase(message) {
 
 client.once('ready', async () => {
   // Sinal de que o bot já conectou e está pronto para receber eventos.
+  console.log(`Kuromi conectada como ${client.user.tag}`);
   console.log(`Pyxie conectada como ${client.user.tag}`);
 
   client.user.setPresence({
+    activities: [{ name: 'Sendo cringe.', type: ActivityType.Watching }],
     activities: [{ name: 'Pymons no Reino Encantado', type: ActivityType.Watching }],
     status: 'online',
   });
@@ -343,23 +369,31 @@ client.on('guildMemberAdd', async (member) => {
   const welcomeEmbed = new EmbedBuilder()
     .setColor('#8b5cf6')
     .setTitle(`${getAnimatedEmoji(member.guild, ['heart', 'welcome', 'love'], '🎉')}  ✦  Uma nova pessoa chegou`)
+    .setDescription(`Que bom ter você aqui, **${member.displayName}**. A Cringelândia ficou mais interessante; não me faça me arrepender.`)
     .setDescription(`Que bom ter você aqui, **${member.displayName}**! Seja muito bem-vindo(a) a **${guildName}**!`)
     .addFields(
       {
+        name: '📜 Comece pelas regras',
+        value: `Consulte <#${RULES_CHANNEL_ID}> para conhecer a casa e manter o ambiente seguro. Eu sei, regras são chatas. Ainda assim.`,
         name: '📜 Regras do Servidor',
         value: `Consulte <#${RULES_CHANNEL_ID}> para conhecer nossas diretrizes e manter um ambiente acolhedor.`,
       },
       {
+        name: '🧭 Explore o servidor',
+        value: `Veja vantagens e tutoriais em <#${GUIDES_CHANNEL_ID}>. Tente não se perder logo de cara.`,
         name: '🧭 Explore o Servidor',
         value: `Veja tutoriais e canais importantes em <#${GUIDES_CHANNEL_ID}>.`,
       },
       {
+        name: '🎨 Personalize sua experiência',
+        value: `Confira as cores disponíveis em <#${COLORS_CHANNEL_ID}>. Até sua estética merece atenção.`,
         name: '🎨 Personalize sua Experiência',
         value: `Escolha suas cores e cargos em <#${COLORS_CHANNEL_ID}>.`,
       }
     )
     .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 256 }))
     .setImage('https://cdn.discordapp.com/attachments/1533657882862686218/1541908904487690321/dhj7hfn-842bcc59-b41f-4ef3-888b-dbfc210f4a5c.gif?ex=6a9b2b92&is=6a99da12&hm=7a41318a2f477b04a295a5b209c43de9517cfa47ac6ecf15e351c045aa104714&')
+    .setFooter({ text: 'Cringelândia • Kuromi finge que não ficou feliz com sua chegada' })
     .setFooter({ text: `${guildName} • Desejamos ótimos momentos na comunidade!` })
     .setTimestamp();
 
@@ -497,6 +531,41 @@ client.on('interactionCreate', async (interaction) => {
       incrementCommand();
       recordUniqueUser(interaction.user.id);
       await profileCommand.handleProfileInteraction(interaction);
+      return;
+    }
+
+    if (typeof dailyCommand?.isDailyInteraction === 'function' && dailyCommand.isDailyInteraction(interaction)) {
+      incrementCommand();
+      recordUniqueUser(interaction.user.id);
+      await dailyCommand.handleDailyInteraction(interaction);
+      return;
+    }
+
+    if (typeof tradeCommand?.isTradeInteraction === 'function' && tradeCommand.isTradeInteraction(interaction)) {
+      incrementCommand();
+      recordUniqueUser(interaction.user.id);
+      await tradeCommand.handleTradeInteraction(interaction);
+      return;
+    }
+
+    if (typeof expeditionCommand?.isExpeditionInteraction === 'function' && expeditionCommand.isExpeditionInteraction(interaction)) {
+      incrementCommand();
+      recordUniqueUser(interaction.user.id);
+      await expeditionCommand.handleExpeditionInteraction(interaction);
+      return;
+    }
+
+    if (typeof bossCommand?.isBossInteraction === 'function' && bossCommand.isBossInteraction(interaction)) {
+      incrementCommand();
+      recordUniqueUser(interaction.user.id);
+      await bossCommand.handleBossInteraction(interaction);
+      return;
+    }
+
+    if (typeof rankingCommand?.isRankingInteraction === 'function' && rankingCommand.isRankingInteraction(interaction)) {
+      incrementCommand();
+      recordUniqueUser(interaction.user.id);
+      await rankingCommand.handleRankingInteraction(interaction);
       return;
     }
 

@@ -44,6 +44,7 @@ function startBot() {
   }
 
   botStartTime = Date.now();
+  addLog('Iniciando bot Kuromiga...');
   addLog('Iniciando bot Pyxie...');
   botProcess = spawn('node', ['--max-old-space-size=192', 'index.js'], {
     cwd: appRoot,
@@ -78,6 +79,7 @@ async function stopBot() {
     return { running: false, message: 'O bot já está offline.' };
   }
 
+  addLog('Encerrando bot Kuromiga...');
   addLog('Encerrando bot Pyxie...');
   botProcess.kill('SIGTERM');
 
@@ -125,47 +127,82 @@ function registerSlashCommands() {
   });
 }
 
+const { processPostback } = require('./src/services/lootlabs');
+
+function requireAdminAuth(req, res, next) {
+  const secret = process.env.API_SECRET_TOKEN || process.env.PANEL_SECRET;
+  if (!secret) {
+    return next();
+  }
+
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : (req.query.token || req.headers['x-api-key']);
+
+  if (token !== secret) {
+    return res.status(401).json({ error: 'Acesso administrativo não autorizado.' });
+  }
+
+  next();
+}
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1d' }));
 
+// 1. Healthcheck e status público
 app.get('/api/status', (req, res) => {
   res.json(getBotStatus());
 });
 
-app.post('/api/start', (req, res) => {
+// 2. Webhook / Postback do LootLabs (Recompensas Diárias)
+app.all('/api/lootlabs/postback', (req, res) => {
+  const payload = {
+    userId: req.query.userId || req.query.user_id || req.body?.userId || req.body?.user_id,
+    puid: req.query.puid || req.body?.puid,
+    txId: req.query.txId || req.query.tx_id || req.query.p || req.body?.txId || req.body?.tx_id || req.body?.p,
+    taskId: req.query.taskId || req.query.task_id || req.body?.taskId || req.body?.task_id,
+    ip: req.ip,
+  };
+
+  const result = processPostback(payload);
+  addLog(`[LootLabs Postback] uid=${payload.puid || payload.userId} tx=${result.txId} success=${result.success}`);
+  return res.status(200).json({ status: 'success', data: result });
+});
+
+// 3. Rotas administrativas protegidas
+app.post('/api/start', requireAdminAuth, (req, res) => {
   res.json(startBot());
 });
 
-app.post('/api/stop', async (req, res) => {
+app.post('/api/stop', requireAdminAuth, async (req, res) => {
   const result = await stopBot();
   res.json(result);
 });
 
-app.post('/api/restart', async (req, res) => {
+app.post('/api/restart', requireAdminAuth, async (req, res) => {
   const result = await restartBot();
   res.json(result);
 });
 
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', requireAdminAuth, async (req, res) => {
   const response = await registerSlashCommands();
   res.json(response);
 });
 
-app.get('/api/config', (req, res) => {
+app.get('/api/config', requireAdminAuth, (req, res) => {
   res.json({
     welcomeChannelId: getWelcomeChannel('global') || null,
     economy: getEconomyConfig(),
   });
 });
 
-app.post('/api/config/welcome-channel', (req, res) => {
+app.post('/api/config/welcome-channel', requireAdminAuth, (req, res) => {
   const { channelId } = req.body || {};
   const normalized = String(channelId || '').trim();
   const result = setWelcomeChannel('global', normalized);
   res.json({ success: true, welcomeChannelId: result });
 });
 
-app.post('/api/config/economy', (req, res) => {
+app.post('/api/config/economy', requireAdminAuth, (req, res) => {
   const minimum = Number(req.body?.minimum);
   const maximum = Number(req.body?.maximum);
 
@@ -176,7 +213,7 @@ app.post('/api/config/economy', (req, res) => {
   res.json({ success: true, economy: setEconomyConfig(minimum, maximum) });
 });
 
-app.get('/api/logs', (req, res) => {
+app.get('/api/logs', requireAdminAuth, (req, res) => {
   const limit = parseInt(req.query.limit || '100', 10);
   res.json({ logs: getLogs(limit) });
 });
@@ -187,17 +224,17 @@ app.get('/api/stats', (req, res) => {
   res.json({ ...stats, uptime });
 });
 
-app.post('/api/stats/reset', (req, res) => {
+app.post('/api/stats/reset', requireAdminAuth, (req, res) => {
   const newStats = resetStats();
   res.json({ success: true, stats: newStats });
 });
 
-app.post('/api/logs/clear', (req, res) => {
+app.post('/api/logs/clear', requireAdminAuth, (req, res) => {
   clearLogs();
   res.json({ success: true, message: 'Logs limpos com sucesso.' });
 });
 
-app.post('/api/embed/send', (req, res) => {
+app.post('/api/embed/send', requireAdminAuth, (req, res) => {
   const { channelId, title, description, color, fields } = req.body || {};
   
   if (!botProcess || botProcess.killed || botProcess.exitCode !== null) {

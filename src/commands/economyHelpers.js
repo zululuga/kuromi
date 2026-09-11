@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
+const { KUROMI_COLORS } = require('../utils/kuromiVoice');
 const { PYXIE_COLORS } = require('../utils/pyxieVoice');
 
 function formatCoins(coins) {
@@ -36,6 +37,7 @@ function buildWalletEmbed(user, currencies, position) {
   ].join('\n');
 
   return new EmbedBuilder()
+    .setColor(KUROMI_COLORS.gold)
     .setColor(PYXIE_COLORS.gold)
     .setTitle(`🪙  ✦  Carteira de ${user.displayName || user.username}`)
     .setDescription(desc)
@@ -103,12 +105,17 @@ function buildProfileEmbed({ user, account, spouse, rankPosition, professionLabe
     marriageDisplay,
   ].join('\n');
 
+  const { THEMES_CATALOG } = require('../services/economy');
+  const equippedTheme = account?.equippedTheme && THEMES_CATALOG[account.equippedTheme]
+    ? THEMES_CATALOG[account.equippedTheme]
+    : THEMES_CATALOG.default;
+
   return new EmbedBuilder()
-    .setColor(PYXIE_COLORS.violet || '#c084fc')
+    .setColor(equippedTheme?.color || PYXIE_COLORS.magenta || '#e60067')
     .setTitle(`👤  ✦  ${titlePrefix}${user.displayName || user.username}`)
     .setDescription(description)
     .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
-    .setFooter({ text: 'Perfil de Aventureiro • Use os botões abaixo para gerenciar títulos' })
+    .setFooter({ text: `Perfil • Tema: ${equippedTheme?.emoji || '🌸'} ${equippedTheme?.name || 'Padrão'} • Gerencie títulos e temas abaixo` })
     .setTimestamp();
 }
 
@@ -131,6 +138,7 @@ function buildRankingEmbed(entries, memberMap, viewerRank) {
   ].join('\n');
 
   const embed = new EmbedBuilder()
+    .setColor(KUROMI_COLORS.pink)
     .setColor(PYXIE_COLORS.magenta || '#e60067')
     .setTitle('🏆  ✦  Ranking Global de Economia')
     .setDescription(desc)

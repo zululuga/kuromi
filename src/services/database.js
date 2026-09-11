@@ -129,26 +129,27 @@ function getGlobalPrefix() {
     // Ignora um arquivo de prefixo legado inválido.
   }
 
-  return 'ku!';
+  return 'py!';
 }
 
 function setGlobalPrefix(prefix) {
   return setGuildSettings('global', { prefix }).prefix;
 }
 
-function getEconomyConfig() {
-  const economy = getGlobalSettings().economy || {};
+function getEconomyConfig(guildId = 'global') {
+  const settings = guildId && guildId !== 'global' ? getGuildSettings(guildId) : getGlobalSettings();
+  const economy = settings.economy || getGlobalSettings().economy || {};
   const minimum = Number.isFinite(Number(economy.minimum)) ? Math.max(0, Math.floor(Number(economy.minimum))) : 0;
   const maximum = Number.isFinite(Number(economy.maximum)) ? Math.max(minimum, Math.floor(Number(economy.maximum))) : 100;
 
   return { minimum, maximum };
 }
 
-function setEconomyConfig(minimum, maximum) {
+function setEconomyConfig(minimum, maximum, guildId = 'global') {
   const normalizedMinimum = Math.max(0, Math.floor(Number(minimum)));
   const normalizedMaximum = Math.max(normalizedMinimum, Math.floor(Number(maximum)));
 
-  return setGuildSettings('global', {
+  return setGuildSettings(guildId, {
     economy: {
       minimum: normalizedMinimum,
       maximum: normalizedMaximum,

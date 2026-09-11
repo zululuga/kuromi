@@ -14,6 +14,7 @@ const {
 } = require('../services/economy');
 const { formatCoins, formatRemaining } = require('./economyHelpers');
 const { WORK } = require('./commandNames');
+const { KUROMI_COLORS } = require('../utils/kuromiVoice');
 const { PYXIE_COLORS } = require('../utils/pyxieVoice');
 
 const WORK_MINIMUM = 20;
@@ -377,6 +378,7 @@ async function handleWorkInteraction(interaction) {
     ].join('\n');
 
     const errorEmbed = new EmbedBuilder()
+      .setColor(KUROMI_COLORS.crimson || '#ef4444')
       .setColor(PYXIE_COLORS.crimson || '#ef4444')
       .setTitle(`❌  ✦  Expediente de ${session.professionLabel} Falhou`)
       .setDescription(desc)
@@ -406,6 +408,7 @@ async function handleWorkInteraction(interaction) {
   }
 
   const successEmbed = new EmbedBuilder()
+    .setColor(KUROMI_COLORS.emerald || '#10b981')
     .setColor(PYXIE_COLORS.emerald || '#10b981')
     .setTitle(`✅  ✦  Expediente de ${session.professionLabel} Concluído!`)
     .setDescription(desc.join('\n'))
@@ -478,6 +481,7 @@ async function runWork(source, reply) {
   ].join('\n');
 
   const embed = new EmbedBuilder()
+    .setColor(KUROMI_COLORS.violet || '#a855f7')
     .setColor(PYXIE_COLORS.violet || '#a855f7')
     .setTitle(`💼  ✦  Expediente de ${profDef.label} — Minigame`)
     .setDescription(questionDesc)

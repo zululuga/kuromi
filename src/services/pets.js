@@ -147,8 +147,6 @@ function getUserPetRecord(userId) {
     };
   }
 
-  ensureUserIncubator(data[userId]);
-  return data[userId];
   const record = data[userId];
   if (!record.dex) {
     record.dex = {};
@@ -175,22 +173,52 @@ function getUserPetRecord(userId) {
   return record;
 }
 
-/**
- * Registra a descoberta de um Pymon na Dex do jogador.
- */
-function recordDexEntry(userId, petKey, isShiny = false) {
+function transferPet(fromUserId, toUserId, petId) {
+  const fromRecord = getUserPetRecord(fromUserId);
+  const toRecord = getUserPetRecord(toUserId);
+
+  const petIndex = fromRecord.pets.findIndex((p) => p.id === petId);
+  if (petIndex === -1) {
+    return { success: false, reason: 'pet_not_found' };
+  }
+
+  if (toRecord.pets.length >= (toRecord.maxPets || DEFAULT_MAX_PETS)) {
+    return { success: false, reason: 'receiver_max_pets_reached' };
+  }
+
+  const [pet] = fromRecord.pets.splice(petIndex, 1);
+  if (fromRecord.activePetId === petId) {
+    fromRecord.activePetId = fromRecord.pets[0]?.id || null;
+  }
+
+  toRecord.pets.push(pet);
+  if (!toRecord.activePetId) {
+    toRecord.activePetId = pet.id;
+  }
+
+  unlockDexEntry(toUserId, pet.key, Boolean(pet.shiny));
+
+  schedulePetsSave();
+  return { success: true, pet };
+}
+
+function recordDexEntry(userId, petKey, isShiny = false, isAlpha = false) {
   const record = getUserPetRecord(userId);
   record.dex = record.dex || {};
   if (!record.dex[petKey]) {
     record.dex[petKey] = {
       discovered: true,
       shinyDiscovered: Boolean(isShiny),
+      alphaDiscovered: Boolean(isAlpha),
       firstSeenAt: Date.now(),
     };
   } else {
     record.dex[petKey].discovered = true;
     if (isShiny) {
       record.dex[petKey].shinyDiscovered = true;
+    }
+    if (isAlpha) {
+      record.dex[petKey].alphaDiscovered = true;
     }
   }
   schedulePetsSave();
@@ -220,6 +248,7 @@ function getUserDex(userId) {
       isStarter: Boolean(petDef.isStarter),
       discovered: Boolean(entry?.discovered),
       shinyDiscovered: Boolean(entry?.shinyDiscovered),
+      alphaDiscovered: Boolean(entry?.alphaDiscovered),
       firstSeenAt: entry?.firstSeenAt || null,
     };
   }
@@ -684,6 +713,39 @@ function expandUserIncubator(userId) {
   return expandIncubator(userId, record, schedulePetsSave);
 }
 
+function getTopPets(limit = 10) {
+  const all = getFullPetsMap();
+  return Object.entries(all)
+    .map(([userId, record]) => {
+      const activePet = (record.pets || []).find((p) => p.id === record.activePetId) || record.pets?.[0];
+      return {
+        userId,
+        petName: activePet?.name || 'Sem Pet',
+        petEmoji: activePet?.emoji || '🐾',
+        level: activePet?.level || 0,
+        shiny: Boolean(activePet?.shiny),
+      };
+    })
+    .filter((e) => e.level > 0)
+    .sort((a, b) => b.level - a.level)
+    .slice(0, limit);
+}
+
+function getTopDexUsers(limit = 10) {
+  const all = getFullPetsMap();
+  return Object.entries(all)
+    .map(([userId, record]) => {
+      const discoveredCount = Object.keys(record.dex || {}).length;
+      return {
+        userId,
+        discoveredCount,
+      };
+    })
+    .filter((e) => e.discoveredCount > 0)
+    .sort((a, b) => b.discoveredCount - a.discoveredCount)
+    .slice(0, limit);
+}
+
 module.exports = {
   PETS_CATALOG: petsCatalog,
   getPetsCatalog: () => petsCatalog,
@@ -712,6 +774,9 @@ module.exports = {
   expandUserIncubator,
   getUserDex,
   recordDexEntry,
+  transferPet,
+  getTopPets,
+  getTopDexUsers,
   schedulePetsSave,
   flushPetsSync,
 };

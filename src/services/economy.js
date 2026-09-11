@@ -63,6 +63,16 @@ const TITLES_CATALOG = {
   },
 };
 
+const THEMES_CATALOG = {
+  default: { id: 'default', name: 'Padrão Pyxie', emoji: '🌸', color: '#e60067', cost: 0, desc: 'O clássico magenta da Pyxie.' },
+  ouro: { id: 'ouro', name: 'Ouro Real', emoji: '👑', color: '#facc15', cost: 2, desc: 'Dourado brilhante para os mais prósperos.' },
+  esmeralda: { id: 'esmeralda', name: 'Esmeralda Mística', emoji: '🌲', color: '#10b981', cost: 2, desc: 'Verde vibrante das florestas dos Pymons.' },
+  galaxia: { id: 'galaxia', name: 'Nebulosa Cósmica', emoji: '🌌', color: '#8b5cf6', cost: 3, desc: 'Violeta estelar profundo e misterioso.' },
+  cyberpunk: { id: 'cyberpunk', name: 'Rosa Neon', emoji: '⚡', color: '#ff1493', cost: 3, desc: 'Brilho neon intenso e futurista.' },
+  chama: { id: 'chama', name: 'Fogo Carmesim', emoji: '🔥', color: '#ef4444', cost: 4, desc: 'Vermelho flamejante de pura bravura.' },
+  diamante: { id: 'diamante', name: 'Diamante Glacial', emoji: '💎', color: '#00f5d4', cost: 5, desc: 'Ciano radiante e cristalino.' },
+};
+
 function normalizeNumber(value, fallback = 0) {
   const num = Number(value);
   return Number.isFinite(num) ? num : fallback;
@@ -99,6 +109,8 @@ function normalizeAccount(account) {
     lastDailyAt: acc.lastDailyAt || null,
     titles: Array.isArray(acc.titles) ? acc.titles : [],
     equippedTitle: acc.equippedTitle || null,
+    themes: Array.isArray(acc.themes) ? acc.themes : ['default'],
+    equippedTheme: acc.equippedTheme || 'default',
     bio: typeof acc.bio === 'string' ? acc.bio.trim().slice(0, 150) : null,
   };
 }
@@ -119,6 +131,16 @@ function updateUserAccount(userId, updater) {
 
 function getBalance(userId) {
   return getUserAccount(userId).coins;
+}
+
+function addCoins(userId, amount) {
+  const qty = Math.max(0, normalizeNumber(amount, 0));
+  if (qty === 0) return getUserAccount(userId).coins;
+
+  const updated = updateUserAccount(userId, (acc) => {
+    acc.coins = (acc.coins || 0) + qty;
+  });
+  return updated.coins;
 }
 
 function getMagicBeans(userId) {
@@ -269,6 +291,74 @@ function setUserBio(userId, bioText) {
   return { success: true, bio: updated.bio };
 }
 
+function getThemesCatalog() {
+  return THEMES_CATALOG;
+}
+
+function getUserThemes(userId) {
+  const account = getUserAccount(userId);
+  return account.themes || ['default'];
+}
+
+function buyTheme(userId, themeId) {
+  const theme = THEMES_CATALOG[themeId];
+  if (!theme) {
+    return { success: false, reason: 'theme_not_found', message: 'Tema não encontrado no catálogo.' };
+  }
+
+  const account = getUserAccount(userId);
+  const userThemes = account.themes || ['default'];
+  if (userThemes.includes(themeId)) {
+    return { success: false, reason: 'already_owned', message: `Você já possui o tema visual **${theme.name}**!` };
+  }
+
+  if (account.magicBeans < theme.cost) {
+    return {
+      success: false,
+      reason: 'insufficient_beans',
+      message: `Você precisa de **${theme.cost} 🌱 Feijões Mágicos** para adquirir este tema visual (Saldo atual: ${account.magicBeans} 🌱).`,
+    };
+  }
+
+  const updated = updateUserAccount(userId, (acc) => {
+    acc.magicBeans -= theme.cost;
+    acc.themes = Array.isArray(acc.themes) ? [...acc.themes, themeId] : ['default', themeId];
+    acc.equippedTheme = themeId;
+  });
+
+  return {
+    success: true,
+    theme,
+    equipped: true,
+    remainingBeans: updated.magicBeans,
+    message: `🎨 **Tema Visual Desbloqueado e Equipado!** Seu perfil agora brilha com: **${theme.emoji} ${theme.name}**!`,
+  };
+}
+
+function equipTheme(userId, themeId) {
+  const finalThemeId = themeId || 'default';
+  const theme = THEMES_CATALOG[finalThemeId];
+  if (!theme) {
+    return { success: false, reason: 'theme_not_found', message: 'Tema visual não encontrado.' };
+  }
+
+  const account = getUserAccount(userId);
+  const userThemes = account.themes || ['default'];
+  if (!userThemes.includes(finalThemeId)) {
+    return { success: false, reason: 'not_owned', message: `Você ainda não desbloqueou o tema **${theme.name}**!` };
+  }
+
+  updateUserAccount(userId, (acc) => {
+    acc.equippedTheme = finalThemeId;
+  });
+
+  return {
+    success: true,
+    theme,
+    message: `🎨 Tema visual **${theme.emoji} ${theme.name}** equipado com sucesso!`,
+  };
+}
+
 function getWorkStatus(userId, now = Date.now()) {
   const account = getUserAccount(userId);
   const lastWorkAt = account.lastWorkAt ? new Date(account.lastWorkAt).getTime() : 0;
@@ -398,8 +488,10 @@ module.exports = {
   WORK_COOLDOWN_MS,
   CURRENCY_DEFINITIONS,
   TITLES_CATALOG,
+  THEMES_CATALOG,
   getUserAccount,
   getBalance,
+  addCoins,
   getMagicBeans,
   addMagicBeans,
   spendMagicBeans,
@@ -414,6 +506,10 @@ module.exports = {
   equipTitle,
   unequipTitle,
   setUserBio,
+  getThemesCatalog,
+  getUserThemes,
+  buyTheme,
+  equipTheme,
   getWorkStatus,
   setProfession,
   startWork,

@@ -496,6 +496,7 @@ function renderTarotCard(card, orientation = 'UPRIGHT') {
   ctx.textBaseline = 'middle';
   ctx.fillStyle = accentColor;
   ctx.font = 'bold 11px sans-serif';
+  ctx.fillText('TAROT CRINGELÂNDIA  •  BOT KUROMI', 300, 978);
   ctx.fillText('TAROT CRINGELÂNDIA  •  BOT PYXIE', 300, 978);
 
   const buffer = canvas.toBuffer('image/png');

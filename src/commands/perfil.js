@@ -18,6 +18,10 @@ const {
   buyTitle,
   equipTitle,
   unequipTitle,
+  getThemesCatalog,
+  getUserThemes,
+  buyTheme,
+  equipTheme,
   setUserBio,
 } = require('../services/economy');
 const { getSpouseId } = require('../services/marriage');
@@ -65,8 +69,13 @@ function buildProfileView(targetUser, viewerId) {
   const actionRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`profile_open_titles:${targetUser.id}:${viewerId}`)
-      .setLabel('Títulos & Cosméticos')
+      .setLabel('Títulos')
       .setEmoji('👑')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId(`profile_open_themes:${targetUser.id}:${viewerId}`)
+      .setLabel('Temas Visuais')
+      .setEmoji('🎨')
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setCustomId(`profile_open_bio:${targetUser.id}:${viewerId}`)
@@ -166,6 +175,83 @@ function buildTitlesView(targetUser, viewerId) {
   return { embeds: [embed], components: [selectRow, buttonRow] };
 }
 
+function buildThemesView(targetUser, viewerId) {
+  const account = getUserAccount(targetUser.id);
+  const themesCatalog = getThemesCatalog();
+  const ownedThemes = account.themes || ['default'];
+  const equippedId = account.equippedTheme || 'default';
+  const currentTheme = themesCatalog[equippedId] || themesCatalog.default;
+
+  const desc = [
+    'Personalize a cor e o estilo visual dos cartões do seu perfil!',
+    '',
+    '🌱 **SEU SALDO**',
+    `> 🌱 **Feijões Mágicos:** **${account.magicBeans || 0} 🌱**`,
+    '',
+    '🎨 **TEMA VISUAL ATUAL**',
+    `> ${currentTheme.emoji} **${currentTheme.name}** (\`${currentTheme.color}\`)\n> *« ${currentTheme.desc} »*`,
+    '',
+    '✨ **CATÁLOGO DE TEMAS**',
+    'Escolha um tema no menu suspenso abaixo para **desbloquear** ou **equipar**:',
+  ].join('\n');
+
+  const embed = new EmbedBuilder()
+    .setColor(currentTheme.color || PYXIE_COLORS.magenta)
+    .setTitle(`🎨  ✦  Temas & Cores do Perfil — ${targetUser.displayName || targetUser.username}`)
+    .setDescription(desc)
+    .setThumbnail(targetUser.displayAvatarURL({ dynamic: true, size: 256 }))
+    .setFooter({ text: 'Personalização Visual • Desbloqueie com Feijões Mágicos' })
+    .setTimestamp();
+
+  const options = Object.values(themesCatalog).map((theme) => {
+    const isEquipped = equippedId === theme.id;
+    const isOwned = ownedThemes.includes(theme.id);
+
+    let statusTag = '';
+    let desc = '';
+    let val = '';
+
+    if (isEquipped) {
+      statusTag = ' [EQUIPADO]';
+      desc = 'Tema atualmente ativo no perfil';
+      val = `equipped:${theme.id}`;
+    } else if (isOwned) {
+      statusTag = ' [ADQUIRIDO]';
+      desc = 'Clique para equipar este tema';
+      val = `equip:${theme.id}`;
+    } else {
+      statusTag = ` [${theme.cost} 🌱]`;
+      desc = `Desbloquear por ${theme.cost} Feijão(ões) Mágico(s)`;
+      val = `buy:${theme.id}`;
+    }
+
+    return {
+      label: `${theme.name}${statusTag}`.slice(0, 100),
+      description: desc.slice(0, 100),
+      value: val,
+      emoji: theme.emoji,
+      default: isEquipped,
+    };
+  });
+
+  const selectRow = new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId(`profile_select_theme:${targetUser.id}:${viewerId}`)
+      .setPlaceholder('🎨 Escolha um tema visual para equipar ou comprar...')
+      .addOptions(options)
+  );
+
+  const buttonRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`profile_view_main:${targetUser.id}:${viewerId}`)
+      .setLabel('Voltar ao Perfil')
+      .setEmoji('◀️')
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  return { embeds: [embed], components: [selectRow, buttonRow] };
+}
+
 function isProfileInteraction(interaction) {
   return typeof interaction.customId === 'string' && interaction.customId.startsWith('profile_');
 }
@@ -248,7 +334,14 @@ async function handleProfileInteraction(interaction) {
     return interaction.update(view);
   }
 
-  // 6. Desequipar Título
+  // 6. Abrir Galeria de Temas
+  if (action === 'profile_open_themes') {
+    const targetUser = await interaction.client.users.fetch(targetId).catch(() => interaction.user);
+    const view = buildThemesView(targetUser, interaction.user.id);
+    return interaction.update(view);
+  }
+
+  // 7. Desequipar Título
   if (action === 'profile_unequip') {
     unequipTitle(targetId);
     const targetUser = await interaction.client.users.fetch(targetId).catch(() => interaction.user);
@@ -256,7 +349,7 @@ async function handleProfileInteraction(interaction) {
     return interaction.update(view);
   }
 
-  // 7. Seleção de Título no Dropdown (Comprar / Equipar)
+  // 8. Seleção de Título no Dropdown
   if (action === 'profile_select_title') {
     const selectedVal = interaction.values[0];
     const [operation, titleId] = selectedVal.split(':');
@@ -282,17 +375,45 @@ async function handleProfileInteraction(interaction) {
       return interaction.update(view);
     }
   }
+
+  // 9. Seleção de Tema no Dropdown
+  if (action === 'profile_select_theme') {
+    const selectedVal = interaction.values[0];
+    const [operation, themeId] = selectedVal.split(':');
+
+    if (operation === 'equipped') {
+      return interaction.reply({ content: '🎨 Este tema visual já está ativo no seu perfil!', flags: 64 });
+    }
+
+    if (operation === 'equip') {
+      const res = equipTheme(targetId, themeId);
+      const targetUser = await interaction.client.users.fetch(targetId).catch(() => interaction.user);
+      const view = buildThemesView(targetUser, interaction.user.id);
+      return interaction.update(view);
+    }
+
+    if (operation === 'buy') {
+      const res = buyTheme(targetId, themeId);
+      if (!res.success) {
+        return interaction.reply({ content: `❌ ${res.message}`, flags: 64 });
+      }
+      const targetUser = await interaction.client.users.fetch(targetId).catch(() => interaction.user);
+      const view = buildThemesView(targetUser, interaction.user.id);
+      return interaction.update(view);
+    }
+  }
 }
 
 module.exports = {
   name: PROFILE,
   buildProfileView,
   buildTitlesView,
+  buildThemesView,
   isProfileInteraction,
   handleProfileInteraction,
   data: new SlashCommandBuilder()
     .setName(PROFILE)
-    .setDescription('Exibe seu perfil com títulos customizáveis, Pymon ativo, moedas e Feijões Mágicos.')
+    .setDescription('Exibe seu perfil com títulos e temas customizáveis, Pymon ativo, moedas e Feijões Mágicos.')
     .addUserOption((option) => option.setName('usuario').setDescription('Usuário para consultar').setRequired(false)),
   async executePrefix({ message }) {
     const target = message.mentions.users.first() || message.author;

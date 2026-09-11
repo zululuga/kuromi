@@ -95,6 +95,8 @@ function buildPetTab(userId, userTag, subMode = null) {
 
   const shinyTag = activePet.shiny ? ' ✨ **Shiny**' : '';
   const desc = [
+    `👤 **Treinador:** ${userTag}`,
+    `🐾 **Espécie:** ${activePet.species}  •  🔮 **Elemento:** \`${activePet.element}\`  •  ⭐ **Nível:** **${activePet.level}**`,
     '✨ **TREINADOR & ESPÉCIE**',
     `> 👤 **Treinador:** ${userTag}`,
     `> 🐾 **Espécie:** ${activePet.species}  •  🔮 **Elemento:** \`${activePet.element}\`  •  ⭐ **Nível:** **${activePet.level}**`,
@@ -252,8 +254,10 @@ function buildIncubatorTab(userId, userTag) {
   });
 
   const desc = [
+    `*Chocadeira mágica com taxa elevada de criaturas **SHINY (15% a 20%)**!*`,
     '> *Chocadeira mágica com taxa elevada de criaturas **SHINY (15% a 20%)**!*',
     '',
+    `🏡 **Capacidade:** **${incubator.activeCount}/${incubator.maxSlots} ninhos ocupados**`,
     '🏡 **CAPACIDADE DA CHOCADEIRA**',
     `> 🪺 **Ocupação:** **${incubator.activeCount}/${incubator.maxSlots} ninhos ocupados**`,
     '',
@@ -393,6 +397,8 @@ function buildDungeonTab(userId, userTag) {
 
   const isExhausted = activePet.energy < 8 || run.isExhausted;
   const desc = [
+    `🐾 **Explorador:** **${activePet.name}** (${activePet.emoji} Nv. ${activePet.level})`,
+    `📍 **Posição:** Quadrante **(${run.playerPos.x + 1}, ${run.playerPos.y + 1})**  •  🏞️ **Terreno:** ${run.currentTerrain?.emoji || '🌿'} **${run.currentTerrain?.name || 'Trilha'}**`,
     '🧭 **COORDENADAS DA EXPEDIÇÃO**',
     `> 🐾 **Explorador:** **${activePet.name}** (${activePet.emoji} Nv. ${activePet.level})`,
     `> 📍 **Posição:** Quadrante **(${run.playerPos.x + 1}, ${run.playerPos.y + 1})**  •  🏞️ **Terreno:** ${run.currentTerrain?.emoji || '🌿'} **${run.currentTerrain?.name || 'Trilha'}**`,
@@ -473,6 +479,8 @@ function buildInventoryTab(userId, userTag) {
   const entries = Object.entries(inventory).filter(([_, count]) => count > 0);
 
   const desc = [
+    `💰 **Saldo em Carteira:** **${formatCoins(account.coins)}**`,
+    `🐾 **Pymon Ativo:** ${activePet ? `${activePet.emoji} **${activePet.name}** (Nv. ${activePet.level})` : '*Nenhum ativo*'}`,
     '🎒 **STATUS GERAL**',
     `> 💰 **Saldo em Carteira:** **${formatCoins(account.coins)}**`,
     `> 🐾 **Pymon Ativo:** ${activePet ? `${activePet.emoji} **${activePet.name}** (Nv. ${activePet.level})` : '*Nenhum ativo*'}`,
@@ -561,6 +569,8 @@ function buildShopTab(userId, categoryOrTag = 'comida', maybeCategory = null) {
   };
 
   const desc = [
+    `💰 **Seu Saldo:** **${formatCoins(account.coins)}**`,
+    `📂 **Categoria:** **${catNames[category] || category}**`,
     '🪙 **CARTEIRA & DEPARTAMENTO**',
     `> 💰 **Seu Saldo:** **${formatCoins(account.coins)}**`,
     `> 📂 **Categoria:** **${catNames[category] || category}**`,
