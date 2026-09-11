@@ -15,68 +15,99 @@ const testRunId = Date.now();
 const testUserA = `user_test_a_${testRunId}`;
 const testUserB = `user_test_b_${testRunId}`;
 
-// 1. Setup inicial de contas
-addCoins(testUserA, 2000);
-addCoins(testUserB, 2000);
-addMagicBeans(testUserA, 10);
-adoptPet(testUserA, 'cinna');
-adoptPet(testUserB, 'bonorka');
+try {
+  // 1. Setup inicial de contas
+  addCoins(testUserA, 2000);
+  addCoins(testUserB, 2000);
+  addMagicBeans(testUserA, 10);
+  adoptPet(testUserA, 'cinna');
+  adoptPet(testUserB, 'bonorka');
 
-// 2. Teste LootLabs e Idempotência
-const txId = `tx_test_${Date.now()}`;
-const postback1 = processPostback({ userId: testUserA, txId, taskId: 'task_1', p: txId });
-assert.equal(postback1.success, true, 'O primeiro postback deve creditar com sucesso.');
-assert.equal(isTransactionProcessed(txId), true, 'A transação deve constar como processada.');
+  // 2. Teste LootLabs e Idempotência
+  const txId = `tx_test_${Date.now()}`;
+  const postback1 = processPostback({ userId: testUserA, txId, taskId: 'task_1', p: txId });
+  assert.equal(postback1.success, true, 'O primeiro postback deve creditar com sucesso.');
+  assert.equal(isTransactionProcessed(txId), true, 'A transação deve constar como processada.');
 
-const postback2 = processPostback({ userId: testUserA, txId, taskId: 'task_1', p: txId });
-assert.equal(postback2.success, false, 'O segundo postback idêntico deve ser recusado (Idempotência).');
-assert.equal(postback2.reason, 'already_processed', 'Motivo da recusa deve ser already_processed.');
+  const postback2 = processPostback({ userId: testUserA, txId, taskId: 'task_1', p: txId });
+  assert.equal(postback2.success, false, 'O segundo postback idêntico deve ser recusado (Idempotência).');
+  assert.equal(postback2.reason, 'already_processed', 'Motivo da recusa deve ser already_processed.');
 
-// 3. Teste Duelos (Máx 3x ao dia)
-const duelChallenge = createDuelChallenge(testUserA, testUserB, 100);
-assert.equal(duelChallenge.success, true, 'Desafio de duelo válido deve ser criado.');
-const duelRes = resolveDuelChallenge(duelChallenge.challenge.id, testUserB, true);
-assert.equal(duelRes.success, true, 'Duelo aceito deve simular combate e entregar recompensas.');
-assert.ok(duelRes.battleLogs.length > 0, 'Relatório de combate deve conter logs.');
+  // 3. Teste Duelos (Máx 3x ao dia)
+  const duelChallenge = createDuelChallenge(testUserA, testUserB, 100);
+  assert.equal(duelChallenge.success, true, 'Desafio de duelo válido deve ser criado.');
+  const duelRes = resolveDuelChallenge(duelChallenge.challenge.id, testUserB, true);
+  assert.equal(duelRes.success, true, 'Duelo aceito deve simular combate e entregar recompensas.');
+  assert.ok(duelRes.battleLogs.length > 0, 'Relatório de combate deve conter logs.');
 
-const guideEmbed = buildDuelGuideEmbed();
-assert.ok(guideEmbed.data.title.includes('Guia'), 'Guia de combate deve ser gerado.');
+  const guideEmbed = buildDuelGuideEmbed();
+  assert.ok(guideEmbed.data.title.includes('Guia'), 'Guia de combate deve ser gerado.');
 
-// 4. Teste de Trocas Seguras
-addItem(testUserA, 'racao_cringe', 3);
-const tradeProp = createTradeProposal(testUserA, testUserB, { type: 'item', id: 'racao_cringe', amount: 1 });
-assert.equal(tradeProp.success, true, 'Proposta de troca válida deve ser criada.');
+  // 4. Teste de Trocas Seguras
+  addItem(testUserA, 'racao_cringe', 3);
+  const tradeProp = createTradeProposal(testUserA, testUserB, { type: 'item', id: 'racao_cringe', amount: 1 });
+  assert.equal(tradeProp.success, true, 'Proposta de troca válida deve ser criada.');
 
-const confirm1 = confirmTrade(tradeProp.session.id, testUserA);
-assert.equal(confirm1.completed, false, 'Apenas 1 confirmação não deve concluir a troca.');
+  const confirm1 = confirmTrade(tradeProp.session.id, testUserA);
+  assert.equal(confirm1.completed, false, 'Apenas 1 confirmação não deve concluir a troca.');
 
-const confirm2 = confirmTrade(tradeProp.session.id, testUserB);
-assert.equal(confirm2.completed, true, 'Após ambas as confirmações, a troca deve ser concluída.');
-assert.ok(hasItem(testUserB, 'racao_cringe', 1), 'O receptor deve ter recebido o item.');
+  const confirm2 = confirmTrade(tradeProp.session.id, testUserB);
+  assert.equal(confirm2.completed, true, 'Após ambas as confirmações, a troca deve ser concluída.');
+  assert.ok(hasItem(testUserB, 'racao_cringe', 1), 'O receptor deve ter recebido o item.');
 
-// 5. Teste de Expedição Passiva AFK
-const expRes = startExpedition(testUserA, 2);
-assert.equal(expRes.success, true, 'Expedição de 2h deve ser iniciada.');
-const activeExp = getActiveExpedition(testUserA);
-assert.ok(activeExp, 'Expedição ativa deve ser encontrada.');
+  // 5. Teste de Expedição Passiva AFK
+  const expRes = startExpedition(testUserA, 2);
+  assert.equal(expRes.success, true, 'Expedição de 2h deve ser iniciada.');
+  const activeExp = getActiveExpedition(testUserA);
+  assert.ok(activeExp, 'Expedição ativa deve ser encontrada.');
 
-// 6. Teste World Boss ALPHA
-const boss = getWorldBoss();
-assert.ok(boss, 'World Boss deve estar disponível.');
-assert.equal(boss.title, 'ALPHA', 'World Boss deve possuir o título ALPHA.');
-assert.equal(boss.level, '???', 'Nível do Boss deve ser ???.');
+  // Bloqueio de ação enquanto em expedição
+  const blockedAttack = attackWorldBoss(testUserA);
+  assert.equal(blockedAttack.success, false, 'Pet em expedição não deve poder atacar o World Boss.');
+  assert.equal(blockedAttack.reason, 'on_expedition', 'Motivo deve ser on_expedition.');
 
-const attackRes = attackWorldBoss(testUserA);
-assert.equal(attackRes.success, true, 'Ataque ao Boss deve ser computado com sucesso.');
-assert.ok(attackRes.damage > 0, 'Dano causado deve ser maior que zero.');
+  // 6. Teste World Boss ALPHA com usuário com pet livre
+  const boss = getWorldBoss();
+  assert.ok(boss, 'World Boss deve estar disponível.');
+  assert.equal(boss.title, 'ALPHA', 'World Boss deve possuir o título ALPHA.');
+  assert.equal(boss.level, '???', 'Nível do Boss deve ser ???.');
 
-const bossRanking = getBossRanking(5);
-assert.ok(bossRanking.length > 0, 'Ranking de dano do Boss deve listar participantes.');
+  const attackRes = attackWorldBoss(testUserB);
+  assert.equal(attackRes.success, true, 'Ataque ao Boss pelo pet livre deve ser computado com sucesso.');
+  assert.ok(attackRes.damage > 0, 'Dano causado deve ser maior que zero.');
 
-// 7. Teste de Temas Visuais com Feijões Mágicos
-const themeBuy = buyTheme(testUserA, 'ouro');
-assert.equal(themeBuy.success, true, 'Compra de tema com Feijões Mágicos deve ter sucesso.');
-const userAcc = getUserAccount(testUserA);
-assert.equal(userAcc.equippedTheme, 'ouro', 'Tema Ouro deve estar equipado no perfil.');
+  // 7. Teste de Temas Visuais com Feijões Mágicos
+  const themeBuy = buyTheme(testUserA, 'ouro');
+  assert.equal(themeBuy.success, true, 'Compra de tema com Feijões Mágicos deve ter sucesso.');
+  const userAcc = getUserAccount(testUserA);
+  assert.equal(userAcc.equippedTheme, 'ouro', 'Tema Ouro deve estar equipado no perfil.');
 
-console.log('Verificação de Monetização LootLabs, Idempotência, Duelos, Trocas, Expedições AFK, World Boss ALPHA e Temas: OK');
+  console.log('Verificação de Monetização LootLabs, Idempotência, Duelos, Trocas, Expedições AFK, World Boss ALPHA e Temas: OK');
+} finally {
+  // Limpeza rigorosa de dados de teste para não poluir rankings nem produção
+  const cleanFiles = [
+    path.join(__dirname, '..', 'data', 'economy.json'),
+    path.join(__dirname, '..', 'data', 'pets.json'),
+    path.join(__dirname, '..', 'data', 'world_boss.json'),
+    path.join(__dirname, '..', 'data', 'expeditions.json'),
+    path.join(__dirname, '..', 'data', 'inventory.json'),
+  ];
+
+  for (const file of cleanFiles) {
+    if (fs.existsSync(file)) {
+      try {
+        const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+        if (file.endsWith('world_boss.json')) {
+          if (data.participants) {
+            delete data.participants[testUserA];
+            delete data.participants[testUserB];
+          }
+        } else {
+          delete data[testUserA];
+          delete data[testUserB];
+        }
+        fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
+      } catch (e) {}
+    }
+  }
+}

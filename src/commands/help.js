@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { buildModularHelpEmbed, buildModularHelpComponents, HELP_MODULES } = require('./commandHelpers');
+const { buildModularHelpEmbed, buildModularHelpComponents, MODULE_METADATA } = require('./commandHelpers');
 const { HELP } = require('./commandNames');
 
 function isHelpButton(interaction) {
@@ -29,7 +29,7 @@ async function executeButton({ interaction }) {
 }
 
 function getModuleChoices() {
-  return HELP_MODULES.map((m) => ({
+  return Object.values(MODULE_METADATA).map((m) => ({
     name: `${m.emoji} ${m.label}`,
     value: m.id,
   }));

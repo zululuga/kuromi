@@ -11,6 +11,7 @@
   "git.ignoreLimitWarning": true,
   "git.detectSubmodules": false,
   "git.fetchOnType": false,
-  "git.showInlineNotification": false
+  "git.showInlineNotification": false,
+  "git.autorefresh": false
 }
 

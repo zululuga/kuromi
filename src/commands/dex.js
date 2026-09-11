@@ -93,7 +93,7 @@ function buildDexView(userId, userTag, selectedKey = 'cinna', viewShiny = false)
         : `🔒  ✦  Dex #${currentIndex + 1} — ??? (Criatura Misteriosa)`
     )
     .setImage('attachment://dex_entry.png')
-    .setFooter({ text: 'Dex de Pymons • Navegue pelos botões ou use o menu abaixo' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 
   if (isUnlocked) {
@@ -173,7 +173,7 @@ function buildDexView(userId, userTag, selectedKey = 'cinna', viewShiny = false)
 
   const shinyToggleBtn = new ButtonBuilder()
     .setCustomId(`dex_toggle_shiny:${selectedKey}:${currentViewShiny ? '0' : '1'}:${userId}`)
-    .setLabel(currentViewShiny ? 'Ver Normal' : 'Ver Shiny ✨')
+    .setLabel(currentViewShiny ? 'Ver Normal' : 'Ver Shiny')
     .setEmoji(currentViewShiny ? '🐾' : '✨')
     .setStyle(currentViewShiny ? ButtonStyle.Primary : ButtonStyle.Secondary)
     .setDisabled(!isShinyUnlocked);
@@ -181,12 +181,14 @@ function buildDexView(userId, userTag, selectedKey = 'cinna', viewShiny = false)
   const navRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`dex_nav:${prevKey}:0:${userId}`)
-      .setLabel('◀ Anterior')
+      .setLabel('Anterior')
+      .setEmoji('◀️')
       .setStyle(ButtonStyle.Secondary),
     shinyToggleBtn,
     new ButtonBuilder()
       .setCustomId(`dex_nav:${nextKey}:0:${userId}`)
-      .setLabel('Próximo ▶')
+      .setLabel('Próximo')
+      .setEmoji('▶️')
       .setStyle(ButtonStyle.Secondary)
   );
 

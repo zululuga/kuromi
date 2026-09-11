@@ -121,11 +121,13 @@ try {
   assert.equal(changedProfession.charged, 50, 'A troca de profissão deve custar 50 Moedinhas.');
   const work = startWork('worker', { profession: 'programador' }, Date.parse('2026-01-03T00:00:00.000Z'));
   assert.equal(work.started, true, 'O trabalho deve iniciar quando o cooldown estiver disponível.');
-  assert.equal(work.workCount, 1, 'O trabalho deve incrementar o contador.');
+  assert.equal(work.workCount, 0, 'O trabalho não deve incrementar o contador antes de concluído com sucesso.');
   assert.equal(getWorkStatus('worker', Date.parse('2026-01-03T01:00:00.000Z')).available, false, 'O trabalho deve ter cooldown de 3 horas.');
 
   const workFinish = finishWork('worker', true, 35, true);
   assert.equal(workFinish.amount, 35, 'O trabalho concluído deve pagar o salário.');
+  assert.equal(workFinish.workCount, 1, 'O trabalho concluído com sucesso deve incrementar o contador.');
+  assert.equal(getUserAccount('worker').workCount, 1, 'Conta deve ter 1 trabalho registrado.');
   assert.equal(workFinish.bonusBean, true, 'O bônus de feijão mágico deve ser registrado.');
   assert.equal(getMagicBeans('worker'), 1, 'Trabalhador deve ter recebido 1 feijão de bônus.');
 

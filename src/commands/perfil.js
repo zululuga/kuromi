@@ -45,11 +45,12 @@ function buildProfileView(targetUser, viewerId) {
   const titlesCatalog = getTitlesCatalog();
   const equippedTitle = account.equippedTitle ? titlesCatalog[account.equippedTitle] : null;
 
-  const unlockedCount = Object.keys(userDex?.unlocked || {}).length;
-  const shiniesCount = Object.keys(userDex?.unlockedShiny || {}).length;
+  const dexValues = Object.values(userDex || {});
+  const unlockedCount = dexValues.filter((e) => e.discovered).length;
+  const shiniesCount = dexValues.filter((e) => e.shinyDiscovered).length;
   const dexStats = {
     totalUnlocked: unlockedCount,
-    totalSpecies: 10,
+    totalSpecies: dexValues.length || 10,
     totalShinies: shiniesCount,
   };
 
@@ -70,7 +71,6 @@ function buildProfileView(targetUser, viewerId) {
   const actionRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`profile_open_titles:${targetUser.id}:${viewerId}`)
-      .setLabel('Títulos & Cosméticos')
       .setLabel('Títulos')
       .setEmoji('👑')
       .setStyle(ButtonStyle.Primary),
@@ -120,7 +120,7 @@ function buildTitlesView(targetUser, viewerId) {
     .setTitle(`👑  ✦  Galeria de Títulos — ${targetUser.displayName || targetUser.username}`)
     .setDescription(desc)
     .setThumbnail(targetUser.displayAvatarURL({ dynamic: true, size: 256 }))
-    .setFooter({ text: 'Títulos de Prestígio • Adquira com Feijões Mágicos (/diario ou Pymon Nv. 100)' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 
   const options = Object.values(titlesCatalog).map((title) => {
@@ -203,7 +203,7 @@ function buildThemesView(targetUser, viewerId) {
     .setTitle(`🎨  ✦  Temas & Cores do Perfil — ${targetUser.displayName || targetUser.username}`)
     .setDescription(desc)
     .setThumbnail(targetUser.displayAvatarURL({ dynamic: true, size: 256 }))
-    .setFooter({ text: 'Personalização Visual • Desbloqueie com Feijões Mágicos' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 
   const options = Object.values(themesCatalog).map((theme) => {

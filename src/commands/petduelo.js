@@ -53,6 +53,8 @@ async function handleDuelInteraction(interaction) {
       await interaction.update({ content: '⏳ O desafio expirou ou já foi finalizado.', embeds: [], components: [] });
     } else if (result.reason === 'insufficient_funds_at_execution') {
       await interaction.update({ content: '❌ Um dos jogadores não possui moedas suficientes para cobrir a aposta!', embeds: [], components: [] });
+    } else if (result.reason === 'pet_on_expedition') {
+      await interaction.update({ content: '🧭 Um dos Pymons partiu em expedição e não pode lutar no momento!', embeds: [], components: [] });
     } else {
       await interaction.update({ content: '❌ Não foi possível realizar o combate.', embeds: [], components: [] });
     }
@@ -128,6 +130,8 @@ function formatDuelError(challengeRes, target) {
   if (challengeRes.reason === 'target_daily_limit_reached') return `⏳ ${target} já atingiu o limite de **3 duelos hoje**!`;
   if (challengeRes.reason === 'challenger_no_pet') return '❌ Você precisa ter um Pymon ativo para duelar! Inicie sua jornada com `/pymons`.';
   if (challengeRes.reason === 'target_no_pet') return `❌ ${target} ainda não possui nenhum Pymon ativo.`;
+  if (challengeRes.reason === 'challenger_on_expedition') return '🧭 Seu Pymon está atualmente em uma expedição e não pode duelar!';
+  if (challengeRes.reason === 'target_on_expedition') return `🧭 O Pymon de ${target} está atualmente em uma expedição e não pode duelar!`;
   if (challengeRes.reason === 'challenger_insufficient_funds') return `❌ Você não tem moedas suficientes para apostar ${formatCoins(challengeRes.bet)} (Seu saldo: ${formatCoins(challengeRes.balance)}).`;
   if (challengeRes.reason === 'target_insufficient_funds') return `❌ ${target} não tem moedas suficientes para cobrir essa aposta.`;
   if (challengeRes.reason === 'challenger_hungry') return '❌ Seu Pymon está com muita fome (< 15%) para lutar! Alimente-o antes.';

@@ -115,7 +115,7 @@ function buildPetTab(userId, userTag, subMode = null) {
     .setTitle(`${activePet.emoji}  ✦  ${activePet.name}${shinyTag}`)
     .setDescription(desc)
     .setImage('attachment://pet_card.png')
-    .setFooter({ text: 'Pymons • Painel Tamagotchi' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 
   const components = [buildHubHeaderRow(userId, 'pet', subMode)];
@@ -152,8 +152,8 @@ function buildPetTab(userId, userTag, subMode = null) {
     components.push(careRow);
 
   } else if (subMode === 'more') {
-    // Submenu Mais Utilitários
-    const moreRow = new ActionRowBuilder().addComponents(
+    // Submenu Mais Recursos & Ações
+    const moreRow1 = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(`hub_tab:dex:${userId}`)
         .setLabel('Dex')
@@ -170,12 +170,29 @@ function buildPetTab(userId, userTag, subMode = null) {
         .setEmoji('🛒')
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
+        .setCustomId(`hub_tab:element:${userId}`)
+        .setLabel('Elementos')
+        .setEmoji('⚖️')
+        .setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder()
         .setCustomId(`hub_tab:pet:${userId}`)
         .setLabel('Fechar')
         .setEmoji('◀')
         .setStyle(ButtonStyle.Secondary)
     );
-    components.push(moreRow);
+    const moreRow2 = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`hub_tab:expedition:${userId}`)
+        .setLabel('Expedição AFK')
+        .setEmoji('⏳')
+        .setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId(`hub_tab:boss:${userId}`)
+        .setLabel('World Boss')
+        .setEmoji('🐉')
+        .setStyle(ButtonStyle.Danger)
+    );
+    components.push(moreRow1, moreRow2);
 
   } else {
     // Menu padrão rápido
@@ -269,7 +286,7 @@ function buildIncubatorTab(userId, userTag) {
     .setColor(PYXIE_COLORS.emerald)
     .setTitle(`🥚  ✦  Chocadeira Encantada de Pyxie — ${userTag}`)
     .setDescription(desc)
-    .setFooter({ text: 'Chocadeira • Incubação em tempo real' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 
   const components = [buildHubHeaderRow(userId, 'incubator')];
@@ -338,6 +355,31 @@ function buildDungeonTab(userId, userTag) {
     return buildOnboardingView(userId, userTag);
   }
 
+  const { getActiveExpedition } = require('../services/petExpedition');
+  const activeExp = getActiveExpedition(userId);
+  if (activeExp && !activeExp.completed) {
+    const remainingMins = Math.ceil(activeExp.remainingMs / 60000);
+    const desc = [
+      `🧭 **${activePet.name}** (${activePet.emoji}) está atualmente em uma **Expedição AFK**!`,
+      '',
+      `> ⏳ **Retorno estimado:** **${remainingMins} minuto(s)**`,
+      `> 📍 **Missão:** Expedição de ${activeExp.durationHours}h`,
+      '',
+      'Enquanto estiver em expedição externa, seu Pymon não pode explorar masmorras simultaneamente.',
+      'Aguarde o término da expedição e resgate seus tesouros com `/expedicao` para liberar novas aventuras!',
+    ].join('\n');
+
+    const embed = new EmbedBuilder()
+      .setColor(PYXIE_COLORS.gold)
+      .setTitle(`🗺️  ✦  Dungeons em Pausa — ${userTag}`)
+      .setDescription(desc)
+      .setFooter({ text: 'Pyxie' })
+      .setTimestamp();
+
+    const components = [buildHubHeaderRow(userId, 'dungeon')];
+    return { embeds: [embed], components, files: [] };
+  }
+
   if (!run) {
     const zones = getDungeonZones();
     const desc = [
@@ -357,7 +399,7 @@ function buildDungeonTab(userId, userTag) {
       .setColor(PYXIE_COLORS.cyan)
       .setTitle(`🗺️  ✦  Masmorras & Dungeons Procedurais 2D — ${userTag}`)
       .setDescription(desc)
-      .setFooter({ text: 'Dungeons • Movimente-se em grade • Fome 0% ou 0 HP impedem exploração' })
+      .setFooter({ text: 'Pyxie' })
       .setTimestamp();
 
     const components = [buildHubHeaderRow(userId, 'dungeon')];
@@ -418,7 +460,7 @@ function buildDungeonTab(userId, userTag) {
     .setTitle(`🧭  ✦  ${run.zone.emoji} ${run.zone.name} — Mapa 2D`)
     .setDescription(desc)
     .setImage('attachment://dungeon_map.png')
-    .setFooter({ text: 'Dungeon 2D • Use o D-Pad para navegar • Resgate voluntário salva 100% dos espólios' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 
   // Controles Direcionais D-Pad
@@ -501,7 +543,7 @@ function buildInventoryTab(userId, userTag) {
     .setColor(PYXIE_COLORS.magenta)
     .setTitle(`🎒  ✦  Mochila Encantada — ${userTag}`)
     .setDescription(desc)
-    .setFooter({ text: 'Mochila • Selecione um item no menu para usá-lo' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 
   const components = [buildHubHeaderRow(userId, 'inventory')];
@@ -588,7 +630,7 @@ function buildShopTab(userId, categoryOrTag = 'comida', maybeCategory = null) {
     .setColor(PYXIE_COLORS.gold)
     .setTitle(`🛒  ✦  Lojinha da Pyxie — ${catNames[category] || category}`)
     .setDescription(desc)
-    .setFooter({ text: 'Lojinha • Selecione uma categoria ou compre pelo menu abaixo' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 
   const components = [buildHubHeaderRow(userId, 'shop')];
@@ -660,7 +702,7 @@ function buildOnboardingView(userId, userDisplayName) {
     .setColor(PYXIE_COLORS.lilac)
     .setTitle('✨ ✦ Boas-vindas ao Reino dos Pymons! ✦ ✨')
     .setDescription(desc)
-    .setFooter({ text: 'Pymons • Inicie sua jornada pelo botão abaixo' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(
@@ -766,6 +808,30 @@ async function handleHubInteraction(interaction) {
     if (tabName === 'shop') {
       const view = buildShopTab(userId, 'comida');
       return interaction.update(view);
+    }
+    if (tabName === 'boss') {
+      const { buildBossEmbed, buildBossComponents } = require('./boss');
+      const embed = buildBossEmbed(userId);
+      const components = buildBossComponents(userId);
+      return interaction.update({ embeds: [embed], components, files: [] });
+    }
+    if (tabName === 'expedition') {
+      const { buildExpeditionEmbed, buildExpeditionComponents } = require('./expedicao');
+      const embed = buildExpeditionEmbed(userId);
+      const components = buildExpeditionComponents(userId);
+      return interaction.update({ embeds: [embed], components, files: [] });
+    }
+    if (tabName === 'element') {
+      const { buildElementChartEmbed } = require('../utils/elementChart');
+      const embed = buildElementChartEmbed();
+      const backRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`hub_tab:pet:${userId}`)
+          .setLabel('Voltar ao Hub')
+          .setEmoji('◀')
+          .setStyle(ButtonStyle.Secondary)
+      );
+      return interaction.update({ embeds: [embed], components: [backRow], files: [] });
     }
   }
 
@@ -910,6 +976,14 @@ async function handleHubInteraction(interaction) {
 
   // 9. Dungeons: Iniciar expedição
   if (action === 'hub_dungeon_start_zone' || action === 'hub_dungeon_start_fast') {
+    const { isPetOnExpedition } = require('../services/petExpedition');
+    if (isPetOnExpedition(userId)) {
+      return interaction.reply({
+        content: '🧭 **Seu Pymon está atualmente em uma expedição!** Aguarde o retorno dele para explorar masmorras.',
+        flags: 64,
+      });
+    }
+
     const zoneId = action === 'hub_dungeon_start_zone' ? interaction.values[0] : 'bosque';
     const activePet = getActivePet(userId);
     const startRes = startProceduralRun(userId, zoneId, activePet);

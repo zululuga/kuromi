@@ -33,7 +33,7 @@ try {
 
   const help = getCommandList();
   assert.ok(Array.isArray(help), 'A lista de comandos deve existir.');
-  assert.ok(help.some((item) => item.name === '/ajuda'), 'O comando /ajuda deve estar na lista.');
+  assert.ok(help.some((item) => item.name === '/ajuda' || item.name === '/py-ajuda'), 'O comando de ajuda deve estar na lista.');
 
   const helpPage1 = buildHelpMessage('todos', 'user-123');
   assert.ok(helpPage1.embed, 'O embed do menu de ajuda deve ser gerado.');

@@ -6,6 +6,11 @@ const petsCatalog = require('../data/petsData.json');
 const { getElementMultiplier } = require('./petDuels');
 const { addCoins, addMagicBeans } = require('./economy');
 const { checkCooldown, setCooldown } = require('../utils/cooldown');
+const { isPetOnExpedition } = require('./petExpedition');
+
+function isTestUser(userId) {
+  return !userId || /^(user_)?test_/i.test(userId) || userId === 'user_123';
+}
 
 const bossFile = path.join(__dirname, '..', '..', 'data', 'world_boss.json');
 const ATTACK_COOLDOWN_MS = 10 * 60 * 1000; // 10 minutos entre ataques
@@ -75,6 +80,7 @@ function getBossRanking(limit = 10) {
   if (!boss || !boss.participants) return [];
 
   return Object.entries(boss.participants)
+    .filter(([userId]) => !isTestUser(userId))
     .map(([userId, data]) => ({
       userId,
       damage: data.totalDamage || 0,
@@ -92,6 +98,14 @@ function attackWorldBoss(userId) {
       success: false,
       reason: 'no_active_boss',
       message: 'Nenhum World Boss ativo no momento. Um novo titã ALPHA surgirá em breve!',
+    };
+  }
+
+  if (isPetOnExpedition(userId)) {
+    return {
+      success: false,
+      reason: 'on_expedition',
+      message: '🧭 Seu Pymon está atualmente em uma expedição e não pode lutar contra o World Boss!',
     };
   }
 
@@ -169,7 +183,9 @@ function attackWorldBoss(userId) {
     boss.defeatedAt = Date.now();
 
     // Determina MVP
-    const ranking = Object.entries(boss.participants).sort((a, b) => b[1].totalDamage - a[1].totalDamage);
+    const ranking = Object.entries(boss.participants)
+      .filter(([uId]) => !isTestUser(uId))
+      .sort((a, b) => b[1].totalDamage - a[1].totalDamage);
     if (ranking.length > 0) {
       mvpUserId = ranking[0][0];
       boss.mvp = mvpUserId;

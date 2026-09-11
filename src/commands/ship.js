@@ -87,7 +87,7 @@ function buildShipEmbed(memberA, memberB, percent) {
     embed
       .setTitle(`💖  ✦  Ship Eterno — ${guildName}  ✦  💖`)
       .setDescription(desc)
-      .setFooter({ text: `${guildName} • Conexão predestinada e inabalável` });
+      .setFooter({ text: 'Pyxie' });
   } else {
     const desc = [
       `**${nameA}**  x  **${nameB}**`,
@@ -102,7 +102,7 @@ function buildShipEmbed(memberA, memberB, percent) {
     embed
       .setTitle(`${verdict.emoji}  ✦  Ship — ${guildName}`)
       .setDescription(desc)
-      .setFooter({ text: `${guildName} • Compatibilidade de Membros` });
+      .setFooter({ text: 'Pyxie' });
   }
 
   return embed;

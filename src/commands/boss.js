@@ -86,16 +86,24 @@ function buildBossComponents(boss) {
     new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('boss_attack')
-        .setLabel('⚔️ Atacar Boss ALPHA')
+        .setLabel('Atacar Boss ALPHA')
+        .setEmoji('⚔️')
         .setStyle(ButtonStyle.Danger)
         .setDisabled(isDefeated),
       new ButtonBuilder()
         .setCustomId('boss_ranking')
-        .setLabel('🏆 Ranking Completo')
+        .setLabel('Ranking Completo')
+        .setEmoji('🏆')
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId('boss_status')
-        .setLabel('🔄 Atualizar')
+        .setLabel('Atualizar')
+        .setEmoji('🔄')
+        .setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId('boss_element_chart')
+        .setLabel('Tabela Elemental')
+        .setEmoji('⚖️')
         .setStyle(ButtonStyle.Secondary)
     ),
   ];
@@ -105,12 +113,18 @@ function isBossInteraction(interaction) {
   return typeof interaction.customId === 'string' && (
     interaction.customId === 'boss_attack' ||
     interaction.customId === 'boss_ranking' ||
-    interaction.customId === 'boss_status'
+    interaction.customId === 'boss_status' ||
+    interaction.customId === 'boss_element_chart'
   );
 }
 
 async function handleBossInteraction(interaction) {
   const action = interaction.customId;
+
+  if (action === 'boss_element_chart') {
+    const { buildElementChartEmbed } = require('../utils/elementChart');
+    return interaction.reply({ embeds: [buildElementChartEmbed()], flags: 64 });
+  }
 
   if (action === 'boss_status') {
     const boss = getWorldBoss();

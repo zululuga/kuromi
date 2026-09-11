@@ -16,8 +16,9 @@ const { createTarotAttachment } = require('../services/tarotRenderer');
 const { formatCoins } = require('./economyHelpers');
 const { getAnimatedEmoji } = require('../utils/serverEmojis');
 const { TAROT_LOG_CHANNEL_ID } = require('../config');
+const { TAROT } = require('./commandNames');
 
-const name = 'tarot';
+const name = TAROT || 'py-tarot';
 
 function getDisplayCardName(card) {
   if (!card) return 'Desconhecida';
@@ -60,11 +61,7 @@ function buildTarotEmbed(result, guild) {
     .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Tarot${guildName ? ` — ${guildName}` : ''}`)
     .setDescription(desc)
     .setImage('attachment://tarot_cringelandia.png')
-    .setFooter({
-      text: paid
-        ? 'Tiragem Especial • Leitura adicional realizada'
-        : 'Tarot • Sua leitura diária é privada e pessoal',
-    })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 
   return embed;
@@ -86,7 +83,7 @@ function buildAlreadyDrawnEmbed(remainingTime, guild) {
     .setColor('#a855f7')
     .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Tarot${guildName ? ` — ${guildName}` : ''}`)
     .setDescription(desc)
-    .setFooter({ text: 'Tarot • Descubra o que as cartas reservam para você' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 }
 
@@ -109,7 +106,7 @@ async function logTarotToPublicChannel(client, { user, result, guild }) {
         `${prefixHumor}O membro <@${user.id}> tirou a carta **${result.card.name}** (**POSIÇÃO ${getDisplayOrientation(result.orientation)}**)!`
       )
       .setImage('attachment://tarot_cringelandia.png')
-      .setFooter({ text: result.paid ? 'Tiragem realizada via suborno (350 🪙)' : 'Tiragem diária gratuita' })
+      .setFooter({ text: 'Pyxie' })
       .setTimestamp();
 
     await channel.send({
@@ -204,6 +201,7 @@ async function executeButton({ interaction, logTarotResult }) {
 
 module.exports = {
   name,
+  aliases: ['tarot'],
   ephemeral: true,
   isTarotButton,
   executeButton,

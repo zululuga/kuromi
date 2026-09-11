@@ -48,7 +48,7 @@ function buildInventoryEmbed(userId, userTag, selectedItemId = null) {
     .setColor(PYXIE_COLORS.magenta)
     .setTitle(`🎒  ✦  Mochila de ${userTag}`)
     .setDescription(desc)
-    .setFooter({ text: 'Mochila • Inventário Pessoal' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 }
 

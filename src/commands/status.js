@@ -17,7 +17,7 @@ function buildStatusEmbed(serverName, userTag) {
     .setTitle('✅  ✦  Status do Sistema — Online')
     .setDescription(desc)
     .setImage(STATUS_IMAGE_URL)
-    .setFooter({ text: 'Status • Monitoramento Operacional' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 }
 

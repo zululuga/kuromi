@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const { getActivePet, awardPetXp } = require('./pets');
+const { getActivePet, awardPetXp, schedulePetsSave } = require('./pets');
 const { addCoins, addMagicBeans } = require('./economy');
 const { addItem } = require('./inventory');
 
@@ -146,6 +146,8 @@ function claimExpedition(userId) {
   // Entrega
   if (pet) {
     awardPetXp(userId, pet.id, xpGained);
+    pet.totalExploracoes = (pet.totalExploracoes || 0) + 1;
+    schedulePetsSave();
   }
   addCoins(userId, coinsGained);
 
@@ -165,9 +167,15 @@ function claimExpedition(userId) {
   };
 }
 
+function isPetOnExpedition(userId) {
+  const exp = getActiveExpedition(userId);
+  return Boolean(exp && !exp.completed);
+}
+
 module.exports = {
   DURATIONS,
   getActiveExpedition,
+  isPetOnExpedition,
   startExpedition,
   claimExpedition,
 };

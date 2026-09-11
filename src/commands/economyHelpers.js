@@ -37,12 +37,11 @@ function buildWalletEmbed(user, currencies, position) {
   ].join('\n');
 
   return new EmbedBuilder()
-    .setColor(KUROMI_COLORS.gold)
     .setColor(PYXIE_COLORS.gold)
     .setTitle(`🪙  ✦  Carteira de ${user.displayName || user.username}`)
     .setDescription(desc)
     .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
-    .setFooter({ text: 'Economia Global • Ganhe moedas em /diario, /trabalho e Dungeons' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 }
 
@@ -73,7 +72,7 @@ function buildProfileEmbed({ user, account, spouse, rankPosition, professionLabe
     ? `> 💍 **Casado(a) com:** ${spouse}`
     : '> 🕊️ *Solteiro(a) • Coração Livre*';
 
-  let bioText = 'Aventureiro destemido explorando o universo de Pymons.';
+  let bioText = 'Aventureiro destemido explorando o reino.';
   if (account?.bio && account.bio.trim()) {
     bioText = account.bio.trim();
   } else if (equippedTitle?.desc) {
@@ -111,14 +110,11 @@ function buildProfileEmbed({ user, account, spouse, rankPosition, professionLabe
     : THEMES_CATALOG.default;
 
   return new EmbedBuilder()
-    .setColor(KUROMI_COLORS.violet || '#c084fc')
-    .setColor(PYXIE_COLORS.violet || '#c084fc')
     .setColor(equippedTheme?.color || PYXIE_COLORS.magenta || '#e60067')
     .setTitle(`👤  ✦  ${titlePrefix}${user.displayName || user.username}`)
     .setDescription(description)
     .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
-    .setFooter({ text: 'Perfil de Aventureiro • Use os botões abaixo para gerenciar títulos' })
-    .setFooter({ text: `Perfil • Tema: ${equippedTheme?.emoji || '🌸'} ${equippedTheme?.name || 'Padrão'} • Gerencie títulos e temas abaixo` })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 }
 
@@ -145,7 +141,7 @@ function buildRankingEmbed(entries, memberMap, viewerRank) {
     .setColor(PYXIE_COLORS.magenta || '#e60067')
     .setTitle('🏆  ✦  Ranking Global de Economia')
     .setDescription(desc)
-    .setFooter({ text: 'Ranking Global • Atualizado em tempo real' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 
   if (viewerRank) {

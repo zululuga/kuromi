@@ -6,100 +6,156 @@ const {
   StringSelectMenuBuilder,
 } = require('discord.js');
 
-const HELP_MODULES = [
-  {
-    id: 'todos',
-    label: 'Visão Geral / Todos',
-    emoji: '📖',
-    desc: 'Visão geral e índice de todos os módulos',
-  },
-  {
-    id: 'pymons',
-    label: 'Pymons & RPG',
-    emoji: '🐾',
-    desc: 'Dex inicial, cuidados, chocadeira, dungeons e duelos PvP',
-    commands: [
-      { name: '/pymons', desc: 'Dashboard do Pymon ativo, botões de ação e escolha de starter para iniciantes.' },
-      { name: '/petexplorar [zona]', desc: 'Envia seu Pymon para explorar dungeons em busca de ovos e moedas.' },
-      { name: '/petduelo @usuario [aposta]', desc: 'Desafia outro jogador para um combate por turnos no Coliseu.' },
-    ],
-  },
-  {
-    id: 'loja',
-    label: 'Loja & Inventário',
-    emoji: '🎒',
-    desc: 'Comidas, poções, baús e gestão da mochila',
-    commands: [
-      { name: '/loja', desc: 'Abre o catálogo da Lojinha com categorias e botões de compra rápida.' },
-      { name: '/inventario', desc: 'Exibe sua mochila de itens com opções interativas de uso e venda.' },
-      { name: '/comprar <item> [qtd]', desc: 'Compra itens diretamente da loja com moedas da carteira.' },
-      { name: '/vender <item> [qtd]', desc: 'Vende itens acumulados em explorações por moedinhas.' },
-      { name: '/usar <item>', desc: 'Aplica os efeitos de um item (comida, cura, elixir) no Pymon ativo.' },
-    ],
-  },
-  {
-    id: 'economia',
-    label: 'Economia & Carreiras',
-    emoji: '🪙',
-    desc: 'Moedinhas, trabalho, profissões e ranking',
-    commands: [
-      { name: '/diario', desc: 'Resgata sua recompensa diária de Moedinhas a cada 24h.' },
-      { name: '/carteira [@user]', desc: 'Consulta o saldo de moedas e posição no ranking.' },
-      { name: '/profissao [escolha]', desc: 'Escolhe ou troca sua carreira profissional.' },
-      { name: '/trabalho', desc: 'Executa seu trabalho diário para receber salário e bônus.' },
-      { name: '/ranking', desc: 'Exibe o ranking dos usuários com mais moedas.' },
-    ],
-  },
-  {
-    id: 'tarot',
-    label: 'Tarot',
-    emoji: '🔮',
-    desc: 'Tiragens diárias, 78 cartas e suborno',
-    commands: [
-      { name: '/tarot', desc: 'Realiza a tiragem da sua carta diária com renderização procedural de alta qualidade.' },
-      { name: 'Suborno do Tarot', desc: 'Pague moedas para forçar uma nova leitura se o destino foi cruel.' },
-    ],
-  },
-  {
-    id: 'social',
-    label: 'Social & Casamentos',
-    emoji: '💑',
-    desc: 'Casamentos, divórcios, perfil e ships',
-    commands: [
-      { name: '/casal [@user1] [@user2]', desc: 'Calcula a compatibilidade amorosa e gera um cartão ilustrado.' },
-      { name: '/casamento @user', desc: 'Pede alguém em casamento oficial no servidor (custa 1.000 moedas).' },
-      { name: '/divorcio', desc: 'Encerra o casamento atual com seu cônjuge.' },
-      { name: '/perfil [@user]', desc: 'Exibe o cartão de perfil completo com cônjuge e finanças.' },
-    ],
-  },
-  {
-    id: 'utilidades',
-    label: 'Utilidades & Servidor',
-    emoji: '⚙️',
-    desc: 'Status, ping, boas-vindas e configurações',
-    commands: [
-      { name: '/ajuda [modulo]', desc: 'Abre este guia categorizado.' },
-      { name: '/ping', desc: 'Testa a latência e tempo de resposta do bot.' },
-      { name: '/status', desc: 'Mostra o status de operação do bot e informações do servidor.' },
-      { name: '/boasvindas #canal', desc: 'Configura o canal de recepção de novos membros (apenas moderadores).' },
-      { name: '/agenda', desc: 'Exibe horários das automações ativas.' },
-    ],
-  },
-];
+const MODULE_METADATA = {
+  todos: { id: 'todos', label: 'Visão Geral / Todos', emoji: '📖', desc: 'Visão geral e índice de todas as categorias' },
+  pymons: { id: 'pymons', label: 'Pymons & RPG', emoji: '🐾', desc: 'Dex, cuidados, chocadeira, dungeons, boss, duelos e expedições' },
+  economia: { id: 'economia', label: 'Economia & Carreiras', emoji: '🪙', desc: 'Moedinhas, trabalho, profissões e ranking global' },
+  loja: { id: 'loja', label: 'Loja & Mochila', emoji: '🎒', desc: 'Comidas, poções, ninho, baús e inventário' },
+  tarot: { id: 'tarot', label: 'Tarot Místico', emoji: '🔮', desc: 'Tiragens diárias, 78 arcanos e suborno' },
+  social: { id: 'social', label: 'Social & Casamentos', emoji: '💑', desc: 'Casamentos, divórcios, perfil de aventureiro e afinidade de casal' },
+  utilidades: { id: 'utilidades', label: 'Utilidades & Sistema', emoji: '⚙️', desc: 'Status operacional, ping, convite, agenda e configurações' },
+};
+
+const COMMAND_CATEGORY_MAP = {
+  pymons: 'pymons',
+  'py-pymons': 'pymons',
+  petexplorar: 'pymons',
+  'py-explorar': 'pymons',
+  petduelo: 'pymons',
+  'py-duelo': 'pymons',
+  boss: 'pymons',
+  'py-boss': 'pymons',
+  expedicao: 'pymons',
+  'py-expedicao': 'pymons',
+  trocar: 'pymons',
+  'py-trocar': 'pymons',
+  dex: 'pymons',
+  'py-dex': 'pymons',
+  adocao: 'pymons',
+
+  diario: 'economia',
+  'py-diario': 'economia',
+  carteira: 'economia',
+  'py-carteira': 'economia',
+  profissao: 'economia',
+  'py-profissao': 'economia',
+  trabalho: 'economia',
+  'py-trabalho': 'economia',
+  ranking: 'economia',
+  'py-ranking': 'economia',
+  configeconomia: 'economia',
+  setareconomia: 'economia',
+  resetareconomia: 'economia',
+
+  loja: 'loja',
+  'py-loja': 'loja',
+  inventario: 'loja',
+  'py-inventario': 'loja',
+  comprar: 'loja',
+  'py-comprar': 'loja',
+  vender: 'loja',
+  'py-vender': 'loja',
+  usar: 'loja',
+  'py-usar': 'loja',
+
+  tarot: 'tarot',
+  'py-tarot': 'tarot',
+
+  casal: 'social',
+  'py-ship': 'social',
+  'py-casal': 'social',
+  ship: 'social',
+  casamento: 'social',
+  'py-casamento': 'social',
+  divorcio: 'social',
+  'py-divorcio': 'social',
+  perfil: 'social',
+  'py-perfil': 'social',
+
+  ajuda: 'utilidades',
+  'py-ajuda': 'utilidades',
+  help: 'utilidades',
+  ping: 'utilidades',
+  'py-ping': 'utilidades',
+  status: 'utilidades',
+  'py-status': 'utilidades',
+  convite: 'utilidades',
+  'py-convite': 'utilidades',
+  boasvindas: 'utilidades',
+  agenda: 'utilidades',
+  'py-agenda': 'utilidades',
+  emojis: 'utilidades',
+  'py-emojis': 'utilidades',
+  sixseven: 'utilidades',
+};
+
+let _loadedCommands = null;
+
+function setLoadedCommands(cmds) {
+  _loadedCommands = cmds;
+}
+
+function getHelpModules(customCommands = null) {
+  let commandsList = customCommands || _loadedCommands;
+  if (!commandsList) {
+    try {
+      commandsList = require('./index').commands || [];
+    } catch (e) {
+      commandsList = [];
+    }
+  }
+
+  const moduleCommands = {
+    pymons: [],
+    economia: [],
+    loja: [],
+    tarot: [],
+    social: [],
+    utilidades: [],
+  };
+
+  const seen = new Set();
+  for (const cmd of commandsList) {
+    const name = cmd.data?.name || cmd.name;
+    if (!name || seen.has(name)) continue;
+    seen.add(name);
+
+    const desc = cmd.data?.description || cmd.description || 'Comando da Pyxie';
+    const category = cmd.category || COMMAND_CATEGORY_MAP[name] || 'utilidades';
+    const targetBucket = moduleCommands[category] || moduleCommands.utilidades;
+
+    targetBucket.push({
+      name: `/${name}`,
+      desc,
+      aliases: cmd.aliases || [],
+    });
+  }
+
+  return [
+    MODULE_METADATA.todos,
+    { ...MODULE_METADATA.pymons, commands: moduleCommands.pymons },
+    { ...MODULE_METADATA.economia, commands: moduleCommands.economia },
+    { ...MODULE_METADATA.loja, commands: moduleCommands.loja },
+    { ...MODULE_METADATA.tarot, commands: moduleCommands.tarot },
+    { ...MODULE_METADATA.social, commands: moduleCommands.social },
+    { ...MODULE_METADATA.utilidades, commands: moduleCommands.utilidades },
+  ];
+}
 
 function buildModularHelpEmbed(moduleId = 'todos', guildName = '') {
-  const mod = HELP_MODULES.find((m) => m.id === moduleId) || HELP_MODULES[0];
-  const serverFooter = guildName ? `${guildName} • Guia Oficial de Comandos` : 'Guia Oficial de Comandos';
+  const modules = getHelpModules();
+  const mod = modules.find((m) => m.id === moduleId) || modules[0];
+  const serverFooter = guildName ? `${guildName} • Guia de Comandos` : 'Guia de Comandos';
 
   const embed = new EmbedBuilder()
     .setColor('#E60067')
     .setTitle(`${mod.emoji}  ✦  Central de Ajuda — ${mod.label}`)
-    .setFooter({ text: serverFooter })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 
   if (mod.id === 'todos') {
-    const moduleLines = HELP_MODULES.filter((m) => m.id !== 'todos')
-      .map((m) => `**${m.emoji} ${m.label}**\n> *${m.desc}*`);
+    const moduleLines = modules.filter((m) => m.id !== 'todos')
+      .map((m) => `**${m.emoji} ${m.label}** (${(m.commands || []).length} comandos)\n> *${m.desc}*`);
 
     const desc = [
       `Bem-vindo à Central de Ajuda${guildName ? ` de **${guildName}**` : ''}!`,
@@ -108,21 +164,23 @@ function buildModularHelpEmbed(moduleId = 'todos', guildName = '') {
       '',
       moduleLines.join('\n\n'),
       '',
-      '💡 *Selecione um módulo no menu suspenso abaixo para ver os comandos:*',
+      '💡 *Selecione uma categoria no menu suspenso abaixo para ver todos os comandos:*',
     ].join('\n');
 
     embed.setDescription(desc);
   } else {
-    const cmdLines = (mod.commands || []).map((cmd) => `**\`${cmd.name}\`**\n> *${cmd.desc}*`);
+    const cmdLines = (mod.commands || []).length > 0
+      ? mod.commands.map((cmd) => `**\`${cmd.name}\`**\n> *${cmd.desc}*`)
+      : ['> *Nenhum comando disponível nesta categoria no momento.*'];
 
     const desc = [
       `*« ${mod.desc} »*`,
       '',
-      '📋 **COMANDOS DESTE MÓDULO**',
+      `📋 **COMANDOS DESTE MÓDULO (${mod.commands?.length || 0})**`,
       '',
       cmdLines.join('\n\n'),
       '',
-      '💡 *Use o menu abaixo para navegar entre outros módulos de ajuda:*',
+      '💡 *Use o menu abaixo para navegar entre outras categorias:*',
     ].join('\n');
 
     embed.setDescription(desc);
@@ -132,11 +190,12 @@ function buildModularHelpEmbed(moduleId = 'todos', guildName = '') {
 }
 
 function buildModularHelpComponents(currentModuleId = 'todos', userId = '') {
+  const modules = getHelpModules();
   const selectMenu = new StringSelectMenuBuilder()
     .setCustomId(`help_module_select:${userId}`)
     .setPlaceholder('📂 Escolha uma categoria de comandos...')
     .addOptions(
-      HELP_MODULES.map((m) => ({
+      modules.map((m) => ({
         label: m.label,
         value: m.id,
         emoji: m.emoji,
@@ -155,7 +214,12 @@ function buildHelpMessage(requestedModule = 'todos', userId = '') {
 }
 
 module.exports = {
-  HELP_MODULES,
+  MODULE_METADATA,
+  get HELP_MODULES() {
+    return getHelpModules();
+  },
+  setLoadedCommands,
+  getHelpModules,
   buildModularHelpEmbed,
   buildModularHelpComponents,
   buildHelpMessage,

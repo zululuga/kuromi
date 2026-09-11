@@ -9,10 +9,10 @@ const KUROMI_COLORS = {
   ink: '#1a1a1a',
 };
 
-const KUROMI_FOOTER = 'Pyxie • O Universo Encantado de Pymons';
+const KUROMI_FOOTER = 'Pyxie';
 
-function kuromiFooter(extra = '') {
-  return extra ? `${KUROMI_FOOTER} • ${extra}` : KUROMI_FOOTER;
+function kuromiFooter() {
+  return KUROMI_FOOTER;
 }
 
 module.exports = { KUROMI_COLORS, KUROMI_FOOTER, kuromiFooter };

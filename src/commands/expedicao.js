@@ -42,7 +42,8 @@ function buildExpeditionView(userId) {
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(`expedition_claim:${userId}`)
-        .setLabel('🎁 Coletar Tesouros')
+        .setLabel('Coletar Tesouros')
+        .setEmoji('🎁')
         .setStyle(ButtonStyle.Success)
     );
 
@@ -71,7 +72,8 @@ function buildExpeditionView(userId) {
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(`expedition_refresh:${userId}`)
-        .setLabel('🔄 Atualizar Tempo')
+        .setLabel('Atualizar Tempo')
+        .setEmoji('🔄')
         .setStyle(ButtonStyle.Secondary)
     );
 
@@ -100,15 +102,18 @@ function buildExpeditionView(userId) {
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`expedition_start:${userId}:2`)
-      .setLabel('🧭 2 Horas')
+      .setLabel('2 Horas')
+      .setEmoji('🟢')
       .setStyle(ButtonStyle.Success),
     new ButtonBuilder()
       .setCustomId(`expedition_start:${userId}:4`)
-      .setLabel('🧭 4 Horas')
+      .setLabel('4 Horas')
+      .setEmoji('🟡')
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setCustomId(`expedition_start:${userId}:8`)
-      .setLabel('🧭 8 Horas')
+      .setLabel('8 Horas')
+      .setEmoji('🟣')
       .setStyle(ButtonStyle.Danger)
   );
 
@@ -182,7 +187,8 @@ async function handleExpeditionInteraction(interaction) {
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(`expedition_refresh:${targetId}`)
-        .setLabel('🧭 Nova Expedição')
+        .setLabel('Nova Expedição')
+        .setEmoji('🧭')
         .setStyle(ButtonStyle.Primary)
     );
 

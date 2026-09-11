@@ -49,7 +49,7 @@ function buildDexEmbed(selectedKey = 'cinna') {
     .setTitle(`📖  ✦  Dex de Pymons — Escolha seu Inicial!`)
     .setDescription(desc)
     .setImage('attachment://dex_entry.png')
-    .setFooter({ text: 'Dex de Pymons • Escolha seu companheiro inicial' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 
   return embed;
@@ -105,7 +105,7 @@ function buildAdoptedLockedView(userId, userPets) {
     .setColor(PYXIE_COLORS.lilac)
     .setTitle('🔒  ✦  Centro de Adoção de Pymons — Adoção Concluída')
     .setDescription(desc)
-    .setFooter({ text: 'Adoção Concluída • Obtenha mais Pymons via Dungeons' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(
@@ -211,7 +211,7 @@ async function handleAdoptionInteraction(interaction) {
       .setTitle(`🎉  ✦  Você escolheu ${adopted.name} como seu Pymon!`)
       .setDescription(desc)
       .setImage('attachment://pet_card.png')
-      .setFooter({ text: 'Pymon Adotado • Centro de Adoção Trancado' })
+      .setFooter({ text: 'Pyxie' })
       .setTimestamp();
 
     const actionRow = new ActionRowBuilder().addComponents(

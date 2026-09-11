@@ -46,7 +46,7 @@ function buildShopEmbed(category = 'comida') {
     .setColor(PYXIE_COLORS.gold)
     .setTitle(`${catInfo.emoji}  ✦  Lojinha — ${catInfo.label}`)
     .setDescription(desc)
-    .setFooter({ text: 'Lojinha • Catálogo Oficial de Itens' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 }
 

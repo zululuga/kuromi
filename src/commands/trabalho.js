@@ -378,11 +378,10 @@ async function handleWorkInteraction(interaction) {
     ].join('\n');
 
     const errorEmbed = new EmbedBuilder()
-      .setColor(KUROMI_COLORS.crimson || '#ef4444')
       .setColor(PYXIE_COLORS.crimson || '#ef4444')
       .setTitle(`❌  ✦  Expediente de ${session.professionLabel} Falhou`)
       .setDescription(desc)
-      .setFooter({ text: 'Trabalho • Revise seus conhecimentos e volte mais forte!' })
+      .setFooter({ text: 'Pyxie' })
       .setTimestamp();
 
     return interaction.update({ embeds: [errorEmbed], components: [] });
@@ -408,11 +407,10 @@ async function handleWorkInteraction(interaction) {
   }
 
   const successEmbed = new EmbedBuilder()
-    .setColor(KUROMI_COLORS.emerald || '#10b981')
     .setColor(PYXIE_COLORS.emerald || '#10b981')
     .setTitle(`✅  ✦  Expediente de ${session.professionLabel} Concluído!`)
     .setDescription(desc.join('\n'))
-    .setFooter({ text: 'Trabalho • Volte em 3 horas para um novo expediente' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 
   return interaction.update({ embeds: [successEmbed], components: [] });
@@ -481,11 +479,10 @@ async function runWork(source, reply) {
   ].join('\n');
 
   const embed = new EmbedBuilder()
-    .setColor(KUROMI_COLORS.violet || '#a855f7')
     .setColor(PYXIE_COLORS.violet || '#a855f7')
     .setTitle(`💼  ✦  Expediente de ${profDef.label} — Minigame`)
     .setDescription(questionDesc)
-    .setFooter({ text: 'Minigame de Trabalho • Escolha a opção correta para receber seu salário' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 
   const buttonRow = new ActionRowBuilder();

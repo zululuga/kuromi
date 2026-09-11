@@ -390,18 +390,21 @@ function setProfession(userId, profession, cost = 50) {
   };
 }
 
+function isTestUser(userId) {
+  return !userId || /^(user_)?test_/i.test(userId) || userId === 'user_123';
+}
+
 function startWork(userId, data = {}, now = Date.now()) {
   const status = getWorkStatus(userId, now);
   if (!status.available) return { started: false, ...status };
 
   const account = updateUserAccount(userId, (current) => {
     current.lastWorkAt = new Date(now).toISOString();
-    current.workCount = (Number(current.workCount) || 0) + 1;
   });
   return {
     started: true,
     data,
-    workCount: account.workCount,
+    workCount: Number(account.workCount) || 0,
     ...getWorkStatus(userId, now),
   };
 }
@@ -410,6 +413,7 @@ function finishWork(userId, success, amount, bonusBean = false) {
   if (!success) return { earned: false, amount: 0, balance: getBalance(userId), magicBeans: getMagicBeans(userId), bonusBean: false };
   const account = updateUserAccount(userId, (current) => {
     current.coins = (Number(current.coins) || 0) + amount;
+    current.workCount = (Number(current.workCount) || 0) + 1;
     if (bonusBean) {
       current.magicBeans = (Number(current.magicBeans) || 0) + 1;
     }
@@ -420,6 +424,7 @@ function finishWork(userId, success, amount, bonusBean = false) {
     balance: account.coins,
     magicBeans: account.magicBeans,
     bonusBean,
+    workCount: account.workCount,
   };
 }
 
@@ -467,7 +472,7 @@ function claimDaily(userId, now = Date.now()) {
 
 function getRanking(limit = 10, userIds = null) {
   return Object.entries(readEconomy())
-    .filter(([userId]) => !userIds || userIds.has(userId))
+    .filter(([userId]) => (!userIds || userIds.has(userId)) && !isTestUser(userId))
     .map(([userId, account]) => ({ userId, coins: Number(account.coins) || 0, magicBeans: Number(account.magicBeans) || 0 }))
     .sort((left, right) => right.coins - left.coins)
     .slice(0, limit);
@@ -475,7 +480,7 @@ function getRanking(limit = 10, userIds = null) {
 
 function getUserRank(userId, userIds = null) {
   const accounts = Object.entries(readEconomy())
-    .filter(([id]) => !userIds || userIds.has(id))
+    .filter(([id]) => (!userIds || userIds.has(id)) && !isTestUser(id))
     .map(([id, account]) => ({ userId: id, coins: Number(account.coins) || 0 }))
     .sort((left, right) => right.coins - left.coins);
   const index = accounts.findIndex((account) => account.userId === userId);

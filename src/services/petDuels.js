@@ -46,6 +46,14 @@ function createDuelChallenge(challengerId, targetId, bet = 0) {
   if (!petA) return { success: false, reason: 'challenger_no_pet' };
   if (!petB) return { success: false, reason: 'target_no_pet' };
 
+  const { isPetOnExpedition } = require('./petExpedition');
+  if (isPetOnExpedition(challengerId)) {
+    return { success: false, reason: 'challenger_on_expedition', pet: petA };
+  }
+  if (isPetOnExpedition(targetId)) {
+    return { success: false, reason: 'target_on_expedition', pet: petB };
+  }
+
   if (petA.hunger < 15) return { success: false, reason: 'challenger_hungry', pet: petA };
   if (petB.hunger < 15) return { success: false, reason: 'target_hungry', pet: petB };
 
@@ -194,6 +202,11 @@ function resolveDuelChallenge(duelId, targetUserId, accepted) {
 
   if (!petA || !petB) {
     return { success: false, reason: 'pet_unavailable' };
+  }
+
+  const { isPetOnExpedition } = require('./petExpedition');
+  if (isPetOnExpedition(challenge.challengerId) || isPetOnExpedition(challenge.targetId)) {
+    return { success: false, reason: 'pet_on_expedition' };
   }
 
   // Verifica fundos para aposta

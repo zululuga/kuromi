@@ -25,6 +25,16 @@ module.exports = {
   async executeSlash({ interaction }) {
     const userId = interaction.user.id;
     const userTag = interaction.user.displayName || interaction.user.username;
+    const { isPetOnExpedition, getActiveExpedition } = require('../services/petExpedition');
+    if (isPetOnExpedition(userId)) {
+      const exp = getActiveExpedition(userId);
+      const remainingMins = Math.ceil((exp?.remainingMs || 0) / 60000);
+      await interaction.editReply({
+        content: `🧭 **Seu Pymon está atualmente em uma expedição!**\nRetorno previsto em **${remainingMins} minuto(s)**. Use \`/expedicao\` para coletar as recompensas após o retorno antes de entrar em masmorras.`,
+      });
+      return;
+    }
+
     const directZone = interaction.options?.getString('zona');
 
     if (directZone) {
@@ -39,6 +49,14 @@ module.exports = {
   async executePrefix({ message }) {
     const userId = message.author.id;
     const userTag = message.author.displayName || message.author.username;
+    const { isPetOnExpedition, getActiveExpedition } = require('../services/petExpedition');
+    if (isPetOnExpedition(userId)) {
+      const exp = getActiveExpedition(userId);
+      const remainingMins = Math.ceil((exp?.remainingMs || 0) / 60000);
+      await message.reply(`🧭 **Seu Pymon está atualmente em uma expedição!**\nRetorno previsto em **${remainingMins} minuto(s)**. Use \`/expedicao\` para coletar as recompensas após o retorno antes de entrar em masmorras.`);
+      return;
+    }
+
     const view = buildDungeonTab(userId, userTag);
     await message.reply(view);
   },

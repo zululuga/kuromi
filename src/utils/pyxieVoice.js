@@ -12,10 +12,10 @@ const PYXIE_COLORS = {
   green: '#22c55e',
 };
 
-const PYXIE_FOOTER = 'Pyxie • O Universo Encantado de Pymons';
+const PYXIE_FOOTER = 'Pyxie';
 
-function pyxieFooter(extra = '') {
-  return extra ? `${PYXIE_FOOTER} • ${extra}` : PYXIE_FOOTER;
+function pyxieFooter() {
+  return PYXIE_FOOTER;
 }
 
 const PYXIE_PHRASES = {

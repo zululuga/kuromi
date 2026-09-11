@@ -17,35 +17,40 @@ function getInviteUrl(clientId) {
 function buildInviteEmbed(client) {
   const inviteUrl = getInviteUrl(client?.user?.id);
 
-  const desc = [
-    'Leve toda a magia, diversão e interatividade dos **Pymons** para a sua comunidade!',
-    '',
-    '✨ **O QUE A PYXIE OFERECE AO SEU SERVIDOR:**',
-    '> 🐾 **Tamagotchi & RPG de Pymons:** Choque ovos, alimente, faça carinho e evolua até o Nv. 100.',
-    '> 🧭 **Dungeons Procedurais:** Explore labirintos gerados dinamicamente com D-Pad.',
-    '> ⚔️ **Coliseu de Duelos & World Boss:** Batalhas estratégicas entre membros e chefes globais.',
-    '> 🪙 **Economia & Profissões:** Mini-games interativos de trabalho, moedas e Feijões Mágicos.',
-    '> 🔮 **Tarot & Relacionamentos:** Tiragens místicas diárias e sistema de casamentos.',
-    '',
-    '🔒 **SEGURANÇA & PRIVACIDADE:**',
-    '> • Sem permissões invasivas de Administrador.',
-    '> • Isolamento completo de dados por servidor.',
-    '> • Alta performance e estabilidade 24/7.',
-    '',
-    'Clique no botão abaixo para adicionar a Pyxie com um único clique:',
-  ].join('\n');
-
   const embed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.magenta || '#e60067')
-    .setTitle('✨  ✦  Convide a Pyxie para seu Servidor!')
-    .setDescription(desc)
+    .setTitle('✨ Convite da Pyxie')
+    .setDescription('Traga diversão, RPG de criaturas mágicas e entretenimento completo para o seu servidor Discord!\n\u200b')
+    .addFields(
+      {
+        name: '🐾 Tamagotchi & Pymons',
+        value: 'Adote, cuide, alimente e evolua companheiros mágicos com atributos, expedições e duelos.',
+        inline: false,
+      },
+      {
+        name: '🗺️ Dungeons 2D & World Boss',
+        value: 'Masmorras procedurais com movimentação em grade e combates épicos contra chefes mundiais.',
+        inline: false,
+      },
+      {
+        name: '🪙 Economia & Comunidade',
+        value: 'Profissões interativas, títulos de prestígio, mercado de trocas, Tarot místico e casamentos.',
+        inline: false,
+      },
+      {
+        name: '🔒 Seguro e Confiável',
+        value: 'Permissões transparentes (sem administrador) e operação ininterrupta 24 horas por dia.',
+        inline: false,
+      }
+    )
     .setThumbnail(client?.user?.displayAvatarURL({ dynamic: true, size: 256 }) || null)
-    .setFooter({ text: pyxieFooter('Adicione a Pyxie e comece sua jornada!') })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 
   const buttonRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setLabel('➕ Adicionar Pyxie ao Discord')
+      .setLabel('Adicionar ao Servidor')
+      .setEmoji('✨')
       .setURL(inviteUrl)
       .setStyle(ButtonStyle.Link)
   );

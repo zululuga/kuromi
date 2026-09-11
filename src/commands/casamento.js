@@ -52,7 +52,7 @@ function buildRequestEmbed(requester, target) {
     .setTitle('💍  ✦  Pedido de Casamento')
     .setDescription(desc)
     .setThumbnail(requester.displayAvatarURL({ dynamic: true, size: 256 }))
-    .setFooter({ text: 'Casamentos • União oficial de membros' })
+    .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 }
 

@@ -391,10 +391,27 @@ function adoptPet(userId, speciesKey) {
   };
 }
 
+function isUserPetOnExpedition(userId) {
+  try {
+    const { isPetOnExpedition } = require('./petExpedition');
+    return isPetOnExpedition(userId);
+  } catch (e) {
+    return false;
+  }
+}
+
 function feedPet(userId, itemKey = 'racao_cringe') {
   const activePet = getActivePet(userId);
   if (!activePet) {
     return { success: false, reason: 'no_active_pet', message: 'Você não possui nenhum Pymon ativo!' };
+  }
+
+  if (isUserPetOnExpedition(userId)) {
+    return {
+      success: false,
+      reason: 'on_expedition',
+      message: '🧭 Seu Pymon está atualmente em uma expedição e não pode ser alimentado até retornar!',
+    };
   }
 
   if (activePet.hunger >= 100) {
@@ -461,6 +478,14 @@ function petCarinho(userId, now = Date.now()) {
     return { success: false, reason: 'no_active_pet', message: 'Você não possui nenhum Pymon ativo!' };
   }
 
+  if (isUserPetOnExpedition(userId)) {
+    return {
+      success: false,
+      reason: 'on_expedition',
+      message: '🧭 Seu Pymon está atualmente em uma expedição e não pode receber carinho até retornar!',
+    };
+  }
+
   const lastCarinho = activePet.lastCarinhoAt || 0;
   if (now - lastCarinho < CARINHO_COOLDOWN_MS) {
     const remainingMs = CARINHO_COOLDOWN_MS - (now - lastCarinho);
@@ -494,6 +519,14 @@ function petSleep(userId, now = Date.now()) {
   const activePet = getActivePet(userId);
   if (!activePet) {
     return { success: false, reason: 'no_active_pet', message: 'Você não possui nenhum Pymon ativo!' };
+  }
+
+  if (isUserPetOnExpedition(userId)) {
+    return {
+      success: false,
+      reason: 'on_expedition',
+      message: '🧭 Seu Pymon está atualmente em uma expedição e não pode dormir até retornar!',
+    };
   }
 
   const lastSleep = activePet.lastSleepAt || 0;
@@ -588,6 +621,14 @@ function useItemOnActivePet(userId, itemKey) {
   const activePet = getActivePet(userId);
   if (!activePet) {
     return { success: false, reason: 'no_active_pet', message: 'Você não possui nenhum Pymon ativo!' };
+  }
+
+  if (isUserPetOnExpedition(userId)) {
+    return {
+      success: false,
+      reason: 'on_expedition',
+      message: '🧭 Seu Pymon está atualmente em uma expedição e não pode usar itens até retornar!',
+    };
   }
 
   const item = getItemDefinition(itemKey);

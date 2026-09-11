@@ -649,8 +649,11 @@ function retreatRun(userId, activePet, awardXpFn) {
 
   // Concede XP ao pet se função fornecida
   let xpResult = null;
-  if (awardXpFn && xpWon > 0 && activePet) {
-    xpResult = awardXpFn(userId, activePet.id, xpWon);
+  if (activePet) {
+    activePet.totalExploracoes = (activePet.totalExploracoes || 0) + 1;
+    if (awardXpFn && xpWon > 0) {
+      xpResult = awardXpFn(userId, activePet.id, xpWon);
+    }
   }
 
   activeRuns.delete(userId);
