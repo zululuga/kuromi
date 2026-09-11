@@ -40,7 +40,7 @@ function isTransactionProcessed(txId) {
 function registerPendingBonus(userId, bonusAmount) {
   const pending = readJsonSafe(pendingFile, {});
   pending[userId] = {
-    amount: Math.max(10, Number(bonusAmount) || 50),
+    amount: Math.max(1, Number(bonusAmount) || 5),
     createdAt: Date.now(),
   };
   writeJsonSafe(pendingFile, pending);
@@ -51,7 +51,7 @@ function getPendingBonus(userId) {
   return pending[userId]?.amount || null;
 }
 
-async function createDailyBonusLink(userId, bonusAmount = 50) {
+async function createDailyBonusLink(userId, bonusAmount = 5) {
   registerPendingBonus(userId, bonusAmount);
   const apiKey = process.env.LOOT_LABS_API_KEY;
 
@@ -71,7 +71,7 @@ async function createDailyBonusLink(userId, bonusAmount = 50) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        title: 'Bonus Diario Pyxie',
+        title: 'Bônus Diário Pyxie',
         url: 'https://discord.com',
         tier_id: 1,
         number_of_tasks: 1,
@@ -81,10 +81,22 @@ async function createDailyBonusLink(userId, bonusAmount = 50) {
 
     const data = await response.json().catch(() => null);
 
-    if (data && (data.loot_url || data.url || data.message)) {
-      const baseUrl = data.loot_url || data.url || data.message;
-      const separator = baseUrl.includes('?') ? '&' : '?';
-      const finalUrl = `${baseUrl}${separator}puid=${userId}`;
+    let lootUrl = null;
+    if (data) {
+      if (Array.isArray(data.message) && data.message[0]?.loot_url) {
+        lootUrl = data.message[0].loot_url;
+      } else if (typeof data.message === 'string' && data.message.startsWith('http')) {
+        lootUrl = data.message;
+      } else if (data.loot_url) {
+        lootUrl = data.loot_url;
+      } else if (data.url) {
+        lootUrl = data.url;
+      }
+    }
+
+    if (lootUrl) {
+      const separator = lootUrl.includes('?') ? '&' : '?';
+      const finalUrl = `${lootUrl}${separator}puid=${userId}`;
 
       return {
         success: true,

@@ -34,5 +34,11 @@
     "amount": 50,
     "timestamp": 1789090394816,
     "ip": null
+  },
+  "tx_test_1789091847207": {
+    "userId": "user_test_a_1789091847204",
+    "amount": 50,
+    "timestamp": 1789091847208,
+    "ip": null
   }
 }

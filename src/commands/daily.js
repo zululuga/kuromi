@@ -20,7 +20,7 @@ function buildDailyView(userId) {
     };
   }
 
-  const bonusAmount = Math.max(10, Math.floor(result.amount * 0.5));
+  const bonusAmount = Math.max(1, Math.round(result.amount * 0.5));
 
   const desc = [
     'Sua recompensa diária foi entregue com sucesso no seu cofre!',
@@ -33,7 +33,7 @@ function buildDailyView(userId) {
     '🎁 **BÔNUS EXTRA DISPONÍVEL (+50%)**',
     `> Deseja ganhar mais **+${formatCoins(bonusAmount)}** adicionais?`,
     '> Clique no botão abaixo e aguarde alguns segundos na página de anúncio para liberar seu bônus!',
-  ].filter(Boolean).join('\n');
+  ].filter(Boolean).join('\n\n');
 
   const embed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.gold || '#facc15')
@@ -45,7 +45,8 @@ function buildDailyView(userId) {
   const buttonRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`daily_bonus_lootlabs:${userId}:${bonusAmount}`)
-      .setLabel(`🎁 Ganhar +50% (+${bonusAmount} 🪙)`)
+      .setEmoji('🎁')
+      .setLabel(`Ganhar +50% (+${bonusAmount} Moedas)`)
       .setStyle(ButtonStyle.Success)
   );
 
@@ -59,7 +60,7 @@ function isDailyInteraction(interaction) {
 async function handleDailyInteraction(interaction) {
   const parts = interaction.customId.split(':');
   const targetId = parts[1];
-  const bonusAmount = Number(parts[2]) || 50;
+  const bonusAmount = Number(parts[2]) || 5;
 
   if (interaction.user.id !== targetId) {
     return interaction.reply({
@@ -82,7 +83,7 @@ async function handleDailyInteraction(interaction) {
     `> 3. O bônus de **+${formatCoins(bonusAmount)}** será creditado automaticamente na sua conta!`,
     '',
     '✨ *Não é necessário preencher formulários nem instalar nada.*',
-  ].join('\n');
+  ].join('\n\n');
 
   const embed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.violet || '#8b5cf6')
@@ -93,7 +94,8 @@ async function handleDailyInteraction(interaction) {
 
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setLabel('🌐 Ver Anúncio Rápido')
+      .setEmoji('🌐')
+      .setLabel('Ver Anúncio Rápido')
       .setURL(targetUrl)
       .setStyle(ButtonStyle.Link)
   );
