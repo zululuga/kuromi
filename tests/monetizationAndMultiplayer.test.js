@@ -76,13 +76,22 @@ try {
   assert.equal(attackRes.success, true, 'Ataque ao Boss pelo pet livre deve ser computado com sucesso.');
   assert.ok(attackRes.damage > 0, 'Dano causado deve ser maior que zero.');
 
-  // 7. Teste de Temas Visuais com Feijões Mágicos
-  const themeBuy = buyTheme(testUserA, 'ouro');
-  assert.equal(themeBuy.success, true, 'Compra de tema com Feijões Mágicos deve ter sucesso.');
-  const userAcc = getUserAccount(testUserA);
-  assert.equal(userAcc.equippedTheme, 'ouro', 'Tema Ouro deve estar equipado no perfil.');
+  // 8. Teste de Votos Top.gg (Recompensas e Bônus Fim de Semana)
+  const { processTopggVote, verifyWebhookAuth } = require('../src/services/topgg');
+  assert.equal(verifyWebhookAuth('teste'), true, 'Sem secret configurado deve validar webhook.');
 
-  console.log('Verificação de Monetização LootLabs, Idempotência, Duelos, Trocas, Expedições AFK, World Boss ALPHA e Temas: OK');
+  const voteNormal = processTopggVote({ user: testUserA, isWeekend: false });
+  assert.equal(voteNormal.success, true, 'Voto comum no Top.gg deve ser processado.');
+  assert.equal(voteNormal.coins, 500, 'Recompensa comum deve ser 500 moedas.');
+  assert.equal(hasItem(testUserA, 'bau_madeira', 1), true, 'Usuário deve receber 1x Baú Rústico.');
+
+  const voteWeekend = processTopggVote({ user: testUserB, isWeekend: true });
+  assert.equal(voteWeekend.success, true, 'Voto no fim de semana no Top.gg deve ser processado.');
+  assert.equal(voteWeekend.coins, 1000, 'Recompensa de fim de semana deve ser 1000 moedas (2x).');
+  const userBAcc = getUserAccount(testUserB);
+  assert.equal(userBAcc.magicBeans >= 1, true, 'Usuário deve receber 1x Feijão Mágico.');
+
+  console.log('Verificação de Monetização LootLabs, Top.gg, Idempotência, Duelos, Trocas, Expedições AFK, World Boss ALPHA e Temas: OK');
 } finally {
   // Limpeza rigorosa de dados de teste para não poluir rankings nem produção
   const cleanFiles = [

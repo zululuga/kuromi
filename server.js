@@ -128,6 +128,7 @@ function registerSlashCommands() {
 }
 
 const { processPostback } = require('./src/services/lootlabs');
+const { processTopggVote, verifyWebhookAuth } = require('./src/services/topgg');
 
 function requireAdminAuth(req, res, next) {
   const secret = process.env.API_SECRET_TOKEN || process.env.PANEL_SECRET;
@@ -165,6 +166,22 @@ app.all('/api/lootlabs/postback', (req, res) => {
 
   const result = processPostback(payload);
   addLog(`[LootLabs Postback] uid=${payload.puid || payload.userId} tx=${result.txId} success=${result.success}`);
+  return res.status(200).json({ status: 'success', data: result });
+});
+
+// 2.1 Webhook do Top.gg (Votos e Recompensas a cada 12h)
+app.post('/api/topgg/webhook', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!verifyWebhookAuth(authHeader)) {
+    addLog('[Top.gg Webhook] Falha de autenticação no webhook.');
+    return res.status(401).json({ error: 'Não autorizado.' });
+  }
+
+  const result = processTopggVote(req.body);
+  if (!result.success) {
+    return res.status(400).json({ error: result.error });
+  }
+
   return res.status(200).json({ status: 'success', data: result });
 });
 

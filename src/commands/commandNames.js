@@ -35,4 +35,5 @@ module.exports = {
   EXPEDITION: 'py-expedicao',
   BOSS: 'py-boss',
   TAROT: 'py-tarot',
+  VOTE: 'py-votar',
 };

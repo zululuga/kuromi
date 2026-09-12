@@ -43,6 +43,8 @@ const COMMAND_CATEGORY_MAP = {
   'py-trabalho': 'economia',
   ranking: 'economia',
   'py-ranking': 'economia',
+  votar: 'economia',
+  'py-votar': 'economia',
   configeconomia: 'economia',
   setareconomia: 'economia',
   resetareconomia: 'economia',
