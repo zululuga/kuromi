@@ -10,52 +10,68 @@ const { getItemsByCategory, getItemDefinition, buyItem, formatItemEffects } = re
 const { PYXIE_COLORS } = require('../utils/pyxieVoice');
 const { formatCoins } = require('./economyHelpers');
 const { SHOP } = require('./commandNames');
+const { getLanguage, t } = require('../utils/i18n');
 
-const CATEGORIES = [
-  { label: 'Comidas & Nutrição', value: 'comida', emoji: '🍖', desc: 'Rações e petiscos para o pet' },
-  { label: 'Cura & Estamina', value: 'cura', emoji: '🩹', desc: 'Curativos e poções de estamina' },
-  { label: 'Utilitários & Aceleração', value: 'utilitario', emoji: '⏳', desc: 'Ampulhetas de choco e elixires' },
-  { label: 'Baús Misteriosos', value: 'bau', emoji: '📦', desc: 'Baús com moedas e itens raros' },
-  { label: 'Melhorias & Ninhos', value: 'melhoria', emoji: '🏡', desc: 'Ninhos e expansões de mochila' },
+const CATEGORY_KEYS = [
+  { key: 'comida', emoji: '🍖' },
+  { key: 'cura', emoji: '🩹' },
+  { key: 'utilitario', emoji: '⏳' },
+  { key: 'bau', emoji: '📦' },
+  { key: 'melhoria', emoji: '🏡' },
 ];
 
-function buildShopEmbed(category = 'comida') {
+function getCategories(source = null) {
+  return CATEGORY_KEYS.map((cat) => ({
+    value: cat.key,
+    emoji: cat.emoji,
+    label: t(`shop.categories.${cat.key}.label`, source),
+    desc: t(`shop.categories.${cat.key}.desc`, source),
+  }));
+}
+
+function buildShopEmbed(category = 'comida', source = null) {
+  const isEn = getLanguage(source) === 'en';
+  const categories = getCategories(source);
   const items = getItemsByCategory(category);
-  const catInfo = CATEGORIES.find((c) => c.value === category) || CATEGORIES[0];
+  const catInfo = categories.find((c) => c.value === category) || categories[0];
 
   const itemLines = items.length === 0
-    ? ['> *Nenhum item disponível nesta categoria no momento.*']
+    ? [t('shop.empty', source)]
     : items.map((item) => {
-        const priceTag = item.buyPrice ? `🪙 **${formatCoins(item.buyPrice)}**` : '*Item raro de dungeon*';
+        const priceTag = item.buyPrice
+          ? `🪙 **${formatCoins(item.buyPrice, source)}**`
+          : (isEn ? '*Rare dungeon item*' : '*Item raro de dungeon*');
         const fxText = formatItemEffects(item);
-        const fxLine = fxText ? `\n> 📊 **Efeito:** ${fxText}` : '';
+        const effectLabel = isEn ? 'Effect' : 'Efeito';
+        const fxLine = fxText ? `\n> 📊 **${effectLabel}:** ${fxText}` : '';
         return `**${item.emoji} ${item.name}** — ${priceTag}\n> *${item.description}*${fxLine}\n> 🏷️ *ID:* \`${item.id}\``;
       });
 
   const desc = [
     `*« ${catInfo.desc} »*`,
     '',
-    '🛒 **CATÁLOGO DE ITENS**',
+    t('shop.catalogHeader', source),
     '',
     itemLines.join('\n\n'),
     '',
-    '💡 *Escolha a categoria ou compre diretamente nos menus abaixo:*',
+    t('shop.tip', source),
   ].join('\n');
 
   return new EmbedBuilder()
-    .setColor(PYXIE_COLORS.gold)
-    .setTitle(`${catInfo.emoji}  ✦  Lojinha — ${catInfo.label}`)
+    .setColor(PYXIE_COLORS.gold || '#f6c343')
+    .setTitle(t('shop.title', source, { emoji: catInfo.emoji, label: catInfo.label }))
     .setDescription(desc)
     .setFooter({ text: 'Pyxie' })
     .setTimestamp();
 }
 
-function buildShopComponents(currentCategory = 'comida', userId = '') {
+function buildShopComponents(currentCategory = 'comida', userId = '', source = null) {
+  const categories = getCategories(source);
   const selectMenu = new StringSelectMenuBuilder()
     .setCustomId(`shop_category_select:${userId}`)
-    .setPlaceholder('📂 Escolha uma categoria da loja...')
+    .setPlaceholder(t('shop.selectCatPlaceholder', source))
     .addOptions(
-      CATEGORIES.map((cat) => ({
+      categories.map((cat) => ({
         label: cat.label,
         value: cat.value,
         description: cat.desc,
@@ -70,10 +86,10 @@ function buildShopComponents(currentCategory = 'comida', userId = '') {
   if (items.length > 0) {
     const buyMenu = new StringSelectMenuBuilder()
       .setCustomId(`shop_buy_select:${userId}`)
-      .setPlaceholder('🛒 Comprar item com 1 clique...')
+      .setPlaceholder(t('shop.buySelectPlaceholder', source))
       .addOptions(
         items.map((i) => ({
-          label: `${i.name} (${formatCoins(i.buyPrice)})`,
+          label: `${i.name} (${formatCoins(i.buyPrice, source)})`,
           description: (i.description || '').slice(0, 45),
           value: i.id,
           emoji: i.emoji,
@@ -85,12 +101,12 @@ function buildShopComponents(currentCategory = 'comida', userId = '') {
   const buttonsRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`hub_tab:inventory:${userId}`)
-      .setLabel('Abrir Mochila')
+      .setLabel(t('shop.btnBackpack', source))
       .setEmoji('🎒')
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setCustomId(`hub_tab:pet:${userId}`)
-      .setLabel('Ver Meu Pymon')
+      .setLabel(t('shop.btnPet', source))
       .setEmoji('🐾')
       .setStyle(ButtonStyle.Secondary)
   );
@@ -115,7 +131,7 @@ async function handleShopInteraction(interaction) {
 
   if (targetUserId && targetUserId !== interaction.user.id) {
     return interaction.reply({
-      content: '❌ Esta lojinha pertence a outro aventureiro. Use `/loja` para abrir a sua!',
+      content: t('common.onlyOwner', interaction),
       flags: 64,
     });
   }
@@ -124,8 +140,8 @@ async function handleShopInteraction(interaction) {
 
   if (action === 'shop_category_select') {
     const selectedCategory = interaction.values[0];
-    const embed = buildShopEmbed(selectedCategory);
-    const components = buildShopComponents(selectedCategory, userId);
+    const embed = buildShopEmbed(selectedCategory, interaction);
+    const components = buildShopComponents(selectedCategory, userId, interaction);
     return interaction.update({ embeds: [embed], components });
   }
 
@@ -136,7 +152,10 @@ async function handleShopInteraction(interaction) {
     if (!buyResult.success) {
       if (buyResult.reason === 'insufficient_coins') {
         return interaction.reply({
-          content: `❌ Você precisa de **${formatCoins(buyResult.price)}**, mas só tem **${formatCoins(buyResult.currentCoins)}**!`,
+          content: t('shop.insufficientCoins', interaction, {
+            needed: formatCoins(buyResult.price, interaction),
+            current: formatCoins(buyResult.currentCoins, interaction),
+          }),
           flags: 64,
         });
       }
@@ -147,11 +166,16 @@ async function handleShopInteraction(interaction) {
     }
 
     const itemDef = getItemDefinition(itemId);
-    const embed = buildShopEmbed(itemDef ? itemDef.category : 'comida');
-    const components = buildShopComponents(itemDef ? itemDef.category : 'comida', userId);
+    const embed = buildShopEmbed(itemDef ? itemDef.category : 'comida', interaction);
+    const components = buildShopComponents(itemDef ? itemDef.category : 'comida', userId, interaction);
 
     return interaction.update({
-      content: `🎉 **Compra Realizada!** Você comprou 1x ${itemDef ? itemDef.emoji : '📦'} **${itemDef ? itemDef.name : itemId}** por **${formatCoins(buyResult.totalCost)}**! (Saldo restante: **${formatCoins(buyResult.remainingCoins)}**)`,
+      content: t('shop.buySuccess', interaction, {
+        emoji: itemDef ? itemDef.emoji : '📦',
+        name: itemDef ? itemDef.name : itemId,
+        cost: formatCoins(buyResult.totalCost, interaction),
+        balance: formatCoins(buyResult.remainingCoins, interaction),
+      }),
       embeds: [embed],
       components,
     });
@@ -162,36 +186,46 @@ module.exports = {
   name: SHOP,
   data: new SlashCommandBuilder()
     .setName(SHOP)
-    .setDescription('Abre a Lojinha de Mascotes e Itens de Pyxie com categorias e compras em 1 clique.')
+    .setDescription('Open creature & items shop / Abre a Lojinha de Mascotes e Itens de Pyxie.')
+    .setDescriptionLocalizations({
+      'pt-BR': 'Abre a Lojinha de Mascotes e Itens de Pyxie.',
+    })
     .addStringOption((option) =>
       option
         .setName('categoria')
-        .setDescription('Categoria da loja para abrir diretamente')
+        .setNameLocalizations({
+          'en-US': 'category',
+          'en-GB': 'category',
+          'pt-BR': 'categoria',
+        })
+        .setDescription('Category of the shop / Categoria da loja para abrir')
         .setRequired(false)
         .addChoices(
-          { name: 'Comidas & Nutrição', value: 'comida' },
-          { name: 'Cura & Estamina', value: 'cura' },
-          { name: 'Utilitários & Ampulhetas', value: 'utilitario' },
-          { name: 'Baús Misteriosos', value: 'bau' },
-          { name: 'Melhorias & Ninhos', value: 'melhoria' }
+          { name: '🍖 Comidas / Food', value: 'comida' },
+          { name: '🩹 Cura & Estamina / Healing & Energy', value: 'cura' },
+          { name: '⏳ Utilitários / Utilities', value: 'utilitario' },
+          { name: '📦 Baús / Mystery Chests', value: 'bau' },
+          { name: '🏡 Melhorias & Ninhos / Upgrades & Nests', value: 'melhoria' }
         )
     ),
-  aliases: ['lojinha', 'mercado', 'mercadinho', 'shop'],
+  aliases: ['lojinha', 'mercado', 'mercadinho', 'shop', 'store'],
   isShopInteraction,
   handleShopInteraction,
+  buildShopEmbed,
+  buildShopComponents,
   async executeSlash({ interaction }) {
     const userId = interaction.user.id;
-    const directCat = interaction.options?.getString('categoria') || 'comida';
-    const embed = buildShopEmbed(directCat);
-    const components = buildShopComponents(directCat, userId);
+    const directCat = interaction.options?.getString('categoria') || interaction.options?.getString('category') || 'comida';
+    const embed = buildShopEmbed(directCat, interaction);
+    const components = buildShopComponents(directCat, userId, interaction);
     await interaction.editReply({ embeds: [embed], components });
   },
   async executePrefix({ message, args }) {
     const userId = message.author.id;
     const cat = args && args[0] ? args[0].toLowerCase() : 'comida';
-    const validCat = CATEGORIES.some((c) => c.value === cat) ? cat : 'comida';
-    const embed = buildShopEmbed(validCat);
-    const components = buildShopComponents(validCat, userId);
+    const validCat = CATEGORY_KEYS.some((c) => c.key === cat) ? cat : 'comida';
+    const embed = buildShopEmbed(validCat, message);
+    const components = buildShopComponents(validCat, userId, message);
     await message.reply({ embeds: [embed], components });
   },
 };

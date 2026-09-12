@@ -1,5 +1,6 @@
 const { createCanvas, loadImage } = require('@napi-rs/canvas');
 const { AttachmentBuilder } = require('discord.js');
+const { getCanvasStrings, getLanguage } = require('../utils/i18n');
 
 const WIDTH = 1200;
 const HEIGHT = 700;
@@ -87,14 +88,17 @@ function isSpecialCouple(memberA, memberB) {
   return SPECIAL_COUPLE_IDS.has(idA) && SPECIAL_COUPLE_IDS.has(idB) && idA !== idB;
 }
 
-function getThemePalette(percent, isSpecial = false) {
+function getThemePalette(percent, isSpecial = false, lang = 'pt') {
+  const langKey = getLanguage(lang);
+  const cStrs = getCanvasStrings(langKey).ship;
+
   if (isSpecial) {
     return {
       accent: '#ff70a6',
       accentGlow: 'rgba(255, 112, 166, 0.55)',
       barStart: '#e60067',
       barEnd: '#c084fc',
-      verdict: 'Esses usuários se amam mais do que qualquer coisa no mundo.',
+      verdict: cStrs.verdictSpecial,
     };
   }
   if (percent < 40) {
@@ -103,7 +107,7 @@ function getThemePalette(percent, isSpecial = false) {
       accentGlow: 'rgba(244, 63, 94, 0.4)',
       barStart: '#e11d48',
       barEnd: '#fb7185',
-      verdict: 'Química duvidosa, mas o drama está garantido.',
+      verdict: cStrs.verdictLow,
     };
   }
   if (percent < 70) {
@@ -112,7 +116,7 @@ function getThemePalette(percent, isSpecial = false) {
       accentGlow: 'rgba(236, 72, 153, 0.4)',
       barStart: '#db2777',
       barEnd: '#c084fc',
-      verdict: 'Há faísca. Talvez. Não me pressionem.',
+      verdict: cStrs.verdictMid,
     };
   }
   return {
@@ -120,15 +124,17 @@ function getThemePalette(percent, isSpecial = false) {
     accentGlow: 'rgba(168, 85, 247, 0.4)',
     barStart: '#9333ea',
     barEnd: '#f472b6',
-    verdict: 'Isso está perigosamente romântico.',
+    verdict: cStrs.verdictHigh,
   };
 }
 
-async function renderShipCard(memberA, memberB, percent) {
+async function renderShipCard(memberA, memberB, percent, lang = 'pt') {
+  const langKey = getLanguage(lang);
+  const cStrs = getCanvasStrings(langKey).ship;
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
   const isSpecial = isSpecialCouple(memberA, memberB);
-  const palette = getThemePalette(percent, isSpecial);
+  const palette = getThemePalette(percent, isSpecial, langKey);
 
   // 1. Background Radial Gradient (Gothic Romantic Dark)
   const bg = ctx.createRadialGradient(WIDTH / 2, HEIGHT / 2, 60, WIDTH / 2, HEIGHT / 2, 750);
@@ -187,13 +193,12 @@ async function renderShipCard(memberA, memberB, percent) {
   ctx.shadowColor = palette.accentGlow;
   ctx.shadowBlur = 12;
   ctx.font = 'bold 38px serif';
-  ctx.fillText('SHIP CRINGELÂNDIA', WIDTH / 2, 80);
+  ctx.fillText(langKey === 'pt' ? cStrs.header : cStrs.headerGeneric, WIDTH / 2, 80);
   ctx.shadowBlur = 0;
 
   ctx.fillStyle = '#e2e8f0';
   ctx.font = '17px sans-serif';
-  ctx.fillText('A Kuromi juntou os destinos. Não faça disso uma cerimônia.', WIDTH / 2, 118);
-  ctx.fillText('Calculadora mágica de afinidade e romance.', WIDTH / 2, 118);
+  ctx.fillText(cStrs.subtitle, WIDTH / 2, 118);
 
   // 4. Avatars & Bridge
   const centerY = 310;
@@ -227,8 +232,8 @@ async function renderShipCard(memberA, memberB, percent) {
   ctx.font = 'bold 25px sans-serif';
   ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
   ctx.shadowBlur = 8;
-  ctx.fillText(memberA.displayName || 'Pessoa 1', 245, 460);
-  ctx.fillText(memberB.displayName || 'Pessoa 2', 955, 460);
+  ctx.fillText(memberA.displayName || cStrs.person1, 245, 460);
+  ctx.fillText(memberB.displayName || cStrs.person2, 955, 460);
   ctx.shadowBlur = 0;
 
   // 5. Progress Bar
@@ -278,18 +283,18 @@ async function renderShipCard(memberA, memberB, percent) {
   // 7. Footer
   ctx.fillStyle = palette.accent;
   ctx.font = 'bold 12px sans-serif';
-  ctx.fillText('✦ KUROMI SUPERVISIONA O ROMANCE ✦', WIDTH / 2, 658);
-  ctx.fillText('✦ AFINIDADE & ROMANCE NO SERVIDOR ✦', WIDTH / 2, 658);
+  ctx.fillText(cStrs.footer, WIDTH / 2, 658);
 
   return canvas.toBuffer('image/png');
 }
 
-async function createShipAttachment(memberA, memberB, percent) {
-  const buffer = await renderShipCard(memberA, memberB, percent);
+async function createShipAttachment(memberA, memberB, percent, lang = 'pt') {
+  const buffer = await renderShipCard(memberA, memberB, percent, lang);
   return new AttachmentBuilder(buffer, { name: 'casal_cringelandia.png' });
 }
 
 module.exports = {
   renderShipCard,
   createShipAttachment,
+  getThemePalette,
 };

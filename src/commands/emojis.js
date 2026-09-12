@@ -1,6 +1,7 @@
 const { AttachmentBuilder, PermissionFlagsBits, EmbedBuilder, SlashCommandBuilder } = require('discord.js');
 const { serializeGuildEmojis } = require('../utils/serverEmojis');
 const { EMOJIS } = require('./commandNames');
+const { getLanguage, t } = require('../utils/i18n');
 
 const name = EMOJIS || 'py-emojis';
 
@@ -24,47 +25,41 @@ function buildFile(guild) {
   };
 }
 
-function buildSummary(guild, count, animated) {
+function buildSummary(guild, count, animated, source = null) {
   const guildName = guild?.name || 'Servidor';
-  const desc = [
-    `Catálogo completo de emojis customizados do servidor **${guildName}**:`,
-    '',
-    '📊 **ESTATÍSTICAS DOS EMOJIS**',
-    `> 🎀 **Total de Emojis:** **${count}**`,
-    `> ✨ **Emojis Animados:** **${animated}**`,
-    `> 📄 **Arquivo Anexo:** \`emojis-do-servidor.json\``,
-    '',
-    '📥 *O arquivo JSON com a lista completa foi anexado a esta mensagem.*',
-  ].join('\n');
+  const lang = getLanguage(source || guild);
 
   return new EmbedBuilder()
     .setColor('#e60067')
-    .setTitle(`🎀  ✦  Lista de Emojis — ${guildName}`)
-    .setDescription(desc)
-    .setFooter({ text: `${guildName} • Catálogo baixável de emojis` })
+    .setTitle(t('admin.emojisExportTitle', source || guild, { server: guildName }))
+    .setDescription(t('admin.emojisExportDesc', source || guild, { server: guildName, count, animated }))
+    .setFooter({ text: `${guildName} • ${lang === 'en' ? 'Downloadable Emoji Catalog' : 'Catálogo baixável de emojis'}` })
     .setTimestamp();
 }
 
-function buildUsage() {
-  return '❌ Apenas administradores podem baixar a lista de emojis do servidor.';
+function buildUsage(source = null) {
+  return t('admin.noPermission', source);
 }
 
 async function sendExport(source, reply) {
-  if (!source.guild) return reply('❌ Este comando precisa ser usado dentro de um servidor.');
-  if (!isManager(source)) return reply(buildUsage());
+  if (!source.guild) return reply(t('admin.onlyServer', source));
+  if (!isManager(source)) return reply(buildUsage(source));
 
   const result = buildFile(source.guild);
-  await reply({ embeds: [buildSummary(source.guild, result.count, result.animated)], files: [result.file] });
+  await reply({ embeds: [buildSummary(source.guild, result.count, result.animated, source)], files: [result.file] });
 }
 
 module.exports = {
   name,
-  aliases: ['listaemojis'],
+  aliases: ['listaemojis', 'emojis'],
   buildFile,
   serializeGuildEmojis,
   data: new SlashCommandBuilder()
     .setName(name)
-    .setDescription('Baixa a lista de emojis customizados deste servidor em JSON.')
+    .setDescription('Download this server\'s custom emojis as a JSON file.')
+    .setDescriptionLocalizations({
+      'pt-BR': 'Baixa a lista de emojis customizados deste servidor em JSON.',
+    })
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .setDMPermission(false),
   async executePrefix({ message }) {

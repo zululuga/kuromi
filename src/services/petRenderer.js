@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { createCanvas, loadImage } = require('@napi-rs/canvas');
 const { AttachmentBuilder } = require('discord.js');
+const { getCanvasStrings, getLanguage, PET_DESCRIPTIONS_EN, ELEMENT_NAMES, RARITY_NAMES } = require('../utils/i18n');
 
 const WIDTH = 800;
 const HEIGHT = 500;
@@ -163,8 +164,9 @@ function drawProgressBar(ctx, x, y, width, height, current, max, fillStart, fill
 /**
  * Renderiza o Cartão de Status do PixelMonster.
  */
-function renderPetCard(pet) {
-  const cacheKey = `${pet.id}_${pet.level}_${pet.hunger}_${pet.happiness}_${pet.energy}_${pet.xp}_${pet.stats?.hp}_${Boolean(pet.shiny)}`;
+function renderPetCard(pet, lang = 'pt') {
+  const langKey = getLanguage(lang);
+  const cacheKey = `${pet.id}_${pet.level}_${pet.hunger}_${pet.happiness}_${pet.energy}_${pet.xp}_${pet.stats?.hp}_${Boolean(pet.shiny)}_${langKey}`;
   if (petCardCache.has(cacheKey)) {
     return petCardCache.get(cacheKey);
   }
@@ -172,6 +174,7 @@ function renderPetCard(pet) {
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
   const theme = ELEMENT_THEMES[pet.element] || ELEMENT_THEMES.CHARME;
+  const cStrs = getCanvasStrings(langKey).pet;
 
   // 1. Background Radial Gradient
   const bgGrad = ctx.createRadialGradient(200, 250, 40, WIDTH / 2, HEIGHT / 2, 500);
@@ -247,12 +250,12 @@ function renderPetCard(pet) {
     ctx.fillStyle = '#facc15';
     ctx.font = 'bold 13px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('SHINY', avatarCx, avatarCy + avatarR + 24);
+    ctx.fillText(cStrs.shiny, avatarCx, avatarCy + avatarR + 24);
   } else if (pet.corrupt) {
     ctx.fillStyle = '#f43f5e';
     ctx.font = 'bold 13px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('CORROMPIDO', avatarCx, avatarCy + avatarR + 24);
+    ctx.fillText(cStrs.corrupted, avatarCx, avatarCy + avatarR + 24);
   }
 
   // 4. Header: Nome e Título
@@ -265,9 +268,10 @@ function renderPetCard(pet) {
   ctx.shadowBlur = 0;
 
   // Badges (Level e Elemento)
+  const elementName = langKey === 'en' ? (ELEMENT_NAMES.en[pet.element] || pet.element) : (ELEMENT_NAMES.pt[pet.element] || pet.element);
   ctx.fillStyle = theme.accent;
   ctx.font = 'bold 14px sans-serif';
-  ctx.fillText(`Nível ${pet.level}  •  ${pet.species || pet.name}  •  Elemento: ${pet.element}`, 310, 98);
+  ctx.fillText(`${cStrs.level} ${pet.level}  •  ${pet.species || pet.name}  •  ${cStrs.element}: ${elementName}`, 310, 98);
 
   // 5. Barras de Progresso
   const barX = 310;
@@ -277,11 +281,11 @@ function renderPetCard(pet) {
   const currentHp = pet.stats?.hp !== undefined ? pet.stats.hp : 55;
   const maxHp = pet.stats?.maxHp !== undefined ? pet.stats.maxHp : 55;
 
-  drawProgressBar(ctx, barX, 130, barW, barH, currentHp, maxHp, '#10b981', '#34d399', 'Vida (HP)');
-  drawProgressBar(ctx, barX, 162, barW, barH, pet.hunger || 0, 100, '#f97316', '#fb923c', 'Fome');
-  drawProgressBar(ctx, barX, 194, barW, barH, pet.happiness || 0, 100, '#ec4899', '#f472b6', 'Humor');
-  drawProgressBar(ctx, barX, 226, barW, barH, pet.energy || 0, 100, '#eab308', '#facc15', 'Energia');
-  drawProgressBar(ctx, barX, 258, barW, barH, pet.xp || 0, pet.xpToNext || 100, '#06b6d4', '#38bdf8', 'Experiência (XP)');
+  drawProgressBar(ctx, barX, 130, barW, barH, currentHp, maxHp, '#10b981', '#34d399', cStrs.hp);
+  drawProgressBar(ctx, barX, 162, barW, barH, pet.hunger || 0, 100, '#f97316', '#fb923c', cStrs.hunger);
+  drawProgressBar(ctx, barX, 194, barW, barH, pet.happiness || 0, 100, '#ec4899', '#f472b6', cStrs.happiness);
+  drawProgressBar(ctx, barX, 226, barW, barH, pet.energy || 0, 100, '#eab308', '#facc15', cStrs.energy);
+  drawProgressBar(ctx, barX, 258, barW, barH, pet.xp || 0, pet.xpToNext || 100, '#06b6d4', '#38bdf8', cStrs.xp);
 
   // 6. Painel de Atributos de Batalha (Grid Inferior)
   const gridY = 320;
@@ -293,10 +297,10 @@ function renderPetCard(pet) {
   const spd = pet.stats?.spd !== undefined ? pet.stats.spd : 12;
 
   const statBoxes = [
-    { label: 'ATAQUE', val: atk, x: 310 },
-    { label: 'DEFESA', val: def, x: 425 },
-    { label: 'VELOCIDADE', val: spd, x: 540 },
-    { label: 'VITÓRIAS', val: `${pet.duelosVencidos || 0}/${(pet.duelosVencidos || 0) + (pet.duelosPerdidos || 0)}`, x: 655 },
+    { label: cStrs.attack, val: atk, x: 310 },
+    { label: cStrs.defense, val: def, x: 425 },
+    { label: cStrs.speed, val: spd, x: 540 },
+    { label: cStrs.victories, val: `${pet.duelosVencidos || 0}/${(pet.duelosVencidos || 0) + (pet.duelosPerdidos || 0)}`, x: 655 },
   ];
 
   for (const box of statBoxes) {
@@ -321,7 +325,7 @@ function renderPetCard(pet) {
   ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
   ctx.font = '11px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('PYMONS • REINO TRAVESSO DE PYXIE', WIDTH / 2, 470);
+  ctx.fillText(cStrs.footer, WIDTH / 2, 470);
 
   const buffer = canvas.toBuffer('image/png');
 
@@ -367,12 +371,17 @@ function drawSilhouetteSprite(ctx, img, targetX, targetY, targetSize) {
 /**
  * Renderiza uma entrada visual da Dex com suporte a Pymons descobertos, não descobertos e Shinies.
  */
-function renderDexCard(monsterDef, isShiny = false, isUnlocked = true, isShinyUnlocked = false) {
+/**
+ * Renderiza uma entrada visual da Dex com suporte a Pymons descobertos, não descobertos e Shinies.
+ */
+function renderDexCard(monsterDef, isShiny = false, isUnlocked = true, isShinyUnlocked = false, lang = 'pt') {
+  const langKey = getLanguage(lang);
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
   const theme = isUnlocked
     ? (ELEMENT_THEMES[monsterDef.element] || ELEMENT_THEMES.CHARME)
     : ELEMENT_THEMES.TRAVESSURA;
+  const cStrs = getCanvasStrings(langKey).dex;
 
   // Background
   const bgGrad = ctx.createRadialGradient(200, 250, 40, WIDTH / 2, HEIGHT / 2, 500);
@@ -430,11 +439,11 @@ function renderDexCard(monsterDef, isShiny = false, isUnlocked = true, isShinyUn
 
     ctx.fillStyle = theme.accent;
     ctx.font = 'bold 15px sans-serif';
-    ctx.fillText('🔒 Pymon Não Registrado  •  Elemento: ???', 310, 110);
+    ctx.fillText(`${cStrs.unregistered}  •  ${cStrs.elementLabel}: ???`, 310, 110);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
     ctx.font = 'italic 15px sans-serif';
-    const descText = '"Esta criatura misteriosa ainda não foi registrada por você. Explore as Dungeons e choque novos ovos para desvendar este Pymon!"';
+    const descText = cStrs.descUnknown;
     const descLines = wrapCanvasText(ctx, descText, 440);
     descLines.forEach((line, idx) => {
       ctx.fillText(line, 310, 148 + idx * 22);
@@ -442,10 +451,10 @@ function renderDexCard(monsterDef, isShiny = false, isUnlocked = true, isShinyUn
 
     const statY = 245;
     const stats = [
-      { label: 'Vida Base (HP)', val: 0, bar: '#4b5563' },
-      { label: 'Ataque (ATK)', val: 0, bar: '#4b5563' },
-      { label: 'Defesa (DEF)', val: 0, bar: '#4b5563' },
-      { label: 'Velocidade (SPD)', val: 0, bar: '#4b5563' },
+      { label: cStrs.baseHp, val: 0, bar: '#4b5563' },
+      { label: cStrs.baseAtk, val: 0, bar: '#4b5563' },
+      { label: cStrs.baseDef, val: 0, bar: '#4b5563' },
+      { label: cStrs.baseSpd, val: 0, bar: '#4b5563' },
     ];
     stats.forEach((st, idx) => {
       const yPos = statY + idx * 42;
@@ -455,7 +464,7 @@ function renderDexCard(monsterDef, isShiny = false, isUnlocked = true, isShinyUn
     ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.font = '12px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('DEX DE PYMONS • CRIATURA NÃO REGISTRADA', WIDTH / 2, 470);
+    ctx.fillText(cStrs.unregisteredFooter || cStrs.footer, WIDTH / 2, 470);
   } else if (isShiny && !isShinyUnlocked) {
     // 2. Descoberto apenas na forma normal (Shiny bloqueado)
     if (sprite) {
@@ -472,13 +481,14 @@ function renderDexCard(monsterDef, isShiny = false, isUnlocked = true, isShinyUn
     ctx.font = 'bold 34px serif';
     ctx.fillText(`${monsterDef.name} (Shiny)`, 310, 75);
 
+    const elementName = langKey === 'en' ? (ELEMENT_NAMES.en[monsterDef.element] || monsterDef.element) : (ELEMENT_NAMES.pt[monsterDef.element] || monsterDef.element);
     ctx.fillStyle = '#facc15';
     ctx.font = 'bold 15px sans-serif';
-    ctx.fillText(`✨ Forma Shiny Bloqueada  •  Elemento: ${monsterDef.element}`, 310, 110);
+    ctx.fillText(`${cStrs.shinyLocked}  •  ${cStrs.elementLabel}: ${elementName}`, 310, 110);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
     ctx.font = 'italic 15px sans-serif';
-    const descText = `"Você registrou a espécie ${monsterDef.name}, mas a variante Shiny Rara ainda não foi descoberta. (5% no Inicial / até 20% na Chocadeira)."`;
+    const descText = (cStrs.shinyLockedDesc || '').replace('{name}', monsterDef.name);
     const descLines = wrapCanvasText(ctx, descText, 440);
     descLines.forEach((line, idx) => {
       ctx.fillText(line, 310, 148 + idx * 22);
@@ -486,10 +496,10 @@ function renderDexCard(monsterDef, isShiny = false, isUnlocked = true, isShinyUn
 
     const statY = 245;
     const stats = [
-      { label: 'Vida Base (HP)', val: monsterDef.baseStats?.hp || 55, bar: '#10b981' },
-      { label: 'Ataque (ATK)', val: monsterDef.baseStats?.atk || 12, bar: '#f97316' },
-      { label: 'Defesa (DEF)', val: monsterDef.baseStats?.def || 12, bar: '#38bdf8' },
-      { label: 'Velocidade (SPD)', val: monsterDef.baseStats?.spd || 12, bar: '#ec4899' },
+      { label: cStrs.baseHp, val: monsterDef.baseStats?.hp || 55, bar: '#10b981' },
+      { label: cStrs.baseAtk, val: monsterDef.baseStats?.atk || 12, bar: '#f97316' },
+      { label: cStrs.baseDef, val: monsterDef.baseStats?.def || 12, bar: '#38bdf8' },
+      { label: cStrs.baseSpd, val: monsterDef.baseStats?.spd || 12, bar: '#ec4899' },
     ];
     stats.forEach((st, idx) => {
       const yPos = statY + idx * 42;
@@ -499,7 +509,7 @@ function renderDexCard(monsterDef, isShiny = false, isUnlocked = true, isShinyUn
     ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.font = '12px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('DEX DE PYMONS • VARIANTE SHINY NÃO DESCOBERTA', WIDTH / 2, 470);
+    ctx.fillText(cStrs.shinyLockedFooter || cStrs.footer, WIDTH / 2, 470);
 
   } else {
     // 3. Totalmente Descoberto
@@ -511,7 +521,7 @@ function renderDexCard(monsterDef, isShiny = false, isUnlocked = true, isShinyUn
       ctx.fillStyle = '#facc15';
       ctx.font = 'bold 14px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('✨ SHINY REGISTRADO ✨', avatarCx, avatarCy + avatarR + 24);
+      ctx.fillText(cStrs.shinyRegistered, avatarCx, avatarCy + avatarR + 24);
     }
 
     ctx.textAlign = 'left';
@@ -522,13 +532,16 @@ function renderDexCard(monsterDef, isShiny = false, isUnlocked = true, isShinyUn
     ctx.fillText(`${monsterDef.name}${isShiny ? ' ✨' : ''}`, 310, 75);
     ctx.shadowBlur = 0;
 
+    const rarityName = langKey === 'en' ? (RARITY_NAMES.en[monsterDef.rarity] || monsterDef.rarity) : (RARITY_NAMES.pt[monsterDef.rarity] || monsterDef.rarity || 'Pymon');
+    const elementName = langKey === 'en' ? (ELEMENT_NAMES.en[monsterDef.element] || monsterDef.element) : (ELEMENT_NAMES.pt[monsterDef.element] || monsterDef.element);
+
     ctx.fillStyle = theme.accent;
     ctx.font = 'bold 15px sans-serif';
-    ctx.fillText(`${monsterDef.rarity || 'Pymon'}  •  Elemento: ${monsterDef.element}`, 310, 110);
+    ctx.fillText(`${rarityName}  •  ${cStrs.elementLabel}: ${elementName}`, 310, 110);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = 'italic 15px sans-serif';
-    const descText = `"${monsterDef.description || ''}"`;
+    const descText = `"${(langKey === 'en' && PET_DESCRIPTIONS_EN[monsterDef.key]) || monsterDef.description || ''}"`;
     const descLines = wrapCanvasText(ctx, descText, 440);
     descLines.forEach((line, idx) => {
       ctx.fillText(line, 310, 148 + idx * 22);
@@ -536,10 +549,10 @@ function renderDexCard(monsterDef, isShiny = false, isUnlocked = true, isShinyUn
 
     const statY = 245;
     const stats = [
-      { label: 'Vida Base (HP)', val: monsterDef.baseStats?.hp || 55, bar: '#10b981' },
-      { label: 'Ataque (ATK)', val: monsterDef.baseStats?.atk || 12, bar: '#f97316' },
-      { label: 'Defesa (DEF)', val: monsterDef.baseStats?.def || 12, bar: '#38bdf8' },
-      { label: 'Velocidade (SPD)', val: monsterDef.baseStats?.spd || 12, bar: '#ec4899' },
+      { label: cStrs.baseHp, val: monsterDef.baseStats?.hp || 55, bar: '#10b981' },
+      { label: cStrs.baseAtk, val: monsterDef.baseStats?.atk || 12, bar: '#f97316' },
+      { label: cStrs.baseDef, val: monsterDef.baseStats?.def || 12, bar: '#38bdf8' },
+      { label: cStrs.baseSpd, val: monsterDef.baseStats?.spd || 12, bar: '#ec4899' },
     ];
     stats.forEach((st, idx) => {
       const yPos = statY + idx * 42;
@@ -549,7 +562,7 @@ function renderDexCard(monsterDef, isShiny = false, isUnlocked = true, isShinyUn
     ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.font = '12px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('DEX DE PYMONS • COMPÊNDIO OFICIAL', WIDTH / 2, 470);
+    ctx.fillText(cStrs.footer, WIDTH / 2, 470);
   }
 
   return canvas.toBuffer('image/png');
@@ -557,20 +570,22 @@ function renderDexCard(monsterDef, isShiny = false, isUnlocked = true, isShinyUn
 
 const renderPokedexCard = renderDexCard;
 
-function createPetAttachment(pet) {
-  const buffer = renderPetCard(pet);
+function createPetAttachment(pet, lang = 'pt') {
+  const buffer = renderPetCard(pet, lang);
   return new AttachmentBuilder(buffer, { name: 'pet_card.png' });
 }
 
-function createDexAttachment(monsterDef, isShiny = false, isUnlocked = true, isShinyUnlocked = false) {
-  const buffer = renderDexCard(monsterDef, isShiny, isUnlocked, isShinyUnlocked);
+function createDexAttachment(monsterDef, isShiny = false, isUnlocked = true, isShinyUnlocked = false, lang = 'pt') {
+  const buffer = renderDexCard(monsterDef, isShiny, isUnlocked, isShinyUnlocked, lang);
   return new AttachmentBuilder(buffer, { name: 'dex_entry.png' });
 }
 
 /**
  * Renderiza o mapa procedural 2D da expedição em Canvas com Névoa de Guerra e posição do jogador.
  */
-function renderExpeditionMap(run, activePet) {
+function renderExpeditionMap(run, activePet, lang = 'pt') {
+  const langKey = getLanguage(lang);
+  const cStrs = getCanvasStrings(langKey).dungeon;
   const MAP_WIDTH = 600;
   const MAP_HEIGHT = 480;
 
@@ -634,14 +649,15 @@ function renderExpeditionMap(run, activePet) {
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 15px sans-serif';
-  ctx.fillText(`${activePet?.name || 'Pymon'} (Nv. ${activePet?.level || 1})`, 75, 32);
+  const levelPrefix = langKey === 'en' ? 'Lv.' : 'Nv.';
+  ctx.fillText(`${activePet?.name || 'Pymon'} (${levelPrefix} ${activePet?.level || 1})`, 75, 32);
 
   const curHp = activePet?.stats?.hp ?? 55;
   const maxHp = activePet?.stats?.maxHp ?? 55;
   const curEnergy = activePet?.energy ?? 100;
 
-  drawProgressBar(ctx, 75, 44, 150, 12, curHp, maxHp, '#10b981', '#34d399', `HP: ${curHp}/${maxHp}`);
-  drawProgressBar(ctx, 75, 59, 150, 12, curEnergy, 100, '#eab308', '#facc15', `ENERGIA: ${curEnergy}%`);
+  drawProgressBar(ctx, 75, 44, 150, 12, curHp, maxHp, '#10b981', '#34d399', `${cStrs.hpLabel || 'HP'}: ${curHp}/${maxHp}`);
+  drawProgressBar(ctx, 75, 59, 150, 12, curEnergy, 100, '#eab308', '#facc15', `${cStrs.energyLabel || 'ENERGIA'}: ${curEnergy}%`);
 
   // Painel de Espólios Acumulados (Lado Direito)
   const lootPanelX = 360;
@@ -654,13 +670,13 @@ function renderExpeditionMap(run, activePet) {
 
   ctx.fillStyle = theme.accent;
   ctx.font = 'bold 11px sans-serif';
-  ctx.fillText(`MASMORRA: ${run?.zone?.name?.toUpperCase() || 'DUNGEON'}`, lootPanelX + 10, 36);
+  ctx.fillText(`${cStrs.dungeonLabel || 'MASMORRA'}: ${run?.zone?.name?.toUpperCase() || 'DUNGEON'}`, lootPanelX + 10, 36);
 
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 11px sans-serif';
-  const coinsText = `MOEDAS: +${run?.coinsAccumulated || 0}`;
-  const chestsText = `BAÚS: ${(run?.chestsFound || []).length}`;
-  const eggsText = `OVOS: ${(run?.eggsFound || []).length}`;
+  const coinsText = `${cStrs.coinsLabel || 'MOEDAS'}: +${run?.coinsAccumulated || 0}`;
+  const chestsText = `${cStrs.chestsLabel || 'BAÚS'}: ${(run?.chestsFound || []).length}`;
+  const eggsText = `${cStrs.eggsLabel || 'OVOS'}: ${(run?.eggsFound || []).length}`;
   ctx.fillText(`${coinsText}   ${chestsText}   ${eggsText}`, lootPanelX + 10, 58);
 
   // 3. Grid de Salas 2D (Centro do Canvas)
@@ -829,14 +845,18 @@ function renderExpeditionMap(run, activePet) {
   ctx.font = '11px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const posText = `Posição: (${playerPos.x + 1}, ${playerPos.y + 1})  •  Passos: ${run?.step || 0}  •  Use os botões direcionais D-Pad`;
+  const posTemplate = cStrs.footer || 'Posição: ({x}, {y})  •  Passos: {steps}  •  Use os botões direcionais D-Pad';
+  const posText = posTemplate
+    .replace('{x}', playerPos.x + 1)
+    .replace('{y}', playerPos.y + 1)
+    .replace('{steps}', run?.step || 0);
   ctx.fillText(posText, MAP_WIDTH / 2, MAP_HEIGHT - 22);
 
   return canvas.toBuffer('image/png');
 }
 
-function createExpeditionMapAttachment(run, activePet) {
-  const buffer = renderExpeditionMap(run, activePet);
+function createExpeditionMapAttachment(run, activePet, lang = 'pt') {
+  const buffer = renderExpeditionMap(run, activePet, lang);
   return new AttachmentBuilder(buffer, { name: 'dungeon_map.png' });
 }
 

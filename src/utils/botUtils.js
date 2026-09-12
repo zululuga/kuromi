@@ -100,12 +100,12 @@ function getCommandList() {
       usage: `Slash: /${command.name}\nPrefixo: ${prefix}${command.name}`,
     };
 
-    if (command.name === 'boasvindas') {
-      commandInfo.usage = `Slash: /boasvindas #canal\nPrefixo: ${prefix}boasvindas #canal`;
+    if (command.name === 'py-boasvindas' || command.name === 'boasvindas') {
+      commandInfo.usage = `Slash: /${command.name} #canal\nPrefixo: ${prefix}${command.name} #canal`;
     }
 
-    if (command.name === 'ajuda') {
-      commandInfo.usage = `Slash: /ajuda [pagina]\nPrefixo: ${prefix}ajuda [pagina]`;
+    if (command.name === 'py-ajuda' || command.name === 'ajuda') {
+      commandInfo.usage = `Slash: /${command.name} [modulo]\nPrefixo: ${prefix}${command.name} [modulo]`;
     }
 
     return commandInfo;

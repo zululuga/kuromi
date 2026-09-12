@@ -1,296 +1,139 @@
-# 📚 Comandos da Cringelândia
 # 📚 Manual Oficial de Comandos — Pyxie
 
-## 🔧 Painel de Controle Local
-Acesse em: **http://localhost:3000**
-A **Pyxie** suporta comandos modernos via **Slash Commands (`/`)** e comandos tradicionais de texto com o prefixo **`py!`**.
-
-### Funções do Painel
-- **Start**: Inicia o bot
-- **Restart**: Reinicia o bot
-- **Stop**: Para o bot
-- **Register Slash**: Registra ou atualiza os comandos slash no Discord
-- **Quit**: Para o bot e fecha
+A **Pyxie** suporta comandos modernos via **Slash Commands (`/`)** e comandos tradicionais de texto com o prefixo **`py!`** (ou **`ku!`**).
 
 ---
 
-## ⚡ Comandos com Prefixo (Padrão: `ku!`)
 ## 🧭 Sumário de Módulos
-1. [🐾 Pymons & Tamagotchi](#-1-pymons--tamagotchi)
-2. [⚔️ Combates, Duelos & World Boss](#️-2-combates-duelos--world-boss)
-3. [🧭 Exploração & Dungeons](#-3-exploração--dungeons)
-4. [🪙 Economia, Profissões & Mercado](#-4-economia-profissões--mercado)
-5. [👑 Perfil, Títulos & Cosméticos](#-5-perfil-títulos--cosméticos)
-6. [🔮 Tarot & Interações Sociais](#-6-tarot--interações-sociais)
-7. [⚙️ Utilidades & Administração](#-7-utilidades--administração)
+1. [🐾 Pymons, Tamagotchi & Masmorras](#-1-pymons-tamagotchi--masmorras)
+2. [🪙 Economia, Lojinha & Profissões](#-2-economia-lojinha--profissões)
+3. [🔮 Tarot, Amor & Social](#-3-tarot-amor--social)
+4. [👑 Perfil, Títulos & Cosméticos](#-4-perfil-títulos--cosméticos)
+5. [⚙️ Utilidades & Administração](#-5-utilidades--administração)
 
-Use qualquer um desses comandos digitando a mensagem no Discord:
 ---
 
-### `ku!ping`
-Responde com "pong!" para confirmar que o bot está online.
-```
-Uso: ku!ping
-Resposta: pong! 🏓
-```
-## 🐾 1. Pymons & Tamagotchi
+## 🐾 1. Pymons, Tamagotchi & Masmorras
 
-### `ku!status`
-Mostra o status do bot e informações do servidor.
-```
-Uso: ku!status
-Resposta: Embed com status online
-```
-### `/pymons` (ou `py!pymons`)
-Abre o painel central do seu Pymon. Permite alimentar, fazer carinho, colocar para dormir, gerenciar a chocadeira de ovos e acessar a loja de itens.
+### `/py-pymons` (ou `py!pymons`)
+Abre o painel central Tamagotchi do seu Pymon ativo. Permite:
+- **Cuidar:** Alimentar, dar carinho, colocar para dormir e recuperar energia.
+- **Chocadeira:** Chocar ovos em ninhos temporais com cálculo delta-time.
+- **Mochila & Loja:** Utilizar itens consumíveis, rações e poções diretamente no pet.
+- **Subcomandos:** `/py-pymons painel` e `/py-pymons renomear [novo_nome]`.
 
-### `ku!ajuda`
-Lista todos os comandos e funções disponíveis.
-```
-Uso: ku!ajuda [pagina]
-Resposta: Embed com lista de comandos
-```
-### `/dex` (ou `py!dex`)
-Exibe o compêndio completo de todas as 10 espécies de Pymons. Criaturas já descobertas aparecem coloridas com dados de raridade e elemento; espécies ainda não possuídas ficam em silhueta misteriosa. Permite inspecionar versões normais, Shiny e ALPHA.
+### `/py-dex` (ou `py!dex`)
+Exibe o compêndio completo de todas as 10 espécies oficiais de Pymons. Criaturas já descobertas aparecem coloridas com dados de raridade e elemento; espécies ainda não possuídas ficam em silhueta misteriosa. Permite inspecionar versões normais, Shiny e ALPHA.
 
-A ajuda exibe até 10 comandos por página. Use `ku!ajuda 1` ou `/ajuda pagina:1` para escolher a página.
-### `/adocao [especie]` (ou `py!adocao [especie]`)
-Adota o seu primeiro Pymon inicial (**Cinna**, **Bonorka** ou **Pomcorin**).
+### `/py-explorar [zona]` (ou `py!explorar`)
+Inicia uma expedição em masmorras procedurais 2D onde você controla seu Pymon usando botões direcionais (D-Pad) em busca de baús de tesouro, combates contra monstros e ovos raros.
 
-### `ku!boasvindas #canal`
-Define o canal onde a mensagem de boas-vindas será enviada.
-```
-Uso: ku!boasvindas #bem-vindos
-Resposta: Canal de boas-vindas configurado para #bem-vindos
-```
----
+### `/py-expedicao [duracao]` (ou `py!expedicao [2|4|8]`)
+Envia seu Pymon em uma expedição passiva (AFK) enquanto você estuda, trabalha ou joga:
+- 🟢 **2 Horas:** 150-300 XP • 200-400 🪙 • Comida
+- 🟡 **4 Horas:** 400-700 XP • 500-900 🪙 • Poção + 15% Chance de Ovo
+- 🟣 **8 Horas:** 900-1600 XP • 1200-2200 🪙 • Banquete + 10% Feijão 🌱 + 25% Ovo Raro 🥚✨
 
-### `ku!diario`
-Resgata uma quantidade aleatória de Moedinhas. O resgate pode ser feito uma vez a cada 24 horas.
-## ⚔️ 2. Combates, Duelos & World Boss
-
-### `ku!carteira [@usuário]`
-Exibe todos os saldos e a colocação de um usuário. As moedas exibidas são compartilhadas com o perfil.
-### `/duelo [oponente] [aposta]` (ou `py!duelo @usuario [aposta]`)
-Desafia outro treinador para uma batalha RPG por turnos na arena.
+### `/py-duelo [oponente] [aposta]` (ou `py!duelo @usuario [aposta]`)
+Desafia outro treinador para uma batalha RPG por turnos na arena:
 - **Limite:** Até 3 duelos por dia por jogador.
 - **Aposta:** Opcional (0 a 50.000 moedas).
 - **Atributos:** ATK, DEF e VEL influenciam no dano e na chance de esquiva.
 - **Vantagens Elementais:** Causam +25% de dano e reduzem em 20% o dano recebido.
 
-### `ku!perfil [@usuário]`
-Exibe o cônjuge, todos os saldos e a colocação de um usuário.
-### `/boss [subcomando]` (ou `py!boss`)
-Enfrente o **World Boss Semanal ALPHA** em cooperação com todos os servidores do Discord.
-- `/boss status`: Mostra a barra de vida, elemento, aura avermelhada e ranking de dano atual.
-- `/boss atacar`: Desfere um ataque poderoso com seu Pymon ativo (Cooldown: 10 min).
-- `/boss ranking`: Lista os maiores causadores de dano contra o titã.
+### `/py-boss [subcomando]` (ou `py!boss`)
+Enfrente o **World Boss Semanal ALPHA** em cooperação com todos os servidores do Discord:
+- `/py-boss status`: Mostra a barra de vida, elemento, aura avermelhada e ranking de dano atual.
+- `/py-boss atacar`: Desfere um ataque poderoso com seu Pymon ativo (Cooldown: 10 min).
+- `/py-boss ranking`: Lista os maiores causadores de dano contra o titã.
 - 🎁 **Recompensa do MVP:** O jogador #1 em dano recebe o próprio **Pymon versão ALPHA (🔴 Aura Avermelhada)** + 3 🌱 Feijões Mágicos + 3.000 🪙.
 
-### `ku!casamento @usuário`
-Solicita uma cerimônia de casamento por 1000 Moedinhas. O usuário escolhido deve aceitar ou recusar o pedido.
 ---
 
-### `ku!ranking`
-Exibe os usuários com mais Moedinhas e a sua colocação.
-## 🧭 3. Exploração & Dungeons
+##  2. Economia, Lojinha & Profissões
 
-### `ku!configeconomia <mínimo> <máximo>`
-Configura a faixa do comando `diario`. Disponível para administradores.
-### `/petexplorar` (ou `py!petexplorar`)
-Inicia uma masmorra procedural 2D onde você controla seu Pymon usando botões direcionais (D-Pad) em busca de baús de tesouro, combates contra monstros e ovos raros.
-
-### `ku!setareconomia @usuário <quantidade>`
-Define o saldo de Moedinhas de um usuário. Disponível para administradores.
-### `/expedicao [duracao]` (ou `py!expedicao [2|4|8]`)
-Envia seu Pymon em uma expedição passiva (AFK) enquanto você estuda, trabalha ou joga.
-- 🟢 **2 Horas:** 150-300 XP • 200-400 🪙 • Comida
-- 🟡 **4 Horas:** 400-700 XP • 500-900 🪙 • Poção + 15% Chance de Ovo
-- 🟣 **8 Horas:** 900-1600 XP • 1200-2200 🪙 • Banquete + 10% Feijão 🌱 + 25% Ovo Raro 🥚✨
-
-### `ku!resetareconomia @usuário`
-Zera as Moedinhas e o cooldown diário de um usuário. Disponível para administradores.
-
-### `ku!agenda`
-Mostra as próximas verificações e disparos automáticos do bot, com horário de Brasília, canal, frequência e contagem regressiva. Disponível para administradores.
-
-### `ku!emojis`
-Baixa um arquivo JSON com a lista de emojis customizados do servidor, incluindo URLs, IDs e quais são animados. Disponível para administradores.
-
-### `ku!profissao <profissão>`
-Escolhe uma profissão. A primeira escolha é gratuita; trocar custa 50 Moedinhas.
-
-### `ku!trabalho`
-Inicia um desafio de cinco palavras relacionadas à sua profissão. O trabalho pode ser feito a cada 3 horas e paga de 5 a 50 Moedinhas.
-
-### `ku!divorcio`
-Encerra seu casamento por 500 Moedinhas.
-```
-
----
-
-## 💬 Comandos Slash (Recomendado)
-## 🪙 4. Economia, Profissões & Mercado
-
-Use os comandos digitando `/` no Discord:
-### `/diario` (ou `py!diario`)
+### `/py-diario` (ou `py!diario`)
 Resgata sua recompensa diária em Moedinhas (com 1% de chance de obter 1 Feijão Mágico 🌱).
-- **Bônus Patrocinado (+50%):** Clique no botão após o resgate e aguarde alguns segundos na página do anúncio para receber +50% de moedas automaticamente em sua conta via LootLabs.
+- Inclui botão direto para votar na Pyxie no Top.gg e dobrar seus bônus nos fins de semana!
 
-### `/ping`
-Responde com "pong!" para confirmar que o bot está online.
-```
-Uso: /ping
-Resposta: pong! 🏓
-```
-### `/carteira [usuario]` (ou `py!carteira [@usuario]`)
-Consulta seus saldos de Moedinhas, Feijões Mágicos e posição no ranking de riqueza.
+### `/py-carteira [usuario]` (ou `py!carteira [@usuario]`)
+Consulta seus saldos de Moedinhas, Feijões Mágicos e sua posição no ranking de riqueza.
 
-### `/status`
-Mostra o status do bot e informações do servidor.
-```
-Uso: /status
-Resposta: Embed com status online
-```
-### `/ranking [categoria]` (ou `py!ranking [coins|beans|pets|dex]`)
-Exibe a classificação global e do servidor nas categorias:
-- 🪙 **Moedas:** Os magnatas mais ricos.
-- 🌱 **Feijões:** Os maiores acumuladores de Feijões Mágicos.
-- 🐾 **Pets:** Os Pymons de nível mais alto.
-- 📖 **Dex:** Os exploradores com mais espécies registradas.
+### `/py-ranking [categoria]` (ou `py!ranking`)
+Exibe a classificação global e do servidor nas categorias de Moedas, Feijões Mágicos e Nível de Pymons.
 
-### `/ajuda`
-Lista todos os comandos e funções disponíveis em mensagem privada/efêmera com botões de navegação.
-```
-Uso: /ajuda [pagina]
-Resposta: Embed interativo com lista de comandos, botões de paginação (◀️ / ▶️) e visibilidade apenas para quem executou.
-```
-### `/trocar [usuario] [tipo] [identificador] [quantidade]` (ou `py!trocar @usuario item|moedas|pet`)
-Inicia uma proposta de troca segura e bilateral de itens, moedas ou Pymons com outro membro.
+### `/py-loja`, `/py-comprar [item]`, `/py-vender [item]`, `/py-inventario`, `/py-usar [item]`
+Gerencie seu inventário de itens, compre rações e poções na loja, venda itens coletados em dungeons ou consuma itens no seu Pymon ativo.
+
+### `/py-trocar [usuario] [tipo] [identificador] [quantidade]` (ou `py!trocar @usuario`)
+Inicia uma proposta de troca segura e bilateral de itens, moedas ou Pymons com outro membro:
 - **Segurança:** Ambos os jogadores devem clicar em "Confirmar Troca" para a transferência ocorrer.
 - **Cooldown:** 30 minutos após cada troca concluída.
 
-### `/boasvindas #canal`
-Define o canal onde a mensagem de boas-vindas será enviada.
-```
-Uso: /boasvindas #bem-vindos
-Resposta: Canal de boas-vindas configurado para #bem-vindos
-```
-### `/profissao [carreira]` (ou `py!profissao [carreira]`)
-Escolha sua vocação (Programador, Alquimista, Músico, Explorador, etc.).
+### `/py-profissao [profissao]` (ou `py!profissao`)
+Escolha sua vocação (Programador, Alquimista, Músico, Explorador, Cozinheiro, etc.). A primeira escolha é gratuita; trocar custa 50 Moedinhas.
 
-### `/diario`
-Resgata uma quantidade aleatória de Moedinhas uma vez a cada 24 horas.
-### `/trabalho` (ou `py!trabalho`)
-Mini-game interativo de digitação ou desafios relacionados à sua carreira (a cada 3 horas).
+### `/py-trabalho` (ou `py!trabalho`)
+Mini-game interativo de decisões técnicas relacionadas à sua carreira (a cada 3 horas), com remuneração em Moedinhas e 2% de chance de bônus em Feijão Mágico 🌱.
 
-### `/carteira [usuário]`
-Exibe todos os saldos e a colocação de um usuário. As moedas exibidas são compartilhadas com o perfil.
-### `/loja`, `/comprar [item]`, `/vender [item]`, `/inventario`
-Gerencie seus itens consumíveis, poções, pedras mágicas, sementes e ovos.
+### `/py-votar` (ou `py!votar`)
+Exibe o link oficial de votação no Top.gg para resgatar Moedinhas gratuitas, Rações e XP a cada 12 horas (recompensas em dobro no fim de semana).
 
-### `/perfil [usuário]`
-Exibe o cônjuge, todos os saldos e a colocação de um usuário.
 ---
 
-### `/casamento usuario:@usuário`
-Solicita uma cerimônia de casamento por 1000 Moedinhas. O usuário escolhido deve aceitar ou recusar o pedido.
-## 👑 5. Perfil, Títulos & Cosméticos
+##  3. Tarot, Amor & Social
 
-### `/ranking`
-Exibe o ranking de Moedinhas.
-### `/perfil [usuario]` (ou `py!perfil [@usuario]`)
-Exibe o cartão completo de aventureiro com seu companheiro Pymon, cônjuge, saldo, carreira e compêndio.
+### `/py-tarot` (ou `py!tarot`)
+Realize uma tiragem mística diária privada com renderização visual nativa em Canvas de 78 cartas arcanas (Maiores e Menores), com interpretações diretas e invertidas.
+
+### `/py-casal [usuario1] [usuario2]` (ou `py!casal`)
+Calcula a afinidade amorosa entre dois membros com cartão ilustrado em tempo real.
+
+### `/py-casamento [usuario]` e `/py-divorcio`
+Peça um usuário em casamento por 1.000 moedas com consentimento mútuo, ou encerre um relacionamento por 500 moedas.
+
+### `/py-sixseven` (ou `py!sixseven`)
+Mini-game casual da comunidade.
+
+---
+
+## 👑 4. Perfil, Títulos & Cosméticos
+
+### `/py-perfil [usuario]` (ou `py!perfil [@usuario]`)
+Exibe o cartão completo de aventureiro com seu companheiro Pymon, cônjuge, saldos, carreira e compêndio:
 - **Títulos de Prestígio:** Compre e equipe títulos raros usando Feijões Mágicos 🌱.
-- **Temas & Cores Visuais:** Desbloqueie temas de cores (*Ouro Real, Esmeralda Mística, Nebulosa Cósmica, Rosa Neon, Fogo Carmesim*) para personalizar o visual do seu perfil.
-- **Editar Bio:** Defina uma frase de destaque personalizada.
+- **Temas & Cores Visuais:** Desbloqueie temas de cores (*Ouro Real, Esmeralda Mística, Nebulosa Cósmica, Rosa Neon, Fogo Carmesim*).
 
-### `/configeconomia`
-Configura os valores mínimo e máximo do `diario`. Disponível para administradores.
----
-
-### `/setareconomia usuario quantidade`
-Define o saldo de Moedinhas de um usuário. Disponível para administradores.
-## 🔮 6. Tarot & Interações Sociais
-
-### `/resetareconomia usuario`
-Zera as Moedinhas e o cooldown diário de um usuário. Disponível para administradores.
-### `/tarot`
-Realize uma tiragem mística diária com renderização visual em Canvas nativo de 78 cartas arcanas.
-
-### `/agenda`
-Mostra as próximas verificações e disparos automáticos do bot. Disponível para administradores.
-### `/casal [@usuario]` (ou `py!casal`)
-Calcula a afinidade amorosa entre dois membros com cartão ilustrado de corações.
-
-### `/emojis`
-Baixa a lista de emojis customizados do servidor em JSON. Disponível para administradores.
-### `/casamento [usuario]` e `/divorcio`
-Peça um usuário em casamento por 1.000 moedas ou encerre um relacionamento por 500 moedas.
-
-### `/profissao profissao`
-Escolhe uma profissão. A primeira escolha é gratuita; trocar custa 50 Moedinhas.
-
-### `/trabalho`
-Inicia um desafio de cinco palavras relacionadas à sua profissão. O trabalho pode ser feito a cada 3 horas e paga de 5 a 50 Moedinhas.
-
-### `/divorcio`
-Encerra seu casamento por 500 Moedinhas.
-
-### `ku!adocao <pet>`
-Adota um dos 24 pets disponíveis pelo custo base. Pets Shiny têm 5% de chance e valem 4x nas explorações. Trocar o pet custa mais 100 Moedinhas.
-
-### `ku!petexplorar`
-Envia seu pet para uma exploração a cada 12 horas. A recompensa usa o valor do pet e pode receber bônus de monstro ou redução por machucado.
-
-### `/adocao pet`
-Adota um dos 24 pets disponíveis pelo custo base. Pets Shiny têm 5% de chance e valem 4x nas explorações. Trocar o pet custa mais 100 Moedinhas.
-
-### `/petexplorar`
-Envia seu pet para uma exploração a cada 12 horas. A recompensa usa o valor do pet e pode receber bônus de monstro ou redução por machucado.
+### `/py-idioma [idioma]` (ou `py!idioma [en|pt]`)
+Altera o idioma de exibição do bot para o servidor atual (Inglês ou Português).
 
 ---
 
-## 🎯 Como Registrar Slash Commands
-## ⚙️ 7. Utilidades & Administração
+## ⚙️ 5. Utilidades & Administração
 
-1. Inicie o painel local: **http://localhost:3000**
-2. Clique em **Register Slash**
-3. Aguarde a mensagem de confirmação
-4. Os slash commands estarão disponíveis no Discord após o registro
-### `/convite` (ou `py!convite`)
-Gera o link de convite oficial para adicionar a Pyxie a qualquer servidor com permissões mínimas seguras (sem exigir privilégios de Administrador).
-
-> ⚠️ **Nota:** Se os slash commands não aparecerem imediatamente no Discord, é normal. Discord leva alguns segundos a alguns minutos para sincronizar.
-### `/ping` e `/status`
+### `/py-ping` e `/py-status`
 Verifica a latência da conexão e o status operacional da Pyxie.
 
----
-### `/boasvindas [#canal]` *(Admin)*
-Define o canal de recepção para novos membros com embeds ilustrados.
+### `/py-ajuda [modulo]`
+Menu interativo de ajuda com navegação temática por botões e menus de seleção.
 
-## 📋 Configurações Disponíveis no Painel
+### `/py-convite` (ou `py!convite`)
+Gera o link de convite oficial para adicionar a Pyxie a qualquer servidor com permissões mínimas seguras.
 
-### Economia
-O intervalo do `daily` também fica salvo em `data/settings.json`. Os saldos e os horários do último resgate ficam em `data/economy.json`.
+### `/py-boasvindas [#canal]` *(Admin)*
+Define o canal onde as mensagens de boas-vindas ilustradas serão enviadas.
 
-### Canal de Boas-vindas
-Configure o canal para receber mensagens de boas-vindas. Aceita:
-- ID do canal (ex: `123456789`)
-- Menção do canal (ex: `#bem-vindos`)
-- Link do Discord (ex: `https://discord.com/channels/...`)
+### `/py-configeconomia [min] [max]` *(Admin)*
+Configura o intervalo de moedas do comando `/py-diario` para o seu servidor.
 
----
+### `/py-setareconomia [usuario] [quantidade]` *(Admin)*
+Define manualmente o saldo de moedas de um usuário.
 
-## 🚀 Dicas
+### `/py-resetareconomia [usuario]` *(Admin)*
+Zera as moedas e o cooldown diário de um usuário.
 
-- Use slash commands (`/`) para uma experiência mais moderna
-- Use comandos com prefixo (`ku!`) se preferir, ou se o bot tiver problemas com slash commands
-- O prefixo é global, afeta todos os servidores
-- O canal de boas-vindas é configurado por servidor
+### `/py-agenda` *(Admin)*
+Exibe as próximas tarefas agendadas e automações em execução.
 
----
-
-**Cringelândia** 💗 — Seu lugar de ser você
-### `/configeconomia [min] [max]` *(Admin)*
-Configura o intervalo de moedas diárias para o seu servidor.
+### `/py-emojis` *(Admin)*
+Exporta um catálogo em JSON com todos os emojis customizados do servidor.

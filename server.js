@@ -127,7 +127,6 @@ function registerSlashCommands() {
   });
 }
 
-const { processPostback } = require('./src/services/lootlabs');
 const { processTopggVote, verifyWebhookAuth } = require('./src/services/topgg');
 
 function requireAdminAuth(req, res, next) {
@@ -154,22 +153,7 @@ app.get('/api/status', (req, res) => {
   res.json(getBotStatus());
 });
 
-// 2. Webhook / Postback do LootLabs (Recompensas Diárias)
-app.all('/api/lootlabs/postback', (req, res) => {
-  const payload = {
-    userId: req.query.userId || req.query.user_id || req.body?.userId || req.body?.user_id,
-    puid: req.query.puid || req.body?.puid,
-    txId: req.query.txId || req.query.tx_id || req.query.p || req.body?.txId || req.body?.tx_id || req.body?.p,
-    taskId: req.query.taskId || req.query.task_id || req.body?.taskId || req.body?.task_id,
-    ip: req.ip,
-  };
-
-  const result = processPostback(payload);
-  addLog(`[LootLabs Postback] uid=${payload.puid || payload.userId} tx=${result.txId} success=${result.success}`);
-  return res.status(200).json({ status: 'success', data: result });
-});
-
-// 2.1 Webhook do Top.gg (Votos e Recompensas a cada 12h)
+// 2. Webhook do Top.gg (Votos e Recompensas a cada 12h)
 app.post('/api/topgg/webhook', (req, res) => {
   const authHeader = req.headers.authorization;
   if (!verifyWebhookAuth(authHeader)) {
@@ -183,94 +167,6 @@ app.post('/api/topgg/webhook', (req, res) => {
   }
 
   return res.status(200).json({ status: 'success', data: result });
-});
-
-// 2.1 Página de Destino do LootLabs (Bônus Concluído)
-app.get('/bonus-concluido', (req, res) => {
-  res.send(`<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bônus Confirmado! ✨ Pyxie Bot</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: radial-gradient(circle at top, #1e1035 0%, #0d0914 100%);
-      color: #f1f5f9;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .card {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(230, 0, 103, 0.3);
-      border-radius: 20px;
-      padding: 40px 30px;
-      max-width: 480px;
-      width: 100%;
-      text-align: center;
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(230, 0, 103, 0.2);
-    }
-    .icon {
-      font-size: 64px;
-      margin-bottom: 20px;
-      animation: pulse 2s infinite ease-in-out;
-    }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.08); }
-    }
-    h1 {
-      color: #ff60a8;
-      font-size: 26px;
-      font-weight: 800;
-      margin-bottom: 12px;
-      letter-spacing: -0.5px;
-    }
-    p {
-      color: #cbd5e1;
-      font-size: 15px;
-      line-height: 1.6;
-      margin-bottom: 24px;
-    }
-    .btn {
-      display: inline-block;
-      background: linear-gradient(135deg, #e60067, #a855f7);
-      color: white;
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 15px;
-      padding: 14px 28px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(230, 0, 103, 0.4);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(230, 0, 103, 0.6);
-    }
-    .footer {
-      margin-top: 25px;
-      font-size: 12px;
-      color: #64748b;
-    }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="icon">🎁✨</div>
-    <h1>Missão Concluída!</h1>
-    <p>Obrigado por apoiar a <strong>Pyxie</strong>! Suas moedinhas e recompensas já foram validadas e creditadas na sua carteira do Discord.</p>
-    <a href="https://discord.com/channels/@me" class="btn">Voltar ao Discord</a>
-    <div class="footer">Pyxie • Bot Oficial de Entretenimento & RPG</div>
-  </div>
-</body>
-</html>`);
 });
 
 // 3. Rotas administrativas protegidas

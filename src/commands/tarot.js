@@ -17,6 +17,7 @@ const { formatCoins } = require('./economyHelpers');
 const { getAnimatedEmoji } = require('../utils/serverEmojis');
 const { TAROT_LOG_CHANNEL_ID } = require('../config');
 const { TAROT } = require('./commandNames');
+const { t } = require('../utils/i18n');
 
 const name = TAROT || 'py-tarot';
 
@@ -25,40 +26,41 @@ function getDisplayCardName(card) {
   return card.num ? `${card.num}. ${card.name}` : card.name;
 }
 
-function getDisplayOrientation(orientation) {
-  return orientation === 'REVERSED' ? 'INVERTIDA' : 'DIRETA';
+function getDisplayOrientation(orientation, source = null) {
+  return orientation === 'REVERSED'
+    ? t('tarot.orientationReversed', source)
+    : t('tarot.orientationUpright', source);
 }
 
-function buildBribeRow() {
+function buildBribeRow(source = null) {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId('tarot_subornar')
-      .setLabel('Não gostou? Suborne a Kuromi! (350 🪙)')
-      .setLabel('Tentar Nova Tiragem (350 🪙)')
+      .setLabel(t('tarot.bribeBtn', source))
       .setStyle(ButtonStyle.Secondary)
-      .setEmoji('💜')
       .setEmoji('🔮')
   );
 }
 
-function buildTarotEmbed(result, guild) {
+function buildTarotEmbed(result, guildOrSource) {
   const { card, orientation, paid } = result;
   const isReversed = orientation === 'REVERSED';
+  const guild = guildOrSource?.guild || (guildOrSource?.name ? guildOrSource : null);
   const guildName = guild?.name || '';
 
   const desc = [
-    `🔮 **CARTA:** **${card.num ? `${card.num}. ` : ''}${card.name}**  (\`${getDisplayOrientation(orientation)}\`)`,
+    `🔮 **${t('tarot.cardLabel', guildOrSource)}:** **${card.num ? `${card.num}. ` : ''}${card.name}**  (\`${getDisplayOrientation(orientation, guildOrSource)}\`)`,
     '',
-    '✨ **PALAVRAS-CHAVE**',
+    `✨ **${t('tarot.keywords', guildOrSource)}**`,
     `> *${card.keywords.join('  •  ')}*`,
     '',
-    '📜 **MENSAGEM DO DESTINO**',
+    `📜 **${t('tarot.destinyMessage', guildOrSource)}**`,
     `> "${isReversed ? card.reversed : card.upright}"`,
   ].join('\n');
 
   const embed = new EmbedBuilder()
     .setColor(isReversed ? '#f43f5e' : '#c084fc')
-    .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Tarot${guildName ? ` — ${guildName}` : ''}`)
+    .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  ${t('tarot.title', guildOrSource)}${guildName ? ` — ${guildName}` : ''}`)
     .setDescription(desc)
     .setImage('attachment://tarot_cringelandia.png')
     .setFooter({ text: 'Pyxie' })
@@ -67,21 +69,22 @@ function buildTarotEmbed(result, guild) {
   return embed;
 }
 
-function buildAlreadyDrawnEmbed(remainingTime, guild) {
+function buildAlreadyDrawnEmbed(remainingTime, guildOrSource) {
+  const guild = guildOrSource?.guild || (guildOrSource?.name ? guildOrSource : null);
   const guildName = guild?.name || '';
   const desc = [
-    '🔮 **Você já tirou sua carta de hoje!**',
+    t('tarot.alreadyDrawnTitle', guildOrSource),
     '',
-    '⏳ **PRÓXIMA TIRAGEM GRATUITA**',
-    `> Disponível em **${remainingTime.formatted}** (às 00:00 BRT).`,
+    `⏳ **${t('tarot.nextFree', guildOrSource)}**`,
+    `> ${t('tarot.nextFreeDesc', guildOrSource, { time: remainingTime.formatted })}`,
     '',
-    '✨ **SUBORNO DO DESTINO**',
-    '> Não quer esperar ou quer tentar uma nova sorte? Você pode forçar uma nova leitura no botão abaixo por **350 Moedinhas**.',
+    `✨ **${t('tarot.bribeSection', guildOrSource)}**`,
+    `> ${t('tarot.bribeSectionDesc', guildOrSource)}`,
   ].join('\n');
 
   return new EmbedBuilder()
     .setColor('#a855f7')
-    .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  Tarot${guildName ? ` — ${guildName}` : ''}`)
+    .setTitle(`${getAnimatedEmoji(guild, ['moon', 'tarot', 'magic'], '🌙')}  ✦  ${t('tarot.title', guildOrSource)}${guildName ? ` — ${guildName}` : ''}`)
     .setDescription(desc)
     .setFooter({ text: 'Pyxie' })
     .setTimestamp();
@@ -92,18 +95,23 @@ async function logTarotToPublicChannel(client, { user, result, guild }) {
     const channel = await client.channels.fetch(TAROT_LOG_CHANNEL_ID).catch(() => null);
     if (!channel || !channel.isTextBased()) return;
 
-    const attachment = createTarotAttachment(result.card, result.orientation);
+    const attachment = createTarotAttachment(result.card, result.orientation, guild);
     const isReversed = result.orientation === 'REVERSED';
     const guildName = guild?.name || '';
     const prefixHumor = result.paid
-      ? '🔮 *Tiragem adicional solicitada pelo membro!*\n\n'
+      ? t('tarot.publicHumor', guild)
       : '';
 
     const publicEmbed = new EmbedBuilder()
       .setColor(result.paid ? '#8b5cf6' : (isReversed ? '#f43f5e' : '#c084fc'))
-      .setTitle(`🔮  ✦  Nova Tiragem no Tarot${guildName ? ` — ${guildName}` : ''}`)
+      .setTitle(t('tarot.publicTitle', guild, { guild: guildName ? ` — ${guildName}` : '' }))
       .setDescription(
-        `${prefixHumor}O membro <@${user.id}> tirou a carta **${result.card.name}** (**POSIÇÃO ${getDisplayOrientation(result.orientation)}**)!`
+        t('tarot.publicDesc', guild, {
+          humor: prefixHumor,
+          user: user.id,
+          card: result.card.name,
+          orientation: getDisplayOrientation(result.orientation, guild),
+        })
       )
       .setImage('attachment://tarot_cringelandia.png')
       .setFooter({ text: 'Pyxie' })
@@ -132,7 +140,6 @@ function isTarotButton(interaction) {
 async function executeButton({ interaction, logTarotResult }) {
   const customId = interaction.customId;
 
-  // 1. Botão de Suborno
   // 1. Botão de Suborno / Nova Tiragem
   if (customId === 'tarot_subornar' || customId.startsWith('tarot:bribe')) {
     const result = bribeKuromi(interaction.user.id);
@@ -140,62 +147,60 @@ async function executeButton({ interaction, logTarotResult }) {
     if (!result.bribed) {
       if (result.reason === 'insufficient_funds') {
         await interaction.reply({
-          content: `❌ A Kuromi consultou seu saldo e fez uma carinha triste. Ela exige **${formatCoins(BRIBE_COST)}** por um suborno, mas você possui apenas **${formatCoins(result.balance)}**.`,
-          ephemeral: true,
-          content: `❌ Saldo insuficiente. É necessário **${formatCoins(BRIBE_COST)}** para tentar uma nova tiragem, mas você possui **${formatCoins(result.balance)}**.`,
+          content: t('tarot.insufficientBribe', interaction, {
+            cost: formatCoins(BRIBE_COST, interaction),
+            balance: formatCoins(result.balance, interaction),
+          }),
           flags: 64,
         });
         return;
       }
       await interaction.reply({
-        content: '❌ Não foi possível realizar o suborno no momento. Tente novamente mais tarde.',
-        ephemeral: true,
-        content: '❌ Não foi possível realizar uma nova leitura no momento. Tente novamente mais tarde.',
+        content: t('tarot.bribeUnavailable', interaction),
         flags: 64,
       });
       return;
     }
 
-    const attachment = createTarotAttachment(result.card, result.orientation);
-    const embed = buildTarotEmbed(result, interaction.guild);
+    const attachment = createTarotAttachment(result.card, result.orientation, interaction);
+    const embed = buildTarotEmbed(result, interaction);
 
     await interaction.reply({
       embeds: [embed],
       files: [attachment],
-      components: [buildBribeRow()],
-      ephemeral: true,
+      components: [buildBribeRow(interaction)],
       flags: 64,
     });
 
-    await logTarotToPublicChannel(interaction.client, { user: interaction.user, result });
+    await logTarotToPublicChannel(interaction.client, { user: interaction.user, result, guild: interaction.guild });
     return;
   }
 
   // 2. Botão de Tiragem Diária
   if (customId === 'tarot_tirar_dia' || customId === 'tarot:draw') {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: 64 });
 
     const result = drawTarot(interaction.user.id);
 
     if (!result.drawn) {
       const remaining = getTimeUntilMidnight();
       await interaction.editReply({
-        embeds: [buildAlreadyDrawnEmbed(remaining, interaction.guild)],
-        components: [buildBribeRow()],
+        embeds: [buildAlreadyDrawnEmbed(remaining, interaction)],
+        components: [buildBribeRow(interaction)],
       });
       return;
     }
 
-    const attachment = createTarotAttachment(result.card, result.orientation);
-    const embed = buildTarotEmbed(result, interaction.guild);
+    const attachment = createTarotAttachment(result.card, result.orientation, interaction);
+    const embed = buildTarotEmbed(result, interaction);
 
     await interaction.editReply({
       embeds: [embed],
       files: [attachment],
-      components: [buildBribeRow()],
+      components: [buildBribeRow(interaction)],
     });
 
-    await logTarotToPublicChannel(interaction.client, { user: interaction.user, result });
+    await logTarotToPublicChannel(interaction.client, { user: interaction.user, result, guild: interaction.guild });
   }
 }
 
@@ -213,28 +218,31 @@ module.exports = {
   logTarotToPublicChannel,
   data: new SlashCommandBuilder()
     .setName(name)
-    .setDescription('Receba uma tiragem privada do Tarot da Cringelândia renderizada na hora.'),
+    .setDescription('Draw a daily Tarot card rendered in Canvas / Tiragem do Tarot.')
+    .setDescriptionLocalizations({
+      'pt-BR': 'Receba uma tiragem privada do Tarot da Cringelândia renderizada na hora.',
+    }),
   async executeSlash({ interaction }) {
     const result = drawTarot(interaction.user.id);
 
     if (!result.drawn) {
       const remaining = getTimeUntilMidnight();
       await interaction.editReply({
-        embeds: [buildAlreadyDrawnEmbed(remaining, interaction.guild)],
-        components: [buildBribeRow()],
+        embeds: [buildAlreadyDrawnEmbed(remaining, interaction)],
+        components: [buildBribeRow(interaction)],
       });
       return;
     }
 
-    const attachment = createTarotAttachment(result.card, result.orientation);
-    const embed = buildTarotEmbed(result, interaction.guild);
+    const attachment = createTarotAttachment(result.card, result.orientation, interaction);
+    const embed = buildTarotEmbed(result, interaction);
 
     await interaction.editReply({
       embeds: [embed],
       files: [attachment],
-      components: [buildBribeRow()],
+      components: [buildBribeRow(interaction)],
     });
 
-    await logTarotToPublicChannel(interaction.client, { user: interaction.user, result });
+    await logTarotToPublicChannel(interaction.client, { user: interaction.user, result, guild: interaction.guild });
   },
 };

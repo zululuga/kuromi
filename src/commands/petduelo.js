@@ -6,7 +6,7 @@ const {
   ButtonStyle,
 } = require('discord.js');
 const { createDuelChallenge, resolveDuelChallenge, buildDuelGuideEmbed } = require('../services/petDuels');
-const { formatCoins } = require('./economyHelpers');
+const { formatCoins, t, getLanguage } = require('../utils/i18n');
 const { PET_DUEL } = require('./commandNames');
 const { PYXIE_COLORS, pyxieFooter } = require('../utils/pyxieVoice');
 
@@ -30,7 +30,7 @@ async function handleDuelInteraction(interaction) {
 
   if (interaction.user.id !== targetId) {
     await interaction.reply({
-      content: '❌ Este desafio de duelo não foi enviado para você!',
+      content: t('duel.errors.notForYou', interaction),
       flags: 64,
     });
     return;
@@ -39,7 +39,7 @@ async function handleDuelInteraction(interaction) {
   if (action === 'duel_decline') {
     resolveDuelChallenge(duelId, targetId, false);
     await interaction.update({
-      content: `🏳️ <@${targetId}> recusou o desafio de duelo.`,
+      content: t('duel.declined', interaction, { target: targetId }),
       embeds: [],
       components: [],
     });
@@ -50,95 +50,110 @@ async function handleDuelInteraction(interaction) {
   const result = resolveDuelChallenge(duelId, targetId, true);
   if (!result.success) {
     if (result.reason === 'invalid_or_expired') {
-      await interaction.update({ content: '⏳ O desafio expirou ou já foi finalizado.', embeds: [], components: [] });
+      await interaction.update({ content: t('duel.expired', interaction), embeds: [], components: [] });
     } else if (result.reason === 'insufficient_funds_at_execution') {
-      await interaction.update({ content: '❌ Um dos jogadores não possui moedas suficientes para cobrir a aposta!', embeds: [], components: [] });
+      await interaction.update({ content: t('duel.insufficientFunds', interaction), embeds: [], components: [] });
     } else if (result.reason === 'pet_on_expedition') {
-      await interaction.update({ content: '🧭 Um dos Pymons partiu em expedição e não pode lutar no momento!', embeds: [], components: [] });
+      await interaction.update({ content: t('duel.petOnExpedition', interaction), embeds: [], components: [] });
     } else {
-      await interaction.update({ content: '❌ Não foi possível realizar o combate.', embeds: [], components: [] });
+      await interaction.update({ content: t('duel.combatFailed', interaction), embeds: [], components: [] });
     }
     return;
   }
 
-  const betText = result.betAmount > 0 ? `💰 **Aposta Disputada:** **${formatCoins(result.betAmount)}**` : '🕊️ *Duelo Amigável (Sem apostas)*';
+  const isEn = getLanguage(interaction) === 'en';
+  const betText = result.betAmount > 0
+    ? t('duel.betInGame', interaction, { bet: formatCoins(result.betAmount, interaction) })
+    : t('duel.friendlyDuel', interaction);
   const narrative = result.battleLogs.join('\n\n');
 
+  const winnerMention = `<@${result.winnerUserId}>`;
+  const winnerPetName = result.winnerPet.name;
+  const winnerLine = isEn
+    ? `> 👑 ${winnerMention} with **${winnerPetName}**!`
+    : `> 👑 ${winnerMention} com **${winnerPetName}**!`;
+
   const desc = [
-    `🥊 **LUTADORES:** <@${result.winnerUserId === result.winnerPet.id ? result.winnerUserId : result.loserUserId}> vs <@${targetId}>`,
+    `${t('duel.fighters', interaction)} <@${result.winnerUserId === result.winnerPet.id ? result.winnerUserId : result.loserUserId}> vs <@${targetId}>`,
     betText,
     '',
-    '📜 **RELATÓRIO DO COMBATE**',
+    t('duel.report', interaction),
     narrative,
     '',
-    '🏆 **VENCEDOR DO COMBATE**',
-    `> 👑 <@${result.winnerUserId}> com **${result.winnerPet.name}**!`,
+    t('duel.winner', interaction),
+    winnerLine,
     '',
-    '🎁 **RECOMPENSAS**',
-    `> ⭐ **+100 XP** para o vencedor`,
-    `> ⭐ **+25 XP** para o perdedor`,
-    result.betAmount > 0 ? `> 🪙 **+${formatCoins(result.betAmount)}** transferidos!` : '',
+    t('duel.rewards', interaction),
+    t('duel.winnerXp', interaction),
+    t('duel.loserXp', interaction),
+    result.betAmount > 0 ? t('duel.coinsTransferred', interaction, { coins: formatCoins(result.betAmount, interaction) }) : '',
   ].filter(Boolean).join('\n');
 
   const duelEmbed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.magenta || '#e60067')
-    .setTitle('⚔️  ✦  Coliseu de Pymons — Resultado do Combate')
+    .setTitle(t('duel.embedTitle', interaction))
     .setDescription(desc)
-    .setFooter({ text: pyxieFooter('Arena de Duelos de Pymons • Máx. 3 por dia') })
+    .setFooter({ text: pyxieFooter(isEn ? 'Pymon Duel Arena • Max 3 per day' : 'Arena de Duelos de Pymons • Máx. 3 por dia') })
     .setTimestamp();
 
   const guideRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId('duel_guide')
-      .setLabel('📖 Ver Guia de Atributos & Elementos')
+      .setLabel(t('duel.guideBtn', interaction))
       .setStyle(ButtonStyle.Secondary)
   );
 
   await interaction.update({ embeds: [duelEmbed], components: [guideRow] });
 }
 
-function buildChallengeEmbed(challengerId, targetId, petA, petB, betAmount, guildName) {
+function buildChallengeEmbed(challengerId, targetId, petA, petB, betAmount, guildName, source = null) {
+  const isEn = getLanguage(source) === 'en';
   const betText = betAmount > 0
-    ? `> 💰 **Aposta em Jogo:** **${formatCoins(betAmount)}**`
-    : '> 🕊️ *Duelo Amigável (Sem apostas)*';
+    ? `> ${t('duel.betInGame', source, { bet: formatCoins(betAmount, source) })}`
+    : `> ${t('duel.friendlyDuel', source)}`;
 
   const desc = [
-    `<@${challengerId}> lançou uma luva de desafio para <@${targetId}>!`,
+    isEn
+      ? `<@${challengerId}> threw down the gauntlet to <@${targetId}>!`
+      : `<@${challengerId}> lançou uma luva de desafio para <@${targetId}>!`,
     '',
-    '🥊 **CONFRONTO DE PYMONS**',
-    `> 🔵 **${petA.emoji} ${petA.name}** (Nv. ${petA.level} • \`${petA.element}\`)`,
-    `> 🔴 **${petB.emoji} ${petB.name}** (Nv. ${petB.level} • \`${petB.element}\`)`,
+    t('duel.clashTitle', source),
+    `> 🔵 **${petA.emoji || '🐾'} ${petA.name}** (Nv. ${petA.level || 1} • \`${petA.element || 'Normal'}\`)`,
+    `> 🔴 **${petB.emoji || '🐾'} ${petB.name}** (Nv. ${petB.level || 1} • \`${petB.element || 'Normal'}\`)`,
     '',
-    '💎 **TERMOS DO COMBATE**',
+    t('duel.termsTitle', source),
     betText,
-    '> ⏳ *Limite:* Cada treinador pode realizar até 3 duelos por dia.',
+    t('duel.dailyLimit', source),
     '',
-    `⏳ <@${targetId}>, responda ao desafio nos botões abaixo em até **60 segundos**:`,
+    isEn
+      ? `⏳ <@${targetId}>, answer the challenge using the buttons below within **60 seconds**:`
+      : `⏳ <@${targetId}>, responda ao desafio nos botões abaixo em até **60 segundos**:`,
   ].join('\n');
 
   return new EmbedBuilder()
     .setColor(PYXIE_COLORS.rose || '#ff8fb3')
-    .setTitle('⚔️  ✦  Desafio de Duelo no Coliseu!')
+    .setTitle(t('duel.challengeTitle', source))
     .setDescription(desc)
-    .setFooter({ text: pyxieFooter('Arena de Duelos de Pymons') })
+    .setFooter({ text: pyxieFooter(isEn ? 'Pymon Duel Arena' : 'Arena de Duelos de Pymons') })
     .setTimestamp();
 }
 
-function formatDuelError(challengeRes, target) {
-  if (challengeRes.reason === 'self_duel') return '❌ Você não pode duelar contra si mesmo. Procure outro oponente.';
-  if (challengeRes.reason === 'challenger_daily_limit_reached') return '⏳ Você já atingiu seu limite de **3 duelos hoje**! Volte amanhã para novos combates.';
-  if (challengeRes.reason === 'target_daily_limit_reached') return `⏳ ${target} já atingiu o limite de **3 duelos hoje**!`;
-  if (challengeRes.reason === 'challenger_no_pet') return '❌ Você precisa ter um Pymon ativo para duelar! Inicie sua jornada com `/pymons`.';
-  if (challengeRes.reason === 'target_no_pet') return `❌ ${target} ainda não possui nenhum Pymon ativo.`;
-  if (challengeRes.reason === 'challenger_on_expedition') return '🧭 Seu Pymon está atualmente em uma expedição e não pode duelar!';
-  if (challengeRes.reason === 'target_on_expedition') return `🧭 O Pymon de ${target} está atualmente em uma expedição e não pode duelar!`;
-  if (challengeRes.reason === 'challenger_insufficient_funds') return `❌ Você não tem moedas suficientes para apostar ${formatCoins(challengeRes.bet)} (Seu saldo: ${formatCoins(challengeRes.balance)}).`;
-  if (challengeRes.reason === 'target_insufficient_funds') return `❌ ${target} não tem moedas suficientes para cobrir essa aposta.`;
-  if (challengeRes.reason === 'challenger_hungry') return '❌ Seu Pymon está com muita fome (< 15%) para lutar! Alimente-o antes.';
-  if (challengeRes.reason === 'target_hungry') return `❌ O Pymon de ${target} está com muita fome (< 15%) para lutar!`;
-  if (challengeRes.reason === 'challenger_exhausted') return '❌ Seu Pymon está exausto (< 15% de Energia) para lutar!';
-  if (challengeRes.reason === 'target_exhausted') return `❌ O Pymon de ${target} está exausto (< 15% de Energia) para lutar!`;
-  return '❌ Não foi possível criar o desafio de duelo.';
+function formatDuelError(challengeRes, target, source = null) {
+  const targetTag = target ? `<@${target.id || target}>` : '';
+  if (challengeRes.reason === 'self_duel') return t('duel.errors.self', source);
+  if (challengeRes.reason === 'challenger_daily_limit_reached') return t('duel.errors.challengerLimit', source);
+  if (challengeRes.reason === 'target_daily_limit_reached') return t('duel.errors.targetLimit', source, { target: targetTag });
+  if (challengeRes.reason === 'challenger_no_pet') return t('duel.errors.challengerNoPet', source);
+  if (challengeRes.reason === 'target_no_pet') return t('duel.errors.targetNoPet', source, { target: targetTag });
+  if (challengeRes.reason === 'challenger_on_expedition') return t('duel.errors.challengerOnExpedition', source);
+  if (challengeRes.reason === 'target_on_expedition') return t('duel.errors.targetOnExpedition', source, { target: targetTag });
+  if (challengeRes.reason === 'challenger_insufficient_funds') return t('duel.errors.challengerInsufficientFunds', source, { bet: formatCoins(challengeRes.bet, source), balance: formatCoins(challengeRes.balance, source) });
+  if (challengeRes.reason === 'target_insufficient_funds') return t('duel.errors.targetInsufficientFunds', source, { target: targetTag });
+  if (challengeRes.reason === 'challenger_hungry') return t('duel.errors.challengerHungry', source);
+  if (challengeRes.reason === 'target_hungry') return t('duel.errors.targetHungry', source, { target: targetTag });
+  if (challengeRes.reason === 'challenger_exhausted') return t('duel.errors.challengerExhausted', source);
+  if (challengeRes.reason === 'target_exhausted') return t('duel.errors.targetExhausted', source, { target: targetTag });
+  return t('duel.errors.generic', source);
 }
 
 module.exports = {
@@ -146,12 +161,30 @@ module.exports = {
   aliases: ['duelo', 'batalha', 'combate', 'duel'],
   data: new SlashCommandBuilder()
     .setName(PET_DUEL)
-    .setDescription('Desafia outro jogador para um combate RPG de pets no Coliseu (Máx 3x ao dia).')
-    .addUserOption((opt) => opt.setName('oponente').setDescription('Usuário que você deseja desafiar').setRequired(true))
+    .setDescription('Challenge another player to a Pymon RPG duel in the Colosseum (Max 3/day).')
+    .setDescriptionLocalizations({
+      'pt-BR': 'Desafia outro jogador para um combate RPG de pets no Coliseu (Máx 3x ao dia).',
+    })
+    .addUserOption((opt) =>
+      opt
+        .setName('oponente')
+        .setNameLocalizations({
+          'en-US': 'opponent',
+          'en-GB': 'opponent',
+          'pt-BR': 'oponente',
+        })
+        .setDescription('User you want to challenge / Usuário a desafiar')
+        .setRequired(true)
+    )
     .addIntegerOption((opt) =>
       opt
         .setName('aposta')
-        .setDescription('Quantidade de moedinhas a ser apostada (opcional, padrão: 0)')
+        .setNameLocalizations({
+          'en-US': 'bet',
+          'en-GB': 'bet',
+          'pt-BR': 'aposta',
+        })
+        .setDescription('Amount of coins to bet (optional) / Moedas a apostar')
         .setMinValue(0)
         .setMaxValue(50000)
         .setRequired(false)
@@ -160,16 +193,20 @@ module.exports = {
     const target = message.mentions.users.first();
     if (!target) {
       const guideButton = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('duel_guide').setLabel('📖 Ver Guia de Atributos & Elementos').setStyle(ButtonStyle.Secondary)
+        new ButtonBuilder().setCustomId('duel_guide').setLabel(t('duel.guideBtn', message)).setStyle(ButtonStyle.Secondary)
       );
-      await message.reply({ content: '❌ Mencione o usuário que deseja desafiar para o duelo. Exemplo: `py!petduelo @amigo 100`.', components: [guideButton] });
+      const isEn = getLanguage(message) === 'en';
+      const prompt = isEn
+        ? '❌ Mention the user you wish to duel against. Example: `py!petduelo @friend 100`.'
+        : '❌ Mencione o usuário que deseja desafiar para o duelo. Exemplo: `py!petduelo @amigo 100`.';
+      await message.reply({ content: prompt, components: [guideButton] });
       return;
     }
     const bet = Number(args[1]) || 0;
     const challengeRes = createDuelChallenge(message.author.id, target.id, bet);
 
     if (!challengeRes.success) {
-      await message.reply(formatDuelError(challengeRes, target));
+      await message.reply(formatDuelError(challengeRes, target, message));
       return;
     }
 
@@ -180,34 +217,35 @@ module.exports = {
       petA,
       petB,
       challenge.betAmount,
-      message.guild?.name
+      message.guild?.name,
+      message
     );
 
     const buttons = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(`duel_accept:${challenge.id}:${target.id}`)
-        .setLabel('⚔️ Aceitar Duelo')
+        .setLabel(t('duel.btnAccept', message))
         .setStyle(ButtonStyle.Danger),
       new ButtonBuilder()
         .setCustomId(`duel_decline:${challenge.id}:${target.id}`)
-        .setLabel('🏳️ Recusar')
+        .setLabel(t('duel.btnDecline', message))
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId('duel_guide')
-        .setLabel('📖 Elementos')
+        .setLabel(t('hub.elements', message))
         .setStyle(ButtonStyle.Secondary)
     );
 
     await message.reply({ embeds: [challengeEmbed], components: [buttons] });
   },
   async executeSlash({ interaction }) {
-    const target = interaction.options.getUser('oponente');
-    const bet = interaction.options.getInteger('aposta') || 0;
+    const target = interaction.options.getUser('oponente') || interaction.options.getUser('opponent');
+    const bet = interaction.options.getInteger('aposta') || interaction.options.getInteger('bet') || 0;
 
     const challengeRes = createDuelChallenge(interaction.user.id, target.id, bet);
 
     if (!challengeRes.success) {
-      await interaction.editReply({ content: formatDuelError(challengeRes, target) });
+      await interaction.editReply({ content: formatDuelError(challengeRes, target, interaction) });
       return;
     }
 
@@ -218,21 +256,22 @@ module.exports = {
       petA,
       petB,
       challenge.betAmount,
-      interaction.guild?.name
+      interaction.guild?.name,
+      interaction
     );
 
     const buttons = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(`duel_accept:${challenge.id}:${target.id}`)
-        .setLabel('⚔️ Aceitar Duelo')
+        .setLabel(t('duel.btnAccept', interaction))
         .setStyle(ButtonStyle.Danger),
       new ButtonBuilder()
         .setCustomId(`duel_decline:${challenge.id}:${target.id}`)
-        .setLabel('🏳️ Recusar')
+        .setLabel(t('duel.btnDecline', interaction))
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId('duel_guide')
-        .setLabel('📖 Elementos')
+        .setLabel(t('hub.elements', interaction))
         .setStyle(ButtonStyle.Secondary)
     );
 
@@ -241,5 +280,3 @@ module.exports = {
   isDuelInteraction,
   handleDuelInteraction,
 };
-
-

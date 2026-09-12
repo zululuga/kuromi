@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { buyItem, getAllItems } = require('../services/inventory');
-const { formatCoins } = require('./economyHelpers');
+const { formatCoins, t } = require('../utils/i18n');
 const { BUY } = require('./commandNames');
 
 function getItemChoices() {
@@ -13,51 +13,68 @@ function getItemChoices() {
     }));
 }
 
-function buildReply(result) {
+function buildReply(result, source = null) {
   if (!result.success) {
     if (result.reason === 'insufficient_funds') {
-      return `❌ Você precisa de **${formatCoins(result.totalCost)}**, mas seu saldo atual é de apenas **${formatCoins(result.balance)}**. Sem dinheiro, sem item.`;
+      return t('buy.insufficientFunds', source, {
+        cost: formatCoins(result.totalCost, source),
+        balance: formatCoins(result.balance, source),
+      });
     }
-    return '❌ Item inválido ou indisponível para compra na loja.';
+    return t('buy.invalidItem', source);
   }
 
-  return `✅ Compra realizada com sucesso! Você adquiriu **${result.amount}x ${result.item.emoji} ${result.item.name}** por **${formatCoins(result.totalCost)}**.\nSaldo restante: **${formatCoins(result.balance)}**.`;
+  return t('buy.success', source, {
+    amount: result.amount,
+    emoji: result.item.emoji,
+    name: result.item.name,
+    cost: formatCoins(result.totalCost, source),
+    balance: formatCoins(result.balance, source),
+  });
 }
 
 module.exports = {
   name: BUY,
   aliases: ['buy'],
+  buildReply,
   data: new SlashCommandBuilder()
     .setName(BUY)
-    .setDescription('Compra um item diretamente da loja')
+    .setDescription('Buy an item directly from the shop / Compra um item diretamente da loja.')
+    .setDescriptionLocalizations({
+      'pt-BR': 'Compra um item diretamente da loja.',
+    })
     .addStringOption((opt) =>
       opt
         .setName('item')
-        .setDescription('Item que você deseja comprar')
+        .setDescription('Item you want to buy / Item que você deseja comprar')
         .setRequired(true)
         .addChoices(...getItemChoices())
     )
     .addIntegerOption((opt) =>
       opt
         .setName('quantidade')
-        .setDescription('Quantidade a ser comprada (padrão: 1)')
+        .setNameLocalizations({
+          'en-US': 'amount',
+          'en-GB': 'amount',
+          'pt-BR': 'quantidade',
+        })
+        .setDescription('Quantity to purchase / Quantidade a comprar')
         .setMinValue(1)
         .setMaxValue(99)
         .setRequired(false)
     ),
   async executePrefix({ message, args }) {
     if (!args[0]) {
-      await message.reply('❌ Informe o ID do item que deseja comprar. Use `ku!loja` para ver os itens disponíveis.');
+      await message.reply(t('buy.needIdPrefix', message));
       return;
     }
     const itemId = args[0].toLowerCase();
     const amount = Number(args[1]) || 1;
-    await message.reply(buildReply(buyItem(message.author.id, itemId, amount)));
+    await message.reply(buildReply(buyItem(message.author.id, itemId, amount), message));
   },
   async executeSlash({ interaction }) {
     const itemId = interaction.options.getString('item');
-    const amount = interaction.options.getInteger('quantidade') || 1;
-    await interaction.editReply(buildReply(buyItem(interaction.user.id, itemId, amount)));
+    const amount = interaction.options.getInteger('quantidade') || interaction.options.getInteger('amount') || 1;
+    await interaction.editReply(buildReply(buyItem(interaction.user.id, itemId, amount), interaction));
   },
 };
-

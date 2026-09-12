@@ -3,22 +3,20 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  StringSelectMenuBuilder,
 } = require('discord.js');
 const {
   adoptPet,
   PETS_CATALOG,
   getStarters,
   getUserPets,
-  getActivePet,
 } = require('../services/pets');
 const { createPetAttachment, createDexAttachment } = require('../services/petRenderer');
 const { PYXIE_COLORS } = require('../utils/pyxieVoice');
+const { t, getLanguage, PET_DESCRIPTIONS_EN, ELEMENT_NAMES } = require('../utils/i18n');
 
-const STARTER_KEYS = ['cinna', 'bonorka', 'pomcorin'];
-
-function buildDexEmbed(selectedKey = 'cinna') {
+function buildDexEmbed(selectedKey = 'cinna', source = null) {
   const starter = PETS_CATALOG[selectedKey] || PETS_CATALOG.cinna;
+  const lang = getLanguage(source);
 
   const colorMap = {
     CHARME: PYXIE_COLORS.neonPink,
@@ -26,27 +24,28 @@ function buildDexEmbed(selectedKey = 'cinna') {
     SILVESTRE: PYXIE_COLORS.emerald,
   };
 
-  const desc = [
-    'Escolha o seu companheiro para iniciar sua jornada no Universo Pymon!',
-    '',
-    '✨ **PROBABILIDADE SHINY**',
-    '> Há **5% de chance** do seu inicial despertar em sua variante **Shiny Rara**!',
-    '',
-    '🔒 **REGRA DE ADOÇÃO INICIAL**',
-    '> Você pode escolher apenas **1 Pymon inicial**. Para expandir sua equipe, explore **Dungeons** para encontrar ovos e choque-os na **Chocadeira**!',
-    '',
-    `🐾 **INICIAL SELECIONADO: ${starter.name.toUpperCase()}**`,
-    `> ${starter.emoji} **${starter.name}** (\`${starter.element}\`)`,
-    `> *"${starter.description}"*`,
-    '',
-    '📊 **ATRIBUTOS BÁSICOS**',
-    `> ❤️ **HP:** ${starter.baseStats.hp}  •  ⚔️ **ATK:** ${starter.baseStats.atk}`,
-    `> 🛡️ **DEF:** ${starter.baseStats.def}  •  💨 **SPD:** ${starter.baseStats.spd}`,
-  ].join('\n');
+  const descText = (lang === 'en' && PET_DESCRIPTIONS_EN[selectedKey])
+    ? PET_DESCRIPTIONS_EN[selectedKey]
+    : starter.description;
+
+  const elemName = (ELEMENT_NAMES[lang] && ELEMENT_NAMES[lang][starter.element])
+    ? ELEMENT_NAMES[lang][starter.element]
+    : starter.element;
+
+  const desc = t('adoption.dexDesc', source, {
+    name: starter.name.toUpperCase(),
+    emoji: starter.emoji,
+    element: elemName,
+    desc: descText,
+    hp: starter.baseStats.hp,
+    atk: starter.baseStats.atk,
+    def: starter.baseStats.def,
+    spd: starter.baseStats.spd,
+  });
 
   const embed = new EmbedBuilder()
     .setColor(colorMap[starter.element] || PYXIE_COLORS.lilac)
-    .setTitle(`📖  ✦  Dex de Pymons — Escolha seu Inicial!`)
+    .setTitle(t('adoption.dexTitle', source))
     .setDescription(desc)
     .setImage('attachment://dex_entry.png')
     .setFooter({ text: 'Pyxie' })
@@ -55,9 +54,7 @@ function buildDexEmbed(selectedKey = 'cinna') {
   return embed;
 }
 
-const buildPokedexEmbed = buildDexEmbed;
-
-function buildDexComponents(userId, selectedKey = 'cinna') {
+function buildDexComponents(userId, selectedKey = 'cinna', source = null) {
   const starters = getStarters();
 
   // Botões de Navegação Dex entre os 3 iniciais
@@ -78,7 +75,7 @@ function buildDexComponents(userId, selectedKey = 'cinna') {
   const actionRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`adopt_confirm:${selectedMonster.key}:${userId}`)
-      .setLabel(`Escolher ${selectedMonster.name} como meu Pymon!`)
+      .setLabel(t('adoption.btnChoose', source, { name: selectedMonster.name }))
       .setEmoji('✨')
       .setStyle(ButtonStyle.Success)
   );
@@ -86,24 +83,15 @@ function buildDexComponents(userId, selectedKey = 'cinna') {
   return [navRow, actionRow];
 }
 
-const buildPokedexComponents = buildDexComponents;
-
-function buildAdoptedLockedView(userId, userPets) {
+function buildAdoptedLockedView(userId, userPets, source = null) {
   const active = userPets[0];
-  const desc = [
-    `Olá, aventureiro! Você já escolheu seu Pymon inicial (**${active ? active.name : 'Seu Inicial'}**).`,
-    '',
-    '🌟 **COMO CONSEGUIR MAIS PYMONS?**',
-    'O Centro de Adoção é exclusivo para tutores iniciantes. Para expandir sua coleção com novas espécies e variantes raras:',
-    '',
-    '> 1. 🗺️ Aventure-se nas **Dungeons** com `/pymons` para encontrar **Ovos Misteriosos**;',
-    '> 2. 🥚 Coloque os ovos na sua **Chocadeira** e acompanhe o tempo de choco;',
-    '> 3. 🐣 Quebre a casca para despertar novos Pymons com **até 20% de chance Shiny**!',
-  ].join('\n');
+  const petName = active ? active.name : (getLanguage(source) === 'en' ? 'Your Starter' : 'Seu Inicial');
+
+  const desc = t('adoption.lockedDesc', source, { name: petName });
 
   const embed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.lilac)
-    .setTitle('🔒  ✦  Centro de Adoção de Pymons — Adoção Concluída')
+    .setTitle(t('adoption.lockedTitle', source))
     .setDescription(desc)
     .setFooter({ text: 'Pyxie' })
     .setTimestamp();
@@ -111,17 +99,17 @@ function buildAdoptedLockedView(userId, userPets) {
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`hub_tab:pet:${userId}`)
-      .setLabel('Meu Pymon')
+      .setLabel(t('adoption.btnMyPet', source))
       .setEmoji('🐾')
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setCustomId(`hub_tab:dungeon:${userId}`)
-      .setLabel('Explorar Dungeons')
+      .setLabel(t('adoption.btnExploreDungeons', source))
       .setEmoji('🗺️')
       .setStyle(ButtonStyle.Success),
     new ButtonBuilder()
       .setCustomId(`hub_tab:incubator:${userId}`)
-      .setLabel('Ver Chocadeira')
+      .setLabel(t('adoption.btnIncubator', source))
       .setEmoji('🥚')
       .setStyle(ButtonStyle.Secondary)
   );
@@ -145,7 +133,7 @@ async function handleAdoptionInteraction(interaction) {
 
   if (targetUserId && targetUserId !== interaction.user.id) {
     return interaction.reply({
-      content: '❌ Esta Dex pertence a outro aventureiro. Use `/pymons` para abrir a sua!',
+      content: t('dexCmd.otherUserDex', interaction),
       flags: 64,
     });
   }
@@ -156,7 +144,7 @@ async function handleAdoptionInteraction(interaction) {
   // Se já tiver pet e tentar interagir
   if (userPets.length > 0 && action === 'adopt_confirm') {
     return interaction.reply({
-      content: '🔒 Você já possui um Pymon inicial! Obtenha novos companheiros explorando Dungeons e chocando ovos.',
+      content: t('adoption.alreadyHasPet', interaction),
       flags: 64,
     });
   }
@@ -165,9 +153,9 @@ async function handleAdoptionInteraction(interaction) {
   if (action === 'adopt_preview') {
     const selectedKey = parts[1] || 'cinna';
     const monster = PETS_CATALOG[selectedKey] || PETS_CATALOG.cinna;
-    const embed = buildDexEmbed(selectedKey);
-    const components = buildDexComponents(userId, selectedKey);
-    const attachment = createDexAttachment(monster, false);
+    const embed = buildDexEmbed(selectedKey, interaction);
+    const components = buildDexComponents(userId, selectedKey, interaction);
+    const attachment = createDexAttachment(monster, false, true, false, interaction);
 
     return interaction.update({
       embeds: [embed],
@@ -189,26 +177,24 @@ async function handleAdoptionInteraction(interaction) {
     }
 
     const adopted = result.pet;
-    const desc = [
-      adopted.shiny ? '✨✨ **PARABÉNS! SEU INICIAL NASCEU SHINY (5% DE CHANCE)!** ✨✨\n' : '',
-      `O seu companheiro **${adopted.name}** ${adopted.emoji} já está aos seus cuidados!`,
-      '',
-      '🐾 **FICHA DO INICIAL**',
-      `> 🔮 **Elemento:** \`${adopted.element}\`  •  ⭐ **Nível:** **1**`,
-      `> ❤️ **Vida:** **${adopted.stats.hp}/${adopted.stats.maxHp}**  •  ⚡ **Energia:** **${adopted.energy}%**`,
-      '',
-      '🎁 **KIT DE SOBREVIVÊNCIA ENTREGUE NA MOCHILA**',
-      '> 🪙 **+150 Moedinhas**',
-      '> 🥣 **2x Ração da Floresta**',
-      '> 🩹 **1x Curativo**',
-      '> 📦 **1x Baú Rústico**',
-      '',
-      '*Acesse o painel principal com `/pymons` para alimentá-lo, treinar e desbravar as Dungeons!*',
-    ].filter(Boolean).join('\n');
+    const lang = getLanguage(interaction);
+    const elemName = (ELEMENT_NAMES[lang] && ELEMENT_NAMES[lang][adopted.element])
+      ? ELEMENT_NAMES[lang][adopted.element]
+      : adopted.element;
+
+    const shinyBonus = adopted.shiny ? t('adoption.congratsShiny', interaction) : '';
+    const desc = shinyBonus + t('adoption.adoptedDesc', interaction, {
+      name: adopted.name,
+      emoji: adopted.emoji,
+      element: elemName,
+      hp: adopted.stats.hp,
+      maxHp: adopted.stats.maxHp,
+      energy: adopted.energy,
+    });
 
     const embed = new EmbedBuilder()
       .setColor(adopted.shiny ? '#facc15' : PYXIE_COLORS.emerald)
-      .setTitle(`🎉  ✦  Você escolheu ${adopted.name} como seu Pymon!`)
+      .setTitle(t('adoption.adoptedTitle', interaction, { name: adopted.name }))
       .setDescription(desc)
       .setImage('attachment://pet_card.png')
       .setFooter({ text: 'Pyxie' })
@@ -217,22 +203,22 @@ async function handleAdoptionInteraction(interaction) {
     const actionRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(`hub_pet_feed:${userId}`)
-        .setLabel('Alimentar')
+        .setLabel(t('hub.feed', interaction))
         .setEmoji('🍖')
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
         .setCustomId(`hub_pet_carinho:${userId}`)
-        .setLabel('Carinho')
+        .setLabel(t('hub.petAction', interaction))
         .setEmoji('💖')
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId(`hub_tab:dungeon:${userId}`)
-        .setLabel('Explorar Dungeons')
+        .setLabel(t('hub.dungeon', interaction))
         .setEmoji('🗺️')
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId(`hub_tab:pet:${userId}`)
-        .setLabel('Abrir Pymons')
+        .setLabel(t('adoption.btnOpenPymons', interaction))
         .setEmoji('🎮')
         .setStyle(ButtonStyle.Secondary)
     );
@@ -240,7 +226,7 @@ async function handleAdoptionInteraction(interaction) {
     return interaction.update({
       embeds: [embed],
       components: [actionRow],
-      files: [createPetAttachment(adopted)],
+      files: [createPetAttachment(adopted, interaction)],
     });
   }
 }

@@ -89,10 +89,25 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName(commandName)
     .setDescription('Configure o idioma do bot no servidor / Set bot server language')
+    .setDescriptionLocalizations({
+      'en-US': 'Configure the bot language for this server',
+      'en-GB': 'Configure the bot language for this server',
+      'pt-BR': 'Configure o idioma do bot no servidor',
+    })
     .addStringOption((option) =>
       option
         .setName('idioma')
+        .setNameLocalizations({
+          'en-US': 'language',
+          'en-GB': 'language',
+          'pt-BR': 'idioma',
+        })
         .setDescription('Escolha o idioma / Choose language')
+        .setDescriptionLocalizations({
+          'en-US': 'Choose language',
+          'en-GB': 'Choose language',
+          'pt-BR': 'Escolha o idioma',
+        })
         .setRequired(false)
         .addChoices(
           { name: 'English 🇺🇸', value: 'en' },
@@ -139,3 +154,4 @@ module.exports = {
     await interaction.editReply(view);
   },
 };
+

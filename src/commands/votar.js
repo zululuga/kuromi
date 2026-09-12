@@ -59,13 +59,16 @@ module.exports = {
   ephemeral: false,
   data: new SlashCommandBuilder()
     .setName(commandName)
-    .setDescription('Vote for the bot on Top.gg and claim Coins, Items and XP! / Vote no Top.gg e ganhe moedas e itens!'),
+    .setDescription('Vote for Pyxie on Top.gg to claim free Coins, Rations, and XP.')
+    .setDescriptionLocalizations({
+      'pt-BR': 'Vote na Pyxie no Top.gg e ganhe Moedinhas, Rações e XP!',
+    }),
   async executePrefix({ message, client }) {
-    const view = buildVoteView(message.guild?.id, client?.user?.id);
+    const view = buildVoteView(message, client?.user?.id);
     await message.reply(view);
   },
   async executeSlash({ interaction }) {
-    const view = buildVoteView(interaction.guild?.id, interaction.client?.user?.id);
+    const view = buildVoteView(interaction, interaction.client?.user?.id);
     await interaction.editReply(view);
   },
   buildVoteView,

@@ -7,8 +7,9 @@ const {
 } = require('discord.js');
 const { getWorldBoss, attackWorldBoss, getBossRanking } = require('../services/worldBoss');
 const { getActivePet } = require('../services/pets');
-const { formatCoins } = require('./economyHelpers');
+const { formatCoins, t, getLanguage } = require('../utils/i18n');
 const { PYXIE_COLORS, pyxieFooter } = require('../utils/pyxieVoice');
+const { BOSS } = require('./commandNames');
 
 function createHealthBar(current, max, size = 12) {
   const percentage = Math.max(0, Math.min(1, current / max));
@@ -17,92 +18,110 @@ function createHealthBar(current, max, size = 12) {
   return '█'.repeat(filled) + '░'.repeat(empty);
 }
 
-function buildBossStatusEmbed(boss) {
+function buildBossStatusEmbed(boss, source = null) {
+  const isEn = getLanguage(source) === 'en';
   const isDefeated = boss.status === 'defeated';
   const hpBar = createHealthBar(boss.currentHp, boss.maxHp);
   const hpPercent = Math.round((boss.currentHp / boss.maxHp) * 100);
 
   const topDamagers = getBossRanking(5);
   const rankingText = topDamagers.length > 0
-    ? topDamagers.map((t, idx) => `> **#${idx + 1}** <@${t.userId}> (${t.petName}): **${t.damage.toLocaleString('pt-BR')} dano**`).join('\n')
-    : '> 🕊️ *Nenhum ataque registrado ainda. Seja o primeiro!*';
+    ? topDamagers.map((tItem, idx) => `> **#${idx + 1}** <@${tItem.userId}> (${tItem.petName}): **${tItem.damage.toLocaleString(isEn ? 'en-US' : 'pt-BR')} ${isEn ? 'damage' : 'dano'}**`).join('\n')
+    : t('boss.emptyDamage', source);
+
+  const nameLabel = isEn ? 'Name' : 'Nome';
+  const elemLabel = isEn ? 'Element' : 'Elemento';
+  const levelLabel = isEn ? 'Level' : 'Nível';
+  const hpLabel = isEn ? 'Health' : 'Vida';
+  const bossInfoLines = [
+    `> 👾 **${nameLabel}:** **${boss.emoji} ${boss.name}**`,
+    `> 🌀 **${elemLabel}:** \`${boss.element}\``,
+    `> ⚡ **${levelLabel}:** \`${boss.level}\``,
+    `> ❤️ **${hpLabel}:** **${boss.currentHp.toLocaleString(isEn ? 'en-US' : 'pt-BR')} / ${boss.maxHp.toLocaleString(isEn ? 'en-US' : 'pt-BR')}** (${hpPercent}%)`,
+    `> [ \`${hpBar}\` ]`,
+  ].join('\n');
 
   const desc = [
-    `Um titã colossal surgiu no reino emanando uma **${boss.aura}**!`,
+    t('boss.spawnDesc', source, { aura: boss.aura }),
     '',
-    '👑 **INFORMAÇÕES DO CHEFE MUNDIAL**',
-    `> 👾 **Nome:** **${boss.emoji} ${boss.name}**\n> 🌀 **Elemento:** \`${boss.element}\`\n> ⚡ **Nível:** \`${boss.level}\`\n> ❤️ **Vida:** **${boss.currentHp.toLocaleString('pt-BR')} / ${boss.maxHp.toLocaleString('pt-BR')}** (${hpPercent}%)\n> [ \`${hpBar}\` ]`,
+    t('boss.infoTitle', source),
+    bossInfoLines,
     '',
-    '🏆 **MAIORES CAUSADORES DE DANO (TOP 5)**',
+    t('boss.top5', source),
     rankingText,
     '',
-    '🎁 **RECOMPENSAS DE VITÓRIA**',
-    '> 👑 **TOP 1 (MVP):** Recebe o próprio **Pymon versão ALPHA (🔴 Aura Avermelhada)** + 3 🌱 Feijões + 3.000 🪙\n> ⚔️ **Todos os Participantes:** 1 🌱 Feijão Mágico + 1.000 🪙 + XP proporcional!',
+    t('boss.rewards', source),
     '',
     isDefeated
-      ? '🎉 **ESTE CHEFE JÁ FOI DERROTADO!** O próximo titã despertará em breve.'
-      : '👉 *Clique no botão vermelho abaixo para atacar com seu Pymon ativo (Cooldown: 10m).*',
-  ].join('\n\n');
+      ? t('boss.defeatedNotice', source)
+      : t('boss.attackPrompt', source),
+  ].join('\n');
 
   return new EmbedBuilder()
     .setColor(isDefeated ? PYXIE_COLORS.green || '#22c55e' : '#dc2626')
-    .setTitle(`🐉  ✦  World Boss Semanal — ${boss.name}`)
+    .setTitle(t('boss.title', source, { name: boss.name }))
     .setDescription(desc)
-    .setFooter({ text: pyxieFooter('Ataque conjunto por todos os servidores!') })
+    .setFooter({ text: pyxieFooter(isEn ? 'Joint raid across all servers!' : 'Ataque conjunto por todos os servidores!') })
     .setTimestamp();
 }
 
-function buildBossAttackEmbed(result) {
+function buildBossAttackEmbed(result, source = null) {
+  const isEn = getLanguage(source) === 'en';
   let effectMsg = '';
-  if (result.isSuperEffective) effectMsg = '✨ **SUPER EFICAZ (+35% de Dano Elemental)!**';
-  if (result.isWeak) effectMsg = '🛡️ *Pouco eficaz contra o elemento do Boss (-25% Dano).*';
-  if (result.isCrit) effectMsg += (effectMsg ? '\n' : '') + '💥 **GOLPE CRÍTICO (1.5x Dano)!**';
+  if (result.isSuperEffective) effectMsg = t('boss.superEffective', source);
+  if (result.isWeak) effectMsg = t('boss.weak', source);
+  if (result.isCrit) effectMsg += (effectMsg ? '\n' : '') + t('boss.crit', source);
+
+  const dmgLabel = isEn ? 'Damage Dealt' : 'Dano Causado';
+  const hpLabel = isEn ? 'Boss Remaining HP' : 'Vida Restante do Boss';
+  const reportHeader = isEn ? '💥 **BATTLE REPORT**' : '💥 **RELATÓRIO DO CONFRONTO**';
+  const statusHeader = isEn ? '⏳ **BATTLE STATUS**' : '⏳ **STATUS DA BATALHA**';
 
   const desc = [
-    `Seu Pymon avançou com bravura e desferiu um golpe contra **${result.bossEmoji} ${result.bossName}**!`,
+    t('boss.attackDesc', source, { boss: `${result.bossEmoji} ${result.bossName}` }),
     '',
-    '💥 **RELATÓRIO DO CONFRONTO**',
-    `> ⚔️ **Dano Causado:** **${result.damage.toLocaleString('pt-BR')}**` +
+    reportHeader,
+    `> ⚔️ **${dmgLabel}:** **${result.damage.toLocaleString(isEn ? 'en-US' : 'pt-BR')}**` +
       (effectMsg ? `\n> ${effectMsg}` : '') +
-      `\n> ❤️ **Vida Restante do Boss:** **${result.remainingHp.toLocaleString('pt-BR')} / ${result.maxHp.toLocaleString('pt-BR')}**`,
+      `\n> ❤️ **${hpLabel}:** **${result.remainingHp.toLocaleString(isEn ? 'en-US' : 'pt-BR')} / ${result.maxHp.toLocaleString(isEn ? 'en-US' : 'pt-BR')}**`,
     '',
-    '⏳ **STATUS DA BATALHA**',
+    statusHeader,
     result.bossDefeated
-      ? '> 🎉 **O TITÃ FOI DERROTADO!** O MVP recebeu a versão ALPHA exclusiva!'
-      : '> ⏱️ *Aguarde 10 minutos para atacar novamente.*',
-  ].join('\n\n');
+      ? t('boss.defeatedStatus', source)
+      : t('boss.cooldownNotice', source),
+  ].join('\n');
 
   return new EmbedBuilder()
     .setColor(result.bossDefeated ? PYXIE_COLORS.green || '#22c55e' : '#dc2626')
-    .setTitle('⚔️  ✦  Ataque ao World Boss!')
+    .setTitle(t('boss.attackTitle', source))
     .setDescription(desc)
-    .setFooter({ text: pyxieFooter('Dano contabilizado no ranking global') })
+    .setFooter({ text: pyxieFooter(isEn ? 'Damage tracked on global leaderboard' : 'Dano contabilizado no ranking global') })
     .setTimestamp();
 }
 
-function buildBossComponents(boss) {
+function buildBossComponents(boss, source = null) {
   const isDefeated = boss.status === 'defeated';
   return [
     new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('boss_attack')
-        .setLabel('Atacar Boss ALPHA')
+        .setLabel(t('boss.btnAttack', source))
         .setEmoji('⚔️')
         .setStyle(ButtonStyle.Danger)
         .setDisabled(isDefeated),
       new ButtonBuilder()
         .setCustomId('boss_ranking')
-        .setLabel('Ranking Completo')
+        .setLabel(t('boss.btnRanking', source))
         .setEmoji('🏆')
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId('boss_status')
-        .setLabel('Atualizar')
+        .setLabel(t('boss.btnRefresh', source))
         .setEmoji('🔄')
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId('boss_element_chart')
-        .setLabel('Tabela Elemental')
+        .setLabel(t('boss.btnChart', source))
         .setEmoji('⚖️')
         .setStyle(ButtonStyle.Secondary)
     ),
@@ -123,28 +142,29 @@ async function handleBossInteraction(interaction) {
 
   if (action === 'boss_element_chart') {
     const { buildElementChartEmbed } = require('../utils/elementChart');
-    return interaction.reply({ embeds: [buildElementChartEmbed()], flags: 64 });
+    return interaction.reply({ embeds: [buildElementChartEmbed(interaction)], flags: 64 });
   }
 
   if (action === 'boss_status') {
     const boss = getWorldBoss();
-    const embed = buildBossStatusEmbed(boss);
-    const components = buildBossComponents(boss);
+    const embed = buildBossStatusEmbed(boss, interaction);
+    const components = buildBossComponents(boss, interaction);
     return interaction.update({ embeds: [embed], components });
   }
 
   if (action === 'boss_ranking') {
+    const isEn = getLanguage(interaction) === 'en';
     const top = getBossRanking(10);
     const boss = getWorldBoss();
     const text = top.length > 0
-      ? top.map((t, idx) => `> **#${idx + 1}** <@${t.userId}> (${t.petName}): **${t.damage.toLocaleString('pt-BR')} dano** (${t.hits} ataques)`).join('\n')
-      : '> 🕊️ *Nenhum golpe registrado ainda.*';
+      ? top.map((tItem, idx) => `> **#${idx + 1}** <@${tItem.userId}> (${tItem.petName}): **${tItem.damage.toLocaleString(isEn ? 'en-US' : 'pt-BR')} ${isEn ? 'damage' : 'dano'}** (${tItem.hits} ${isEn ? 'attacks' : 'ataques'})`).join('\n')
+      : t('boss.emptyDamage', interaction);
 
     const embed = new EmbedBuilder()
       .setColor(PYXIE_COLORS.gold || '#facc15')
-      .setTitle(`🏆  ✦  Ranking de Dano — ${boss.name}`)
-      .setDescription(`Confira a classificação dos maiores guerreiros contra o titã:\n\n${text}`)
-      .setFooter({ text: pyxieFooter('O #1 receberá a versão ALPHA ao final') })
+      .setTitle(t('boss.rankingTitle', interaction, { name: boss.name }))
+      .setDescription(t('boss.rankingDesc', interaction, { text }))
+      .setFooter({ text: pyxieFooter(isEn ? '#1 will receive ALPHA version' : 'O #1 receberá a versão ALPHA ao final') })
       .setTimestamp();
 
     return interaction.reply({ embeds: [embed], flags: 64 });
@@ -156,17 +176,15 @@ async function handleBossInteraction(interaction) {
       return interaction.reply({ content: `❌ ${result.message}`, flags: 64 });
     }
 
-    const attackEmbed = buildBossAttackEmbed(result);
+    const attackEmbed = buildBossAttackEmbed(result, interaction);
     return interaction.reply({ embeds: [attackEmbed], flags: 64 });
   }
 }
 
-const { BOSS } = require('./commandNames');
-
-function buildBossView(userId) {
+function buildBossView(userId, source = null) {
   const boss = getWorldBoss();
-  const embed = buildBossStatusEmbed(boss);
-  const components = buildBossComponents(boss);
+  const embed = buildBossStatusEmbed(boss, source);
+  const components = buildBossComponents(boss, source);
   return { embeds: [embed], components, files: [] };
 }
 
@@ -180,43 +198,64 @@ module.exports = {
   buildBossComponents,
   data: new SlashCommandBuilder()
     .setName(BOSS)
-    .setDescription('Enfrente o World Boss Semanal ALPHA junto com todos os servidores!')
-    .addSubcommand((sub) => sub.setName('status').setDescription('Exibe o status do World Boss ALPHA atual e placar'))
-    .addSubcommand((sub) => sub.setName('atacar').setDescription('Desfere um ataque no World Boss com seu Pymon ativo'))
-    .addSubcommand((sub) => sub.setName('ranking').setDescription('Exibe os maiores causadores de dano')),
+    .setDescription('Battle the weekly ALPHA World Boss with all servers / Enfrente o World Boss.')
+    .setDescriptionLocalizations({
+      'pt-BR': 'Enfrente o World Boss Semanal ALPHA junto com todos os servidores!',
+    })
+    .addSubcommand((sub) =>
+      sub
+        .setName('status')
+        .setDescription('Shows current World Boss status / Exibe status do World Boss')
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('atacar')
+        .setNameLocalizations({
+          'en-US': 'attack',
+          'en-GB': 'attack',
+          'pt-BR': 'atacar',
+        })
+        .setDescription('Attack the World Boss / Atacar World Boss')
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('ranking')
+        .setDescription('Show damage leaderboard / Exibe maiores causadores de dano')
+    ),
   async executeSlash({ interaction }) {
     const sub = interaction.options.getSubcommand() || 'status';
 
-    if (sub === 'atacar') {
+    if (sub === 'atacar' || sub === 'attack') {
       const result = attackWorldBoss(interaction.user.id);
       if (!result.success) {
         return interaction.editReply({ content: `❌ ${result.message}` });
       }
 
-      const embed = buildBossAttackEmbed(result);
+      const embed = buildBossAttackEmbed(result, interaction);
       return interaction.editReply({ embeds: [embed] });
     }
 
     if (sub === 'ranking') {
+      const isEn = getLanguage(interaction) === 'en';
       const top = getBossRanking(10);
       const boss = getWorldBoss();
       const text = top.length > 0
-        ? top.map((t, idx) => `> **#${idx + 1}** <@${t.userId}> (${t.petName}): **${t.damage.toLocaleString('pt-BR')} dano** (${t.hits} ataques)`).join('\n')
-        : '> 🕊️ *Nenhum golpe registrado ainda.*';
+        ? top.map((tItem, idx) => `> **#${idx + 1}** <@${tItem.userId}> (${tItem.petName}): **${tItem.damage.toLocaleString(isEn ? 'en-US' : 'pt-BR')} ${isEn ? 'damage' : 'dano'}** (${tItem.hits} ${isEn ? 'attacks' : 'ataques'})`).join('\n')
+        : t('boss.emptyDamage', interaction);
 
       const embed = new EmbedBuilder()
         .setColor(PYXIE_COLORS.gold || '#facc15')
-        .setTitle(`🏆  ✦  Ranking de Dano — ${boss.name}`)
-        .setDescription(`Classificação dos maiores guerreiros contra o titã:\n\n${text}`)
-        .setFooter({ text: pyxieFooter('O #1 receberá a versão ALPHA ao final') })
+        .setTitle(t('boss.rankingTitle', interaction, { name: boss.name }))
+        .setDescription(t('boss.rankingDesc', interaction, { text }))
+        .setFooter({ text: pyxieFooter(isEn ? '#1 will receive ALPHA version' : 'O #1 receberá a versão ALPHA ao final') })
         .setTimestamp();
 
       return interaction.editReply({ embeds: [embed] });
     }
 
     const boss = getWorldBoss();
-    const embed = buildBossStatusEmbed(boss);
-    const components = buildBossComponents(boss);
+    const embed = buildBossStatusEmbed(boss, interaction);
+    const components = buildBossComponents(boss, interaction);
     return interaction.editReply({ embeds: [embed], components });
   },
   async executePrefix({ message, args }) {
@@ -228,14 +267,13 @@ module.exports = {
         return message.reply(`❌ ${result.message}`);
       }
 
-      const embed = buildBossAttackEmbed(result);
+      const embed = buildBossAttackEmbed(result, message);
       return message.reply({ embeds: [embed] });
     }
 
     const boss = getWorldBoss();
-    const embed = buildBossStatusEmbed(boss);
-    const components = buildBossComponents(boss);
+    const embed = buildBossStatusEmbed(boss, message);
+    const components = buildBossComponents(boss, message);
     return message.reply({ embeds: [embed], components });
   },
 };
-

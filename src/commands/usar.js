@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { useItemOnActivePet, getActivePet } = require('../services/pets');
+const { useItemOnActivePet } = require('../services/pets');
 const { getAllItems } = require('../services/inventory');
+const { t } = require('../utils/i18n');
 const { USE } = require('./commandNames');
 
 function getItemChoices() {
@@ -12,56 +13,66 @@ function getItemChoices() {
     }));
 }
 
-function buildReply(result) {
+function buildReply(result, source = null) {
   if (!result.success) {
     if (result.reason === 'no_pet') {
-      return '❌ Você não possui nenhum Pymon ativo para receber este item! Inicie sua jornada usando `/pymons`.';
+      return t('useCmd.noPet', source);
     }
     if (result.reason === 'no_item') {
-      return '❌ Você não possui este item na sua mochila. Compre na `/loja` ou obtenha em `/pymons` (Dungeons).';
+      return t('useCmd.noItem', source);
     }
-    return '❌ Item inválido ou não utilizável diretamente.';
+    return t('useCmd.invalid', source);
   }
 
   let levelMsg = '';
   if (result.leveledUp) {
-    levelMsg = `\n🎉 **LEVEL UP!** Seu Pymon subiu para o **Nível ${result.newLevel}**!`;
+    levelMsg = t('useCmd.levelUp', source, { level: result.newLevel });
   }
 
   if (result.applied === 'expansion') {
-    return `🏠 Você usou **${result.item.name}**! Seu limite de Pymons na mochila agora é de **${result.newMaxSlots} slots**!`;
+    return t('useCmd.expansion', source, { item: result.item.name, slots: result.newMaxSlots });
   }
 
-  const effectsText = result.effectsSummary ? `\n📊 **Efeitos:** ${result.effectsSummary}` : '';
-  const statusText = result.statusSummary ? `\n🐾 **Status atual de ${result.pet?.name}:** ${result.statusSummary}` : '';
+  const effectsText = result.effectsSummary ? t('useCmd.effects', source, { fx: result.effectsSummary }) : '';
+  const statusText = result.statusSummary ? t('useCmd.status', source, { name: result.pet?.name, status: result.statusSummary }) : '';
 
-  return `✨ Você utilizou **${result.item ? result.item.emoji : '📦'} ${result.item ? result.item.name : 'item'}** no seu Pymon **${result.pet?.name}**!${effectsText}${statusText}${levelMsg}\nUse \`/pymons\` para conferir o cartão atualizado.`;
+  return t('useCmd.success', source, {
+    emoji: result.item ? result.item.emoji : '📦',
+    name: result.item ? result.item.name : 'item',
+    petName: result.pet?.name || '',
+    effects: effectsText,
+    status: statusText,
+    levelMsg,
+  });
 }
 
 module.exports = {
   name: USE,
-  aliases: ['use', 'consumir'],
+  aliases: ['use', 'consumir', 'usar'],
+  buildReply,
   data: new SlashCommandBuilder()
     .setName(USE)
-    .setDescription('Utiliza um item da sua mochila no seu pet ativo')
+    .setDescription('Use an item from your backpack on your active Pymon / Usa item no pet.')
+    .setDescriptionLocalizations({
+      'pt-BR': 'Utiliza um item da sua mochila no seu pet ativo.',
+    })
     .addStringOption((opt) =>
       opt
         .setName('item')
-        .setDescription('Item a ser utilizado')
+        .setDescription('Item to be used / Item a ser utilizado')
         .setRequired(true)
         .addChoices(...getItemChoices())
     ),
   async executePrefix({ message, args }) {
     if (!args[0]) {
-      await message.reply('❌ Informe o item que deseja usar. Exemplo: `ku!usar racao_cringe`. Use `ku!inventario` para ver sua mochila.');
+      await message.reply(t('useCmd.needItemPrefix', message));
       return;
     }
     const itemId = args[0].toLowerCase();
-    await message.reply(buildReply(useItemOnActivePet(message.author.id, itemId)));
+    await message.reply(buildReply(useItemOnActivePet(message.author.id, itemId), message));
   },
   async executeSlash({ interaction }) {
     const itemId = interaction.options.getString('item');
-    await interaction.editReply(buildReply(useItemOnActivePet(interaction.user.id, itemId)));
+    await interaction.editReply(buildReply(useItemOnActivePet(interaction.user.id, itemId), interaction));
   },
 };
-

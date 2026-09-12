@@ -7,8 +7,7 @@ const {
 } = require('discord.js');
 const { claimDaily } = require('../services/economy');
 const { getVoteUrl } = require('../services/topgg');
-const { t } = require('../utils/i18n');
-const { formatCoins, formatRemaining } = require('./economyHelpers');
+const { t, formatCoins, formatRemaining } = require('../utils/i18n');
 const { DAILY } = require('./commandNames');
 const { PYXIE_COLORS, pyxieFooter } = require('../utils/pyxieVoice');
 
@@ -28,7 +27,7 @@ function buildDailyView(userId, guildOrSource = null, clientId = null) {
 
   if (!result.claimed) {
     const desc = [
-      t('daily.descCooldown', guildOrSource, { time: formatRemaining(result.remainingMs) }),
+      t('daily.descCooldown', guildOrSource, { time: formatRemaining(result.remainingMs, guildOrSource) }),
       '',
       voteBonusText,
       '',
@@ -57,14 +56,14 @@ function buildDailyView(userId, guildOrSource = null, clientId = null) {
     t('daily.descClaimed', guildOrSource),
     '',
     t('daily.summaryTitle', guildOrSource),
-    t('daily.collected', guildOrSource, { amount: formatCoins(result.amount) }),
-    t('daily.balance', guildOrSource, { balance: formatCoins(result.balance) }),
-    result.magicBeanBonus ? t('daily.magicBean', guildOrSource, { total: result.magicBeans }) : '',
+    t('daily.collected', guildOrSource, { amount: formatCoins(result.amount, guildOrSource) }),
+    t('daily.balance', guildOrSource, { balance: formatCoins(result.balance, guildOrSource) }),
+    ...(result.magicBeanBonus ? [t('daily.magicBean', guildOrSource, { total: result.magicBeans })] : []),
     '',
     voteBonusText,
     '',
     t('vote.cta', guildOrSource),
-  ].filter(Boolean).join('\n\n');
+  ].join('\n');
 
   const embed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.gold || '#facc15')
@@ -90,13 +89,16 @@ module.exports = {
   buildDailyView,
   data: new SlashCommandBuilder()
     .setName(DAILY)
-    .setDescription('Claim daily coins & unlock Top.gg voting bonus / Resgate moedas diárias e bônus no Top.gg'),
+    .setDescription('Claim daily coins & unlock Top.gg voting bonus.')
+    .setDescriptionLocalizations({
+      'pt-BR': 'Resgate moedas diárias e desbloqueie bônus no Top.gg.',
+    }),
   async executePrefix({ message, client }) {
-    const view = buildDailyView(message.author.id, message.guild?.id, client?.user?.id);
+    const view = buildDailyView(message.author.id, message, client?.user?.id);
     await message.reply(view);
   },
   async executeSlash({ interaction }) {
-    const view = buildDailyView(interaction.user.id, interaction.guild?.id, interaction.client?.user?.id);
+    const view = buildDailyView(interaction.user.id, interaction, interaction.client?.user?.id);
     await interaction.editReply(view);
   },
 };

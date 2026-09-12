@@ -6,7 +6,7 @@ const {
   SlashCommandBuilder,
 } = require('discord.js');
 const { t } = require('../utils/i18n');
-const { PYXIE_COLORS, pyxieFooter } = require('../utils/pyxieVoice');
+const { PYXIE_COLORS } = require('../utils/pyxieVoice');
 
 const BOT_PERMISSIONS = 378880; // Send Messages, Embed Links, Attach Files, Read History, Use External Emojis
 
@@ -60,13 +60,16 @@ module.exports = {
   buildInviteEmbed,
   data: new SlashCommandBuilder()
     .setName('py-convite')
-    .setDescription('Get Pyxie official invite link / Link oficial para adicionar o bot.'),
+    .setDescription('Get Pyxie official invite link to add to your server.')
+    .setDescriptionLocalizations({
+      'pt-BR': 'Obtenha o link oficial de convite da Pyxie para seu servidor.',
+    }),
   async executePrefix({ message, client }) {
-    const view = buildInviteEmbed(client, message.guild?.id);
+    const view = buildInviteEmbed(client, message);
     await message.reply(view);
   },
   async executeSlash({ interaction }) {
-    const view = buildInviteEmbed(interaction.client, interaction.guild?.id);
+    const view = buildInviteEmbed(interaction.client, interaction);
     await interaction.editReply(view);
   },
 };

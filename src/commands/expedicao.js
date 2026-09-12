@@ -5,44 +5,40 @@ const {
   EmbedBuilder,
   SlashCommandBuilder,
 } = require('discord.js');
-const { getActiveExpedition, startExpedition, claimExpedition, DURATIONS } = require('../services/petExpedition');
+const { getActiveExpedition, startExpedition, claimExpedition } = require('../services/petExpedition');
 const { getActivePet } = require('../services/pets');
-const { formatCoins, formatRemaining } = require('./economyHelpers');
+const { formatCoins, formatRemaining, t, getLanguage } = require('../utils/i18n');
 const { PYXIE_COLORS, pyxieFooter } = require('../utils/pyxieVoice');
+const { EXPEDITION } = require('./commandNames');
 
-function buildExpeditionView(userId) {
+function buildExpeditionView(userId, source = null) {
   const activePet = getActivePet(userId);
   const exp = getActiveExpedition(userId);
 
   if (!activePet) {
     return {
-      content: '❌ Você precisa adotar um Pymon antes de enviá-lo para expedições! Use `/pymons` para começar.',
+      content: t('expedition.noPet', source),
     };
   }
 
   // 1. Expedição concluída (Pronta para coletar)
   if (exp && exp.completed) {
-    const desc = [
-      `🎉 **${exp.petEmoji} ${exp.petName} retornou da expedição carregado de tesouros!**`,
-      '',
-      '📦 **RELATÓRIO DA EXPEDIÇÃO:**',
-      `> 🧭 **Duração:** ${exp.durationHours} Horas`,
-      '> 🌟 **Status:** Concluída com sucesso!',
-      '',
-      'Clique no botão verde abaixo para resgatar todo o XP, Moedas e Itens coletados:',
-    ].join('\n');
+    const desc = t('expedition.completedDesc', source, {
+      pet: `${exp.petEmoji} ${exp.petName}`,
+      hours: exp.durationHours,
+    });
 
     const embed = new EmbedBuilder()
       .setColor(PYXIE_COLORS.green || '#22c55e')
-      .setTitle('🎁  ✦  Expedição Concluída — Resgate Disponível!')
+      .setTitle(t('expedition.completedTitle', source))
       .setDescription(desc)
-      .setFooter({ text: pyxieFooter('Clique em Coletar para receber seus tesouros') })
+      .setFooter({ text: pyxieFooter(t('expedition.btnClaim', source)) })
       .setTimestamp();
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(`expedition_claim:${userId}`)
-        .setLabel('Coletar Tesouros')
+        .setLabel(t('expedition.btnClaim', source))
         .setEmoji('🎁')
         .setStyle(ButtonStyle.Success)
     );
@@ -52,27 +48,23 @@ function buildExpeditionView(userId) {
 
   // 2. Expedição em andamento
   if (exp && !exp.completed) {
-    const desc = [
-      `🧭 **${exp.petEmoji} ${exp.petName} está atualmente em expedição pelo reino!**`,
-      '',
-      '⏳ **CONTAGEM REGRESSIVA:**',
-      `> ⏱️ **Tempo Restante:** **${formatRemaining(exp.remainingMs)}**`,
-      `> 🧭 **Duração Total:** ${exp.durationHours} Horas`,
-      '',
-      '✨ *Seu Pymon continua acumulando XP e recursos passivamente enquanto você realiza outras tarefas.*',
-    ].join('\n');
+    const desc = t('expedition.inProgressDesc', source, {
+      pet: `${exp.petEmoji} ${exp.petName}`,
+      remaining: formatRemaining(exp.remainingMs, source),
+      hours: exp.durationHours,
+    });
 
     const embed = new EmbedBuilder()
       .setColor(PYXIE_COLORS.violet || '#8b5cf6')
-      .setTitle('🧭  ✦  Pymon em Expedição Passiva (AFK)')
+      .setTitle(t('expedition.inProgressTitle', source))
       .setDescription(desc)
-      .setFooter({ text: pyxieFooter('Retorne após o tempo indicado para coletar') })
+      .setFooter({ text: pyxieFooter('Pyxie Expedition') })
       .setTimestamp();
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(`expedition_refresh:${userId}`)
-        .setLabel('Atualizar Tempo')
+        .setLabel(t('expedition.btnRefresh', source))
         .setEmoji('🔄')
         .setStyle(ButtonStyle.Secondary)
     );
@@ -81,38 +73,31 @@ function buildExpeditionView(userId) {
   }
 
   // 3. Nenhuma expedição ativa (Menu para escolher duração)
-  const desc = [
-    `Envie **${activePet.emoji} ${activePet.name}** para explorar o mundo e coletar recompensas passivas enquanto você estuda, trabalha ou joga!`,
-    '',
-    '⏳ **OPÇÕES DE EXPEDIÇÃO DISPONÍVEIS:**',
-    '> 🟢 **2 Horas (Curta):** 150-300 XP • 200-400 🪙 • 1x Comida Doce',
-    '> 🟡 **4 Horas (Média):** 400-700 XP • 500-900 🪙 • Poção + 15% Chance de Ovo Comum 🥚',
-    '> 🟣 **8 Horas (Longa):** 900-1600 XP • 1200-2200 🪙 • Banquete + 10% Feijão 🌱 + 25% Ovo Raro 🥚✨',
-    '',
-    'Escolha a duração desejada nos botões abaixo para iniciar:',
-  ].join('\n');
+  const desc = t('expedition.availableDesc', source, {
+    pet: `${activePet.emoji} ${activePet.name}`,
+  });
 
   const embed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.gold || '#facc15')
-    .setTitle('🧭  ✦  Expedições Passivas de Pymons (AFK)')
+    .setTitle(t('expedition.availableTitle', source))
     .setDescription(desc)
-    .setFooter({ text: pyxieFooter('Seu Pymon coleta recursos mesmo com o Discord fechado') })
+    .setFooter({ text: pyxieFooter('Pyxie Expedition') })
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`expedition_start:${userId}:2`)
-      .setLabel('2 Horas')
+      .setLabel(t('expedition.btn2h', source))
       .setEmoji('🟢')
       .setStyle(ButtonStyle.Success),
     new ButtonBuilder()
       .setCustomId(`expedition_start:${userId}:4`)
-      .setLabel('4 Horas')
+      .setLabel(t('expedition.btn4h', source))
       .setEmoji('🟡')
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setCustomId(`expedition_start:${userId}:8`)
-      .setLabel('8 Horas')
+      .setLabel(t('expedition.btn8h', source))
       .setEmoji('🟣')
       .setStyle(ButtonStyle.Danger)
   );
@@ -136,13 +121,13 @@ async function handleExpeditionInteraction(interaction) {
 
   if (interaction.user.id !== targetId) {
     return interaction.reply({
-      content: '❌ Apenas o dono deste Pymon pode gerenciar suas expedições!',
+      content: t('expedition.onlyOwner', interaction),
       flags: 64,
     });
   }
 
   if (action === 'expedition_refresh') {
-    const view = buildExpeditionView(targetId);
+    const view = buildExpeditionView(targetId, interaction);
     return interaction.update(view);
   }
 
@@ -151,7 +136,7 @@ async function handleExpeditionInteraction(interaction) {
     if (!result.success) {
       return interaction.reply({ content: `❌ ${result.message}`, flags: 64 });
     }
-    const view = buildExpeditionView(targetId);
+    const view = buildExpeditionView(targetId, interaction);
     return interaction.update(view);
   }
 
@@ -161,33 +146,45 @@ async function handleExpeditionInteraction(interaction) {
       return interaction.reply({ content: `❌ ${result.message}`, flags: 64 });
     }
 
+    const isEn = getLanguage(interaction) === 'en';
     const itemsText = result.itemsGained.length > 0
       ? result.itemsGained.map((i) => `> 📦 **${i}**`).join('\n')
-      : '> 📦 *Nenhum item especial encontrado desta vez.*';
+      : (isEn ? '> 📦 *No special items found this time.*' : '> 📦 *Nenhum item especial encontrado desta vez.*');
+
+    const rewardsHeader = isEn ? '🎁 **CLAIMED REWARDS:**' : '🎁 **RECOMPENSAS RESGATADAS:**';
+    const xpLine = isEn ? `> ⭐ **+${result.xpGained} XP** for your Pymon` : `> ⭐ **+${result.xpGained} XP** para seu Pymon`;
+    const coinsLine = isEn ? `> 💰 **+${formatCoins(result.coinsGained, interaction)}** added to your wallet` : `> 💰 **+${formatCoins(result.coinsGained, interaction)}** adicionadas à sua carteira`;
+    const beanLine = result.magicBeansGained > 0
+      ? (isEn ? '> ✨ **+1x Magic Bean 🌱** (Epic Luck!)' : '> ✨ **+1x Feijão Mágico 🌱** (Sorte Épica!)')
+      : '';
+    const itemsHeader = isEn ? '📦 **COLLECTED ITEMS:**' : '📦 **ITENS COLETADOS:**';
+    const heroLine = isEn
+      ? `🎉 **${result.petEmoji} ${result.petName}** bravely completed the mission!`
+      : `🎉 **${result.petEmoji} ${result.petName}** concluiu sua missão com bravura!`;
 
     const desc = [
-      `🎉 **${result.petEmoji} ${result.petName}** concluiu sua missão com bravura!`,
+      heroLine,
       '',
-      '🎁 **RECOMPENSAS RESGATADAS:**',
-      `> ⭐ **+${result.xpGained} XP** para seu Pymon`,
-      `> 💰 **+${formatCoins(result.coinsGained)}** adicionadas à sua carteira`,
-      result.magicBeansGained > 0 ? '> ✨ **+1x Feijão Mágico 🌱** (Sorte Épica!)' : '',
+      rewardsHeader,
+      xpLine,
+      coinsLine,
+      beanLine,
       '',
-      '📦 **ITENS COLETADOS:**',
+      itemsHeader,
       itemsText,
     ].filter(Boolean).join('\n');
 
     const embed = new EmbedBuilder()
       .setColor(PYXIE_COLORS.gold || '#facc15')
-      .setTitle('🎉  ✦  Recompensas de Expedição Coletadas!')
+      .setTitle(isEn ? '🎉  ✦  Expedition Rewards Collected!' : '🎉  ✦  Recompensas de Expedição Coletadas!')
       .setDescription(desc)
-      .setFooter({ text: pyxieFooter('Seu Pymon já está descansado e pronto para outra!') })
+      .setFooter({ text: pyxieFooter(isEn ? 'Your Pymon is rested and ready for another run!' : 'Seu Pymon já está descansado e pronto para outra!') })
       .setTimestamp();
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(`expedition_refresh:${targetId}`)
-        .setLabel('Nova Expedição')
+        .setLabel(t('expedition.availableTitle', interaction))
         .setEmoji('🧭')
         .setStyle(ButtonStyle.Primary)
     );
@@ -195,8 +192,6 @@ async function handleExpeditionInteraction(interaction) {
     return interaction.update({ embeds: [embed], components: [row] });
   }
 }
-
-const { EXPEDITION } = require('./commandNames');
 
 module.exports = {
   name: EXPEDITION,
@@ -206,27 +201,35 @@ module.exports = {
   handleExpeditionInteraction,
   data: new SlashCommandBuilder()
     .setName(EXPEDITION)
-    .setDescription('Envia seu Pymon em uma expedição passiva (AFK) de 2h, 4h ou 8h para coletar recursos.')
+    .setDescription('Send your Pymon on an AFK expedition for 2h, 4h, or 8h / Expedição passiva.')
+    .setDescriptionLocalizations({
+      'pt-BR': 'Envia seu Pymon em uma expedição passiva (AFK) de 2h, 4h ou 8h para coletar recursos.',
+    })
     .addIntegerOption((opt) =>
       opt
         .setName('duracao')
-        .setDescription('Duração da expedição em horas')
+        .setNameLocalizations({
+          'en-US': 'duration',
+          'en-GB': 'duration',
+          'pt-BR': 'duracao',
+        })
+        .setDescription('Expedition duration in hours / Duração em horas')
         .setRequired(false)
         .addChoices(
-          { name: '🟢 2 Horas (Curta)', value: 2 },
-          { name: '🟡 4 Horas (Média)', value: 4 },
-          { name: '🟣 8 Horas (Longa)', value: 8 }
+          { name: '🟢 2 Horas / 2 Hours', value: 2 },
+          { name: '🟡 4 Horas / 4 Hours', value: 4 },
+          { name: '🟣 8 Horas / 8 Hours', value: 8 }
         )
     ),
   async executeSlash({ interaction }) {
-    const dur = interaction.options.getInteger('duracao');
+    const dur = interaction.options.getInteger('duracao') || interaction.options.getInteger('duration');
     if (dur) {
       const startRes = startExpedition(interaction.user.id, dur);
       if (!startRes.success) {
         return interaction.editReply({ content: `❌ ${startRes.message}` });
       }
     }
-    const view = buildExpeditionView(interaction.user.id);
+    const view = buildExpeditionView(interaction.user.id, interaction);
     await interaction.editReply(view);
   },
   async executePrefix({ message, args }) {
@@ -237,8 +240,7 @@ module.exports = {
         return message.reply(`❌ ${startRes.message}`);
       }
     }
-    const view = buildExpeditionView(message.author.id);
+    const view = buildExpeditionView(message.author.id, message);
     await message.reply(view);
   },
 };
-

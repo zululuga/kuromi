@@ -170,10 +170,19 @@ function spendMagicBeans(userId, amount) {
   return { spent: true, balance: updated.magicBeans };
 }
 
-function getCurrencyBalances(userId) {
+function getCurrencyBalances(userId, source = null) {
   const account = getUserAccount(userId);
+  if (!source) {
+    return CURRENCY_DEFINITIONS.map((currency) => ({
+      ...currency,
+      amount: Number(account[currency.key]) || 0,
+    }));
+  }
+  const { getLanguage } = require('../utils/i18n');
+  const lang = getLanguage(source);
   return CURRENCY_DEFINITIONS.map((currency) => ({
     ...currency,
+    label: currency.key === 'magicBeans' ? (lang === 'en' ? 'Magic Beans' : 'Feijões Mágicos') : (lang === 'en' ? 'Coins' : 'Moedinhas'),
     amount: Number(account[currency.key]) || 0,
   }));
 }

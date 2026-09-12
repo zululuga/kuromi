@@ -3,17 +3,23 @@ const professions = require('../services/professions');
 const { getUserAccount, setProfession } = require('../services/economy');
 const { formatCoins } = require('./economyHelpers');
 const { PROFESSION } = require('./commandNames');
+const { t } = require('../utils/i18n');
 
 function getProfessionChoices() {
   return Object.entries(professions).map(([value, profession]) => ({ name: profession.label, value }));
 }
 
-function getReply(result, profession) {
-  if (!result.changed && result.reason === 'same') return `❌ Você já é **${profession.label}**. Escolha uma crise diferente.`;
-  if (!result.changed && result.reason === 'insufficient') return `❌ Trocar de profissão custa **${formatCoins(50)}**. Seu saldo é **${formatCoins(result.balance)}**. Ambição sem orçamento é só teatro.`;
+function getReply(result, professionKey, source = null) {
+  const professionLabel = t(`profession.labels.${professionKey}`, source) || professions[professionKey]?.label || professionKey;
+  if (!result.changed && result.reason === 'same') {
+    return t('profession.sameProfession', source, { profession: professionLabel });
+  }
+  if (!result.changed && result.reason === 'insufficient') {
+    return t('profession.switchCost', source, { cost: formatCoins(50, source), balance: formatCoins(result.balance, source) });
+  }
   return result.charged === 0
-    ? `✅ Sua profissão agora é **${profession.label}**. Essa escolha foi gratuita. Não se acostume.`
-    : `✅ Sua profissão agora é **${profession.label}**. Foram cobradas **${formatCoins(50)}**. Pelo menos agora existe um plano.`;
+    ? t('profession.freeSuccess', source, { profession: professionLabel })
+    : t('profession.paidSuccess', source, { profession: professionLabel, cost: formatCoins(50, source) });
 }
 
 function resolveProfession(value) {
@@ -23,25 +29,41 @@ function resolveProfession(value) {
 
 async function execute(source, reply, value) {
   const key = resolveProfession(value);
-  if (!key) return reply(`❌ Escolha uma profissão válida: ${Object.values(professions).map((item) => item.label).join(', ')}. Eu não vou transformar sua indecisão em carreira.`);
+  if (!key) {
+    const list = Object.keys(professions).map((k) => t(`profession.labels.${k}`, source) || professions[k].label).join(', ');
+    return reply(t('profession.invalid', source, { list }));
+  }
   const result = setProfession(source.user?.id || source.author.id, key);
-  await reply(getReply(result, professions[key]));
+  await reply(getReply(result, key, source));
 }
 
 module.exports = {
   name: PROFESSION,
-  aliases: ['profissão'],
+  aliases: ['profissão', 'career', 'job', 'profession', 'profissao'],
   resolveProfession,
   data: new SlashCommandBuilder()
     .setName(PROFESSION)
-    .setDescription('Escolhe ou troca sua profissão.')
+    .setDescription('Choose or change your profession.')
+    .setDescriptionLocalizations({
+      'pt-BR': 'Escolhe ou troca sua profissão.',
+    })
     .addStringOption((option) =>
-      option.setName('profissao').setDescription('Profissão desejada').setRequired(true).addChoices(...getProfessionChoices())
+      option
+        .setName('profissao')
+        .setNameLocalizations({
+          'en-US': 'profession',
+          'en-GB': 'profession',
+          'pt-BR': 'profissao',
+        })
+        .setDescription('Desired profession / Profissão desejada')
+        .setRequired(true)
+        .addChoices(...getProfessionChoices())
     ),
   async executePrefix({ message, args }) {
     await execute(message, (content) => message.reply(content), args[0]);
   },
   async executeSlash({ interaction }) {
-    await execute(interaction, (content) => interaction.editReply(content), interaction.options.getString('profissao'));
+    const chosen = interaction.options.getString('profissao') || interaction.options.getString('profession');
+    await execute(interaction, (content) => interaction.editReply(content), chosen);
   },
 };

@@ -1,5 +1,6 @@
 const { createCanvas } = require('@napi-rs/canvas');
 const { AttachmentBuilder } = require('discord.js');
+const { getCanvasStrings, getLanguage } = require('../utils/i18n');
 
 const WIDTH = 600;
 const HEIGHT = 1024;
@@ -274,8 +275,9 @@ const MAX_TAROT_CACHE_SIZE = 40;
  * @param {'UPRIGHT'|'REVERSED'} orientation
  * @returns {Buffer}
  */
-function renderTarotCard(card, orientation = 'UPRIGHT') {
-  const cacheKey = `${card?.id || card?.name || 'unknown'}_${orientation}`;
+function renderTarotCard(card, orientation = 'UPRIGHT', lang = 'pt') {
+  const langKey = getLanguage(lang);
+  const cacheKey = `${card?.id || card?.name || 'unknown'}_${orientation}_${langKey}`;
   if (tarotCardCache.has(cacheKey)) {
     return tarotCardCache.get(cacheKey);
   }
@@ -283,6 +285,7 @@ function renderTarotCard(card, orientation = 'UPRIGHT') {
   const isReversed = orientation === 'REVERSED';
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
+  const cStrs = getCanvasStrings(langKey).tarot;
 
   // Theme Palette
   const accentColor = isReversed ? '#f43f5e' : '#c084fc';
@@ -347,7 +350,8 @@ function renderTarotCard(card, orientation = 'UPRIGHT') {
   ctx.shadowBlur = 0;
   ctx.fillStyle = accentColor;
   ctx.font = 'bold 13px sans-serif';
-  ctx.fillText((card.arcana || 'ARCANOS').toUpperCase(), 300, 98);
+  const arcanaLabel = card.arcana ? (langKey === 'en' ? 'MAJOR ARCANA' : card.arcana.toUpperCase()) : cStrs.arcana;
+  ctx.fillText(arcanaLabel, 300, 98);
 
   // 4. Central Portal (Rotatable)
   ctx.save();
@@ -429,7 +433,7 @@ function renderTarotCard(card, orientation = 'UPRIGHT') {
   ctx.shadowColor = accentColor;
   ctx.shadowBlur = 6;
   ctx.fillText(
-    isReversed ? '✦ POSIÇÃO INVERTIDA ✦' : '✦ POSIÇÃO DIRETA ✦',
+    isReversed ? cStrs.reversedBadge : cStrs.uprightBadge,
     300,
     badgeY + badgeH / 2 + 1
   );
@@ -491,13 +495,12 @@ function renderTarotCard(card, orientation = 'UPRIGHT') {
     ctx.fillText(line, 300, startTextY + index * lineHeight);
   });
 
-  // 9. Footer
+  // 9. Footer (Clean single line)
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = accentColor;
   ctx.font = 'bold 11px sans-serif';
-  ctx.fillText('TAROT CRINGELÂNDIA  •  BOT KUROMI', 300, 978);
-  ctx.fillText('TAROT CRINGELÂNDIA  •  BOT PYXIE', 300, 978);
+  ctx.fillText(cStrs.footer, 300, 978);
 
   const buffer = canvas.toBuffer('image/png');
 
@@ -514,10 +517,11 @@ function renderTarotCard(card, orientation = 'UPRIGHT') {
  * Creates a Discord AttachmentBuilder for the rendered card.
  * @param {Object} card
  * @param {'UPRIGHT'|'REVERSED'} orientation
+ * @param {string|Object} [lang='pt']
  * @returns {AttachmentBuilder}
  */
-function createTarotAttachment(card, orientation = 'UPRIGHT') {
-  const buffer = renderTarotCard(card, orientation);
+function createTarotAttachment(card, orientation = 'UPRIGHT', lang = 'pt') {
+  const buffer = renderTarotCard(card, orientation, lang);
   return new AttachmentBuilder(buffer, { name: 'tarot_cringelandia.png' });
 }
 

@@ -1,20 +1,21 @@
 const { EmbedBuilder, SlashCommandBuilder } = require('discord.js');
 const { STATUS_IMAGE_URL } = require('../config');
 const { STATUS } = require('./commandNames');
+const { t } = require('../utils/i18n');
 
-function buildStatusEmbed(serverName, userTag) {
+function buildStatusEmbed(serverName, userTag, source = null) {
   const desc = [
-    'Sistema operacional e serviços ativos em perfeita execução.',
+    t('status.desc', source),
     '',
-    '📡 **DADOS DA SESSÃO**',
-    `> 🏠 **Servidor:** ${serverName || 'Privado / DM'}`,
-    `> 👤 **Operador:** ${userTag}`,
-    `> 🟢 **Status:** 100% Online & Monitorando`,
+    t('status.sessionHeader', source),
+    t('status.server', source, { server: serverName || 'Direct Message' }),
+    t('status.operator', source, { user: userTag }),
+    t('status.statusOnline', source),
   ].join('\n');
 
   return new EmbedBuilder()
     .setColor('#22c55e')
-    .setTitle('✅  ✦  Status do Sistema — Online')
+    .setTitle(t('status.title', source))
     .setDescription(desc)
     .setImage(STATUS_IMAGE_URL)
     .setFooter({ text: 'Pyxie' })
@@ -23,17 +24,21 @@ function buildStatusEmbed(serverName, userTag) {
 
 module.exports = {
   name: STATUS,
+  aliases: ['status', 'uptime', 'info'],
   data: new SlashCommandBuilder()
     .setName(STATUS)
-    .setDescription('Mostra o status do bot e informações do servidor.'),
+    .setDescription('View system and server status.')
+    .setDescriptionLocalizations({
+      'pt-BR': 'Mostra o status do bot e informações do servidor.',
+    }),
   async executePrefix({ message }) {
     await message.reply({
-      embeds: [buildStatusEmbed(message.guild?.name, message.author.tag)],
+      embeds: [buildStatusEmbed(message.guild?.name, message.author.tag, message)],
     });
   },
   async executeSlash({ interaction }) {
     await interaction.editReply({
-      embeds: [buildStatusEmbed(interaction.guild?.name, interaction.user.tag)],
+      embeds: [buildStatusEmbed(interaction.guild?.name, interaction.user.tag, interaction)],
     });
   },
 };
