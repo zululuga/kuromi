@@ -22,8 +22,8 @@ function buildDailyView(userId, clientId = null) {
   const weekend = isWeekend();
 
   const voteBonusText = weekend
-    ? '🔥 **BÔNUS DE FIM DE SEMANA ATIVO (2X):**\n> Vote no **Top.gg** e ganhe **+1.000 Moedas**, **🌱 1x Feijão Mágico** e **+600 XP** para seu Pymon!'
-    : '🗳️ **BÔNUS EXTRA NO TOP.GG (A CADA 12H):**\n> Vote no **Top.gg** e ganhe **+500 Moedas**, **📦 1x Baú Rústico** e **+300 XP** *(com dobro nos fins de semana!)*';
+    ? '🔥 **BÔNUS DE FIM DE SEMANA ATIVO (2X):**\n> Vote no **Top.gg** e ganhe **+200 Moedas**, **🧪 1x Poção Revitalizante** e **+100 XP** para seu Pymon!'
+    : '🗳️ **BÔNUS EXTRA NO TOP.GG (A CADA 12H):**\n> Vote no **Top.gg** e ganhe **+100 Moedas**, **🥣 1x Ração da Floresta** e **+50 XP** *(com dobro nos fins de semana!)*';
 
   if (!result.claimed) {
     const desc = [

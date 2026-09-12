@@ -88,14 +88,13 @@ try {
   console.log('Verificação de Monetização LootLabs, Idempotência, Duelos, Trocas, Expedições AFK, World Boss ALPHA e Temas: OK');
   const voteNormal = processTopggVote({ user: testUserA, isWeekend: false });
   assert.equal(voteNormal.success, true, 'Voto comum no Top.gg deve ser processado.');
-  assert.equal(voteNormal.coins, 500, 'Recompensa comum deve ser 500 moedas.');
-  assert.equal(hasItem(testUserA, 'bau_madeira', 1), true, 'Usuário deve receber 1x Baú Rústico.');
+  assert.equal(voteNormal.coins, 100, 'Recompensa comum deve ser 100 moedas.');
+  assert.equal(hasItem(testUserA, 'racao_cringe', 1), true, 'Usuário deve receber 1x Ração da Floresta.');
 
   const voteWeekend = processTopggVote({ user: testUserB, isWeekend: true });
   assert.equal(voteWeekend.success, true, 'Voto no fim de semana no Top.gg deve ser processado.');
-  assert.equal(voteWeekend.coins, 1000, 'Recompensa de fim de semana deve ser 1000 moedas (2x).');
-  const userBAcc = getUserAccount(testUserB);
-  assert.equal(userBAcc.magicBeans >= 1, true, 'Usuário deve receber 1x Feijão Mágico.');
+  assert.equal(voteWeekend.coins, 200, 'Recompensa de fim de semana deve ser 200 moedas (2x).');
+  assert.equal(hasItem(testUserB, 'pocao_vida', 1), true, 'Usuário deve receber 1x Poção Revitalizante.');
 
   console.log('Verificação de Monetização LootLabs, Top.gg, Idempotência, Duelos, Trocas, Expedições AFK, World Boss ALPHA e Temas: OK');
 } finally {

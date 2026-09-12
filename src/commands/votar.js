@@ -24,13 +24,13 @@ function buildVoteView(clientOrBotId = null) {
     'Apoie o crescimento do bot votando no **Top.gg** a cada 12 horas e receba recompensas exclusivas instantaneamente!',
     '',
     '🎁 **RECOMPENSAS POR VOTO:**',
-    '> 🪙 **+500 Moedinhas** no cofre',
-    '> 📦 **+1x Baú Rústico** no inventário',
-    '> 🐾 **+300 XP** para o seu Pymon ativo',
+    '> 🪙 **+100 Moedinhas** no cofre',
+    '> 🥣 **+1x Ração da Floresta** no inventário',
+    '> 🐾 **+50 XP** para o seu Pymon ativo',
     '',
     weekend
-      ? '🔥 **BÔNUS DE FIM DE SEMANA ATIVO (2X):**\n> 🌟 *Todos os votos durante o fim de semana entregam o **DOBRO**! (+1.000 Moedas, 🌱 1x Feijão Mágico e +600 XP)!*'
-      : '✨ **DICA DE FIM DE SEMANA (2X):**\n> *De Sexta a Domingo, todos os votos entregam o **DOBRO** (+1.000 Moedas, 🌱 1x Feijão Mágico e +600 XP)!*',
+      ? '🔥 **BÔNUS DE FIM DE SEMANA ATIVO (2X):**\n> 🌟 *Todos os votos durante o fim de semana entregam o **DOBRO**! (+200 Moedas, 🧪 1x Poção Revitalizante e +100 XP)!*'
+      : '✨ **DICA DE FIM DE SEMANA (2X):**\n> *De Sexta a Domingo, todos os votos entregam o **DOBRO** (+200 Moedas, 🧪 1x Poção Revitalizante e +100 XP)!*',
     '',
     '👉 *Clique no botão abaixo para abrir a página de votação:*',
   ].join('\n');

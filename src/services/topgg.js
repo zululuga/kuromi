@@ -32,19 +32,16 @@ function processTopggVote(payload) {
   }
 
   const isWeekend = Boolean(payload.isWeekend);
-  const coinsReward = isWeekend ? 1000 : 500;
-  const xpReward = isWeekend ? 600 : 300;
-  const itemName = isWeekend ? '🌱 1x Feijão Mágico' : '📦 1x Baú Rústico';
+  const coinsReward = isWeekend ? 200 : 100;
+  const xpReward = isWeekend ? 100 : 50;
+  const itemRewardId = isWeekend ? 'pocao_vida' : 'racao_cringe';
+  const itemName = isWeekend ? '🧪 1x Poção Revitalizante' : '🥣 1x Ração da Floresta';
 
   // 1. Entregar Moedas
   addCoins(userId, coinsReward);
 
-  // 2. Entregar Item / Feijão
-  if (isWeekend) {
-    addMagicBeans(userId, 1);
-  } else {
-    addItem(userId, 'bau_madeira', 1);
-  }
+  // 2. Entregar Item
+  addItem(userId, itemRewardId, 1);
 
   // 3. Entregar XP ao Pymon Ativo (se possuir)
   let activePetName = null;
@@ -65,7 +62,7 @@ function processTopggVote(payload) {
     userId,
     coins: coinsReward,
     xp: xpReward,
-    item: isWeekend ? 'feijao_magico' : 'bau_madeira',
+    item: itemRewardId,
     itemName,
     isWeekend,
     activePetName,
