@@ -1,8 +1,11 @@
 const readline = require('node:readline');
+const fs = require('node:fs');
+const path = require('node:path');
 const {
   Client,
   GatewayIntentBits,
   EmbedBuilder,
+  AttachmentBuilder,
   ActivityType,
   ActionRowBuilder,
   ButtonBuilder,
@@ -219,6 +222,7 @@ async function postBumpGuide() {
   const lastGuide = recentMessages?.find(
     (message) =>
       message.author.id === client.user.id &&
+      message.embeds.some((embed) => embed.title?.includes('Como ajudar'))
       message.embeds.some(
         (embed) =>
           embed.title?.includes('Como apoiar') ||
@@ -339,7 +343,15 @@ async function handleCringePhrase(message) {
   cringePhraseCooldowns.set(message.author.id, Date.now());
 
   await message.react('🌈').catch(() => null);
-  await message.reply('https://klipy.com/gifs/gacha-life-gacha-boy');
+  
+  const localGifPath = path.join(__dirname, 'assets', 'cringe_small.gif');
+  if (fs.existsSync(localGifPath)) {
+    await message.reply({
+      files: [new AttachmentBuilder(localGifPath, { name: 'gacha_boy.gif' })]
+    });
+  } else {
+    await message.reply('https://static2.klipy.com/ii/4e7bea9f7a3371424e6c16ebc93252fe/18/bb/YE2nvMxdxoJAADGlru.gif');
+  }
   return true;
 }
 
@@ -359,11 +371,20 @@ client.once('ready', async () => {
 
 // Mensagem de boas-vindas ao entrar no servidor.
 client.on('guildMemberAdd', async (member) => {
+  const configuredWelcomeChannelId = getWelcomeChannel(member.guild.id);
   const targetChannelId =
     getWelcomeChannel(member.guild.id) ||
     getWelcomeChannel('global') ||
     WELCOME_CHANNEL_ID;
 
+  const welcomeChannel =
+    (configuredWelcomeChannelId && member.guild.channels.cache.get(configuredWelcomeChannelId)) ||
+    member.guild.channels.cache.get(member.guild.systemChannelId) ||
+    member.guild.channels.cache.find(
+      (channel) =>
+        channel.isTextBased() &&
+        ['welcome', 'bem-vindos', 'entrada', 'chat-geral'].includes(channel.name)
+    );
   let welcomeChannel = null;
   if (targetChannelId) {
     welcomeChannel =
