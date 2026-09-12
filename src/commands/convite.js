@@ -5,6 +5,7 @@ const {
   EmbedBuilder,
   SlashCommandBuilder,
 } = require('discord.js');
+const { t } = require('../utils/i18n');
 const { PYXIE_COLORS, pyxieFooter } = require('../utils/pyxieVoice');
 
 const BOT_PERMISSIONS = 378880; // Send Messages, Embed Links, Attach Files, Read History, Use External Emojis
@@ -14,32 +15,27 @@ function getInviteUrl(clientId) {
   return `https://discord.com/oauth2/authorize?client_id=${id}&permissions=${BOT_PERMISSIONS}&scope=bot%20applications.commands`;
 }
 
-function buildInviteEmbed(client) {
+function buildInviteEmbed(client, guildOrSource = null) {
   const inviteUrl = getInviteUrl(client?.user?.id);
 
   const embed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.magenta || '#e60067')
-    .setTitle('✨ Convite da Pyxie')
-    .setDescription('Traga diversão, RPG de criaturas mágicas e entretenimento completo para o seu servidor Discord!\n\u200b')
+    .setTitle(t('invite.title', guildOrSource))
+    .setDescription(t('invite.desc', guildOrSource))
     .addFields(
       {
-        name: '🐾 Tamagotchi & Pymons',
-        value: 'Adote, cuide, alimente e evolua companheiros mágicos com atributos, expedições e duelos.',
+        name: t('invite.petsTitle', guildOrSource),
+        value: t('invite.petsDesc', guildOrSource),
         inline: false,
       },
       {
-        name: '🗺️ Dungeons 2D & World Boss',
-        value: 'Masmorras procedurais com movimentação em grade e combates épicos contra chefes mundiais.',
+        name: t('invite.dungeonsTitle', guildOrSource),
+        value: t('invite.dungeonsDesc', guildOrSource),
         inline: false,
       },
       {
-        name: '🪙 Economia & Comunidade',
-        value: 'Profissões interativas, títulos de prestígio, mercado de trocas, Tarot místico e casamentos.',
-        inline: false,
-      },
-      {
-        name: '🔒 Seguro e Confiável',
-        value: 'Permissões transparentes (sem administrador) e operação ininterrupta 24 horas por dia.',
+        name: t('invite.economyTitle', guildOrSource),
+        value: t('invite.economyDesc', guildOrSource),
         inline: false,
       }
     )
@@ -49,7 +45,7 @@ function buildInviteEmbed(client) {
 
   const buttonRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setLabel('Adicionar ao Servidor')
+      .setLabel(t('invite.btnLabel', guildOrSource))
       .setEmoji('✨')
       .setURL(inviteUrl)
       .setStyle(ButtonStyle.Link)
@@ -58,21 +54,19 @@ function buildInviteEmbed(client) {
   return { embeds: [embed], components: [buttonRow] };
 }
 
-const { INVITE } = require('./commandNames');
-
 module.exports = {
-  name: INVITE,
-  aliases: ['convite', 'invite', 'addbot', 'adicionar'],
+  name: 'py-convite',
+  aliases: ['convite', 'invite', 'py-invite', 'adicionar'],
+  buildInviteEmbed,
   data: new SlashCommandBuilder()
-    .setName(INVITE)
-    .setDescription('Receba o link oficial de convite para adicionar a Pyxie ao seu servidor.'),
-  async executePrefix({ message }) {
-    const view = buildInviteEmbed(message.client);
+    .setName('py-convite')
+    .setDescription('Get Pyxie official invite link / Link oficial para adicionar o bot.'),
+  async executePrefix({ message, client }) {
+    const view = buildInviteEmbed(client, message.guild?.id);
     await message.reply(view);
   },
   async executeSlash({ interaction }) {
-    const view = buildInviteEmbed(interaction.client);
+    const view = buildInviteEmbed(interaction.client, interaction.guild?.id);
     await interaction.editReply(view);
   },
 };
-

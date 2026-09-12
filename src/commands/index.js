@@ -33,6 +33,7 @@ const commands = [
   require('./expedicao'),
   require('./boss'),
   require('./votar'),
+  require('./idioma'),
 ];
 
 const { setLoadedCommands } = require('./commandHelpers');

@@ -85,7 +85,6 @@ try {
   const { processTopggVote, verifyWebhookAuth } = require('../src/services/topgg');
   assert.equal(verifyWebhookAuth('teste'), true, 'Sem secret configurado deve validar webhook.');
 
-  console.log('Verificação de Monetização LootLabs, Idempotência, Duelos, Trocas, Expedições AFK, World Boss ALPHA e Temas: OK');
   const voteNormal = processTopggVote({ user: testUserA, isWeekend: false });
   assert.equal(voteNormal.success, true, 'Voto comum no Top.gg deve ser processado.');
   assert.equal(voteNormal.coins, 100, 'Recompensa comum deve ser 100 moedas.');

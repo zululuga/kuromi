@@ -33,6 +33,7 @@ const tradeCommand = require('./src/commands/trocar');
 const expeditionCommand = require('./src/commands/expedicao');
 const bossCommand = require('./src/commands/boss');
 const rankingCommand = require('./src/commands/ranking');
+const idiomaCommand = require('./src/commands/idioma');
 const { syncApplicationEmojis } = require('./src/utils/appEmojis');
 const { registerAutomation, updateAutomation } = require('./src/services/automationSchedule');
 const {
@@ -597,6 +598,13 @@ client.on('interactionCreate', async (interaction) => {
       incrementCommand();
       recordUniqueUser(interaction.user.id);
       await rankingCommand.handleRankingInteraction(interaction);
+      return;
+    }
+
+    if (typeof idiomaCommand?.isLanguageInteraction === 'function' && idiomaCommand.isLanguageInteraction(interaction)) {
+      incrementCommand();
+      recordUniqueUser(interaction.user.id);
+      await idiomaCommand.handleLanguageInteraction(interaction);
       return;
     }
 

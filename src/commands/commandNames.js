@@ -36,4 +36,5 @@ module.exports = {
   BOSS: 'py-boss',
   TAROT: 'py-tarot',
   VOTE: 'py-votar',
+  LANGUAGE: 'py-idioma',
 };

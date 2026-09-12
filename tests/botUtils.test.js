@@ -58,10 +58,18 @@ try {
   assert.equal(urlChannel, '333333333333333333', 'Um link de canal deve ser convertido para o ID do canal.');
   assert.equal(getWelcomeChannel('guild-url'), '333333333333333333', 'O link convertido deve ser persistido e lido corretamente.');
 
+  // Verificação de Internacionalização (i18n):
+  const { getLanguage, setGuildLanguage, CRINGELANDIA_GUILD_ID } = require('../src/utils/i18n');
+  assert.equal(getLanguage(CRINGELANDIA_GUILD_ID), 'pt', 'Servidor Cringelândia deve ter Português como padrão.');
+  assert.equal(getLanguage('outro-servidor-qualquer'), 'en', 'Servidores externos devem ter Inglês como padrão.');
+  
+  setGuildLanguage('servidor-customizado', 'pt');
+  assert.equal(getLanguage('servidor-customizado'), 'pt', 'Servidor customizado deve salvar idioma escolhido.');
+
   releaseBotLock();
   assert.equal(fs.existsSync(lockFile), false, 'O lock deve ser removido ao encerrar.');
 
-  console.log('Verificação do lock, banco, prefixo padrão e ajuda: OK');
+  console.log('Verificação do lock, banco, prefixo padrão, internacionalização (i18n) e ajuda: OK');
 } finally {
   if (fs.existsSync(lockFile)) {
     fs.unlinkSync(lockFile);

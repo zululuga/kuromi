@@ -7,6 +7,7 @@ const {
 } = require('discord.js');
 const { claimDaily } = require('../services/economy');
 const { getVoteUrl } = require('../services/topgg');
+const { t } = require('../utils/i18n');
 const { formatCoins, formatRemaining } = require('./economyHelpers');
 const { DAILY } = require('./commandNames');
 const { PYXIE_COLORS, pyxieFooter } = require('../utils/pyxieVoice');
@@ -16,34 +17,34 @@ function isWeekend() {
   return day === 0 || day === 5 || day === 6;
 }
 
-function buildDailyView(userId, clientId = null) {
+function buildDailyView(userId, guildOrSource = null, clientId = null) {
   const result = claimDaily(userId);
   const voteUrl = getVoteUrl(clientId);
   const weekend = isWeekend();
 
   const voteBonusText = weekend
-    ? '🔥 **BÔNUS DE FIM DE SEMANA ATIVO (2X):**\n> Vote no **Top.gg** e ganhe **+200 Moedas**, **🧪 1x Poção Revitalizante** e **+100 XP** para seu Pymon!'
-    : '🗳️ **BÔNUS EXTRA NO TOP.GG (A CADA 12H):**\n> Vote no **Top.gg** e ganhe **+100 Moedas**, **🥣 1x Ração da Floresta** e **+50 XP** *(com dobro nos fins de semana!)*';
+    ? t('daily.voteWeekendBonus', guildOrSource)
+    : t('daily.voteWeekdayBonus', guildOrSource);
 
   if (!result.claimed) {
     const desc = [
-      `⏳ Você já coletou sua recompensa diária hoje. Espere **${formatRemaining(result.remainingMs)}** para resgatar novamente o cofre diário!`,
+      t('daily.descCooldown', guildOrSource, { time: formatRemaining(result.remainingMs) }),
       '',
       voteBonusText,
       '',
-      '👉 *Clique no botão abaixo para votar e resgatar o bônus:*',
+      t('vote.cta', guildOrSource),
     ].join('\n');
 
     const embed = new EmbedBuilder()
       .setColor(PYXIE_COLORS.violet || '#8b5cf6')
-      .setTitle('🪙  ✦  Cofre Diário em Cooldown')
+      .setTitle(t('daily.titleCooldown', guildOrSource))
       .setDescription(desc)
-      .setFooter({ text: pyxieFooter('Voto no Top.gg disponível a cada 12 horas') })
+      .setFooter({ text: pyxieFooter(t('daily.footerCooldown', guildOrSource)) })
       .setTimestamp();
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setLabel('Votar no Top.gg (Recompensa Extra)')
+        .setLabel(t('daily.btnLabelCooldown', guildOrSource))
         .setEmoji('🗳️')
         .setStyle(ButtonStyle.Link)
         .setURL(voteUrl)
@@ -53,28 +54,28 @@ function buildDailyView(userId, clientId = null) {
   }
 
   const desc = [
-    'Sua recompensa diária foi entregue com sucesso no seu cofre!',
+    t('daily.descClaimed', guildOrSource),
     '',
-    '🪙 **RESUMO DA RECOMPENSA**',
-    `> 💰 **Moedas Coletadas:** **+${formatCoins(result.amount)}**`,
-    `> 🏦 **Saldo Atual:** **${formatCoins(result.balance)}**`,
-    result.magicBeanBonus ? `> ✨ **SORTE ÉPICA (1% de Chance):** **+1x Feijão Mágico 🌱** (Total: **${result.magicBeans} 🌱**)` : '',
+    t('daily.summaryTitle', guildOrSource),
+    t('daily.collected', guildOrSource, { amount: formatCoins(result.amount) }),
+    t('daily.balance', guildOrSource, { balance: formatCoins(result.balance) }),
+    result.magicBeanBonus ? t('daily.magicBean', guildOrSource, { total: result.magicBeans }) : '',
     '',
     voteBonusText,
     '',
-    '👉 *Clique no botão abaixo para votar e resgatar o bônus adicional:*',
+    t('vote.cta', guildOrSource),
   ].filter(Boolean).join('\n\n');
 
   const embed = new EmbedBuilder()
     .setColor(PYXIE_COLORS.gold || '#facc15')
-    .setTitle('🪙  ✦  Recompensa Diária Coletada!')
+    .setTitle(t('daily.titleClaimed', guildOrSource))
     .setDescription(desc)
-    .setFooter({ text: pyxieFooter('Recompensa renovada a cada 24 horas') })
+    .setFooter({ text: pyxieFooter(t('daily.footer', guildOrSource)) })
     .setTimestamp();
 
   const buttonRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setLabel('Resgatar Bônus no Top.gg')
+      .setLabel(t('daily.btnLabel', guildOrSource))
       .setEmoji('🗳️')
       .setStyle(ButtonStyle.Link)
       .setURL(voteUrl)
@@ -89,13 +90,13 @@ module.exports = {
   buildDailyView,
   data: new SlashCommandBuilder()
     .setName(DAILY)
-    .setDescription('Resgata suas Moedinhas diárias e acessa bônus exclusivo no Top.gg.'),
+    .setDescription('Claim daily coins & unlock Top.gg voting bonus / Resgate moedas diárias e bônus no Top.gg'),
   async executePrefix({ message, client }) {
-    const view = buildDailyView(message.author.id, client?.user?.id);
+    const view = buildDailyView(message.author.id, message.guild?.id, client?.user?.id);
     await message.reply(view);
   },
   async executeSlash({ interaction }) {
-    const view = buildDailyView(interaction.user.id, interaction.client?.user?.id);
+    const view = buildDailyView(interaction.user.id, interaction.guild?.id, interaction.client?.user?.id);
     await interaction.editReply(view);
   },
 };

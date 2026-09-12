@@ -88,6 +88,8 @@ const COMMAND_CATEGORY_MAP = {
   'py-agenda': 'utilidades',
   emojis: 'utilidades',
   'py-emojis': 'utilidades',
+  idioma: 'utilidades',
+  'py-idioma': 'utilidades',
   sixseven: 'utilidades',
 };
 
