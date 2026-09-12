@@ -1,0 +1,23 @@
+CUSTOM SOURCE-AVAILABLE LICENSE
+
+Copyright (c) 2026 Pyxie / Cringelândia
+
+1. DEFINITIONS
+"Software" refers to the source code, files, and assets of this Discord bot.
+"Developer" refers to the copyright holder specified above.
+"Commercial Use" includes, but is not limited to, running a public instance of the bot that charges users, gating features behind paywalls, accepting donations for the bot, or using the bot to promote a commercial entity.
+
+2. PERMITTED USES
+You are granted a worldwide, royalty-free, non-exclusive license to:
+* View, read, and audit the Software's source code for security and educational purposes.
+* Run a private, local instance of the bot for your own personal, non-commercial testing.
+* Submit contributions, bug fixes, or pull requests to the Developer.
+
+3. PROHIBITED USES (RESTRICTIONS)
+* You may NOT host, deploy, or distribute a public instance of this bot on Discord.
+* You may NOT use this Software, or any modified version of it, for Commercial Uses.
+* You may NOT create a competing Discord bot using substantial portions of this Software.
+* The Developer remains the sole entity permitted to commercially exploit and publicly host this Software.
+
+4. WARRANTY AND LIABILITY
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
