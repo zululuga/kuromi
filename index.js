@@ -349,7 +349,7 @@ async function handleCringePhrase(message) {
       files: [new AttachmentBuilder(localGifPath, { name: 'gacha_boy.gif' })]
     });
   } else {
-    await message.reply('https://static2.klipy.com/ii/4e7bea9f7a3371424e6c16ebc93252fe/18/bb/YE2nvMxdxoJAADGlru.gif');
+    await message.reply('https://static2.klipy.com/ii/4e7bea9f7a3371424e6c16ebc93252fe/18/bb/PUzq4QPWVloOa.gif');
   }
   return true;
 }
