@@ -222,6 +222,7 @@ async function postBumpGuide() {
   const lastGuide = recentMessages?.find(
     (message) =>
       message.author.id === client.user.id &&
+      message.embeds.some((embed) => embed.title?.includes('Como ajudar'))
       message.embeds.some(
         (embed) =>
           embed.title?.includes('Como apoiar') ||
@@ -372,11 +373,20 @@ client.once('ready', async () => {
 
 // Mensagem de boas-vindas ao entrar no servidor.
 client.on('guildMemberAdd', async (member) => {
+  const configuredWelcomeChannelId = getWelcomeChannel(member.guild.id);
   const targetChannelId =
     getWelcomeChannel(member.guild.id) ||
     getWelcomeChannel('global') ||
     WELCOME_CHANNEL_ID;
 
+  const welcomeChannel =
+    (configuredWelcomeChannelId && member.guild.channels.cache.get(configuredWelcomeChannelId)) ||
+    member.guild.channels.cache.get(member.guild.systemChannelId) ||
+    member.guild.channels.cache.find(
+      (channel) =>
+        channel.isTextBased() &&
+        ['welcome', 'bem-vindos', 'entrada', 'chat-geral'].includes(channel.name)
+    );
   let welcomeChannel = null;
   if (targetChannelId) {
     welcomeChannel =
