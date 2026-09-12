@@ -1,3 +1,5 @@
+# 💖 Cringelândia — Seu lugar de ser você & Painel Web
+# 💖 Kuromi — Bot Oficial da Cringelândia & Painel Web
 
 
 # 🌸 Pyxie — O Universo Encantado de Pymons & RPG para Discord
@@ -8,6 +10,7 @@ Um bot de Discord simples e elegante construído em Node.js (`discord.js` v14), 
   <img src="https://img.shields.io/badge/Node.js-18%2B-blue?style=for-the-badge&logo=node.js" alt="Node Version">
   <img src="https://img.shields.io/badge/discord.js-v14-purple?style=for-the-badge&logo=discord" alt="Discord.js">
   <img src="https://img.shields.io/badge/Status-Produção_Online-success?style=for-the-badge" alt="Status">
+  <img src="https://img.shields.io/badge/Licença-MIT-pink?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/Licença-Source--Available-pink?style=for-the-badge" alt="License">
 </p>
 
@@ -341,10 +344,16 @@ O deploy manual ou por `scp` deve enviar apenas codigo. Nunca use uma copia recu
 
 ---
 
+## 📄 Licença
 ## 📄 Licença & Propriedade Intelectual
 
+Este projeto é distribuído sob a licença [MIT](LICENSE).
 Este projeto é disponibilizado sob a **Custom Source-Available License**.
 - ✅ **Permitido:** Leitura, auditoria de segurança, estudo educacional e testes em instâncias locais/privadas.
 - ❌ **Proibido:** Hospedagem pública concorrente no Discord, cobrança financeira de usuários, criação de bots derivados para fins comerciais ou distribuição não autorizada.
 
+Desenvolvido com carinho e pitadas de sarcasmo para a comunidade **Cringelândia**.
+Sinta-se livre para sugerir melhorias e criar novas funcionalidades!
+## 📜 Licença
+Distribuído sob a licença **MIT**. Consulte `LICENSE` para mais detalhes.
 Consulte o arquivo [LICENSE](LICENSE) para os termos jurídicos completos.
