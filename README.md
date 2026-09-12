@@ -1,5 +1,5 @@
-# 💖 Cringelândia — Seu lugar de ser você & Painel Web
-# 💖 Kuromi — Bot Oficial da Cringelândia & Painel Web
+
+
 # 🌸 Pyxie — O Universo Encantado de Pymons & RPG para Discord
 
 Um bot de Discord simples e elegante construído em Node.js (`discord.js` v14), acompanhado de um **Painel de Controle Web** interativo em Express.js e scripts de gerenciamento via terminal Windows.
