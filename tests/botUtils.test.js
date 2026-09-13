@@ -60,9 +60,16 @@ try {
 
   // Verificação de Internacionalização (i18n):
   const { getLanguage, setGuildLanguage, CRINGELANDIA_GUILD_ID, t, getCanvasStrings } = require('../src/utils/i18n');
-  assert.equal(getLanguage(CRINGELANDIA_GUILD_ID), 'pt', 'Servidor Cringelândia deve ter Português como padrão.');
+  assert.equal(getLanguage(CRINGELANDIA_GUILD_ID), 'pt', 'Servidor Cringelândia deve ter Português como padrão quando não configurado.');
   assert.equal(getLanguage('outro-servidor-qualquer'), 'en', 'Servidores externos devem ter Inglês como padrão.');
   
+  setGuildLanguage(CRINGELANDIA_GUILD_ID, 'en');
+  assert.equal(getLanguage(CRINGELANDIA_GUILD_ID), 'en', 'Servidor Cringelândia deve permitir mudar para Inglês.');
+  assert.equal(getLanguage({ guild: { id: CRINGELANDIA_GUILD_ID } }), 'en', 'Interação no Cringelândia deve respeitar idioma Inglês salvo.');
+
+  setGuildLanguage(CRINGELANDIA_GUILD_ID, 'pt');
+  assert.equal(getLanguage(CRINGELANDIA_GUILD_ID), 'pt', 'Servidor Cringelândia deve permitir voltar para Português.');
+
   setGuildLanguage('servidor-customizado', 'pt');
   assert.equal(getLanguage('servidor-customizado'), 'pt', 'Servidor customizado deve salvar idioma escolhido.');
 

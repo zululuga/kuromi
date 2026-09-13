@@ -5,30 +5,34 @@ const CRINGELANDIA_GUILD_ID = '1453890868980482090';
 /**
  * Obtém o idioma ativo para um servidor/contexto.
  * Prioridade:
- * 1. Servidor Cringelândia -> 'pt' por padrão.
- * 2. Configuração explícita do servidor em banco de dados -> lang configurada.
- * 3. Locale do usuário (se interaction.locale for pt-BR / pt) -> 'pt'.
+ * 1. Configuração explícita do servidor salva no banco de dados -> lang configurada (pt ou en).
+ * 2. Servidor Cringelândia -> 'pt' por padrão se não houver configuração salva.
+ * 3. Locale do usuário/interação (se interaction.locale for pt / pt-BR) -> 'pt', (se en) -> 'en'.
  * 4. Padrão para todos os outros servidores/usuários -> 'en' (Inglês).
  */
 function getLanguage(source) {
+  if (!source) return 'pt';
+
   if (typeof source === 'string') {
     if (source === 'pt' || source === 'pt-BR') return 'pt';
     if (source === 'en' || source === 'en-US' || source === 'en-GB') return 'en';
-    if (source === CRINGELANDIA_GUILD_ID) return 'pt';
 
+    // 1. Verificação de configuração explícita salva no banco
     const settings = getGuildSettings(source);
     if (settings && settings.lang) return settings.lang;
+
+    // 2. Servidor Cringelândia é PT por padrão
+    if (source === CRINGELANDIA_GUILD_ID) return 'pt';
+
     return 'en';
   }
 
-  const guildId = source?.guild?.id || source?.guildId || source?.id || null;
+  const guildId =
+    source?.guild?.id ||
+    source?.guildId ||
+    (source?.id && typeof source.id === 'string' && source.id.length >= 17 ? source.id : null);
 
-  // 1. Cringelândia é sempre PT por padrão
-  if (guildId === CRINGELANDIA_GUILD_ID) {
-    return 'pt';
-  }
-
-  // 2. Verificação de configuração explícita salva no servidor
+  // 1. Verificação de configuração explícita salva no servidor (prioridade máxima)
   if (guildId) {
     const settings = getGuildSettings(guildId);
     if (settings && settings.lang) {
@@ -36,10 +40,16 @@ function getLanguage(source) {
     }
   }
 
+  // 2. Cringelândia é PT por padrão se não houver escolha explícita do admin
+  if (guildId === CRINGELANDIA_GUILD_ID) {
+    return 'pt';
+  }
+
   // 3. Detecção automática pelo locale do cliente do Discord (interaction.locale / interaction.guildLocale)
   const locale = source?.locale || source?.guildLocale;
-  if (locale && typeof locale === 'string' && locale.toLowerCase().startsWith('pt')) {
-    return 'pt';
+  if (locale && typeof locale === 'string') {
+    if (locale.toLowerCase().startsWith('pt')) return 'pt';
+    if (locale.toLowerCase().startsWith('en')) return 'en';
   }
 
   // 4. Padrão internacional para servidores e DMs externos
